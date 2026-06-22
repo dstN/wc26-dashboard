@@ -1,0 +1,49 @@
+# ── Claude Code (private session data, not source) ───────────────────────────
+.claude/
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Node / frontend ───────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/build/
+frontend/dist/
+.pnpm-store/
+
+# ── Python / ingestion ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+ingestion/.venv/
+ingestion/venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Docker / database ─────────────────────────────────────────────────────────
+db_data/
+docker-compose.override.yml
+
+# ── Match report PDFs (large binary assets, stored out of git) ───────────────
+*.pdf
+
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ── Logs & coverage ───────────────────────────────────────────────────────────
+*.log
+coverage/
+htmlcov/
+.coverage
+
+# ── Local Claude Code overrides (personal, not team-wide) ────────────────────
+.claude/settings.local.json
