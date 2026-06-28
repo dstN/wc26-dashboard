@@ -234,6 +234,14 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 
 ## Next steps — Golden Plate V2
 
+### Bug — Mobile navigation menu
+
+Known problems with the hamburger nav on `≤960px` breakpoint (`TopBar.svelte`):
+
+- [ ] **No offcanvas slide-in** — menu currently expands inline, pushing page content down instead of overlaying it as a full-screen or slide-in drawer
+- [ ] **Hamburger doesn't animate** — icon stays as `☰` when open; should morph/animate to `✕` (e.g. CSS transform on the three bars, or swap SVG path)
+- [ ] Fix: convert open state to `position: fixed; inset: 0; z-index: 200` overlay with a slide-in transform (`translateX` from right or top); add `backdrop-filter` dim behind it; animate hamburger bars with CSS `transform` + `transition` on open/close
+
 ### Bug — TermTooltip / popover issues
 
 Known problems with the `TermTooltip` component used on Teams ("In Contest") and Players (9 column headers):
