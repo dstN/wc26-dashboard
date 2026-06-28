@@ -15,8 +15,9 @@
 		shots_a,
 		shots_b,
 		team_a,
-		team_b
-	}: { shots_a: Shot[]; shots_b: Shot[]; team_a: Team; team_b: Team } = $props();
+		team_b,
+		playerNameMap = {}
+	}: { shots_a: Shot[]; shots_b: Shot[]; team_a: Team; team_b: Team; playerNameMap?: Record<string, number> } = $props();
 
 	function outcomeClass(outcome: string | null): string {
 		if (!outcome) return 'neutral';
@@ -61,10 +62,17 @@
 		{#each allShots as shot}
 			<div class="stl__row stl__row--{shot.side}" class:stl__row--goal={shot.outcome?.includes('Goal')}>
 				<span class="stl__min">{shot.minute}'</span>
-				<span class="stl__player" style="color: {shot.side === 'a' ? teamTextColor(team_a.color) : teamTextColor(team_b.color)}">
-					{#if shot.player_jersey != null}#{shot.player_jersey}{/if}
-					{shot.player_name ?? '—'}
-				</span>
+				{@const pColor = shot.side === 'a' ? teamTextColor(team_a.color) : teamTextColor(team_b.color)}
+				{@const pId = shot.player_name ? playerNameMap[shot.player_name] : undefined}
+				{#if pId}
+					<a href="/players/{pId}" class="stl__player stl__player--link" style="color: {pColor}">
+						{#if shot.player_jersey != null}#{shot.player_jersey} {/if}{shot.player_name}
+					</a>
+				{:else}
+					<span class="stl__player" style="color: {pColor}">
+						{#if shot.player_jersey != null}#{shot.player_jersey} {/if}{shot.player_name ?? '—'}
+					</span>
+				{/if}
 				<span class="stl__meta">{shot.body_part ?? '—'}</span>
 				<span class="stl__meta">{shot.delivery_type ?? '—'}</span>
 				<span class="stl__outcome stl__outcome--{outcomeClass(shot.outcome)}">{outcomeLabel(shot.outcome)}</span>
@@ -84,6 +92,11 @@
 		border-bottom: 2px solid var(--border);
 		margin-bottom: var(--sp-2);
 	}
+	.stl__player--link {
+		text-decoration: none;
+	}
+	.stl__player--link:hover { text-decoration: underline; }
+
 	.stl__team {
 		font-size: var(--fs-label);
 		font-weight: 800;

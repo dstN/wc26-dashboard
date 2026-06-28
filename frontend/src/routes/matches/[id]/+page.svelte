@@ -35,6 +35,7 @@
 	const movement = $derived(data.movement);
 	const pressure = $derived(data.pressure);
 	const gkStats = $derived(data.gkStats);
+	const playerNameMap = $derived((data.playerNameMap ?? {}) as Record<string, number>);
 
 	function formatDate(raw: string): string {
 		if (!raw) return '';
@@ -242,6 +243,7 @@
 					shots_b={shots.team_b ?? []}
 					team_a={m.team_a}
 					team_b={m.team_b}
+					{playerNameMap}
 				/>
 			</div>
 		</section>
@@ -260,6 +262,7 @@
 							conns_b={passingNetwork.team_b ?? []}
 							team_a={m.team_a}
 							team_b={m.team_b}
+							{playerNameMap}
 						/>
 					</div>
 				{/if}

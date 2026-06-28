@@ -13,11 +13,9 @@
 		conns_a,
 		conns_b,
 		team_a,
-		team_b
-	}: { conns_a: Connection[]; conns_b: Connection[]; team_a: Team; team_b: Team } = $props();
-
-	// TODO: player names are raw PDF strings; to make them clickable, add a
-	// GET /api/v1/matches/{id}/player-name-map endpoint and resolve name→id here.
+		team_b,
+		playerNameMap = {}
+	}: { conns_a: Connection[]; conns_b: Connection[]; team_a: Team; team_b: Team; playerNameMap?: Record<string, number> } = $props();
 	function shortName(full: string | null): string {
 		if (!full) return '—';
 		const parts = full.trim().split(' ');
@@ -36,12 +34,14 @@
 		{#each conns_a as c}
 			{@const pct = Number(c.pct_of_team_passes ?? 0)}
 			{@const barW = (pct / maxPct) * 100}
+			{@const fromId = c.from_name ? playerNameMap[c.from_name] : undefined}
+			{@const toId = c.to_name ? playerNameMap[c.to_name] : undefined}
 			<div class="pn__row">
 				<span class="pn__rank">#{c.rank_no}</span>
 				<div class="pn__names">
-					<span class="pn__from">{shortName(c.from_name)}</span>
+					{#if fromId}<a href="/players/{fromId}" class="pn__from pn__name-link">{shortName(c.from_name)}</a>{:else}<span class="pn__from">{shortName(c.from_name)}</span>{/if}
 					<span class="pn__arrow">→</span>
-					<span class="pn__to">{shortName(c.to_name)}</span>
+					{#if toId}<a href="/players/{toId}" class="pn__to pn__name-link">{shortName(c.to_name)}</a>{:else}<span class="pn__to">{shortName(c.to_name)}</span>{/if}
 				</div>
 				<div class="pn__bar-wrap">
 					<div class="pn__bar" style="width: {barW}%; background: {teamColorVar(team_a.color)};"></div>
@@ -58,12 +58,14 @@
 		{#each conns_b as c}
 			{@const pct = Number(c.pct_of_team_passes ?? 0)}
 			{@const barW = (pct / maxPct) * 100}
+			{@const fromId = c.from_name ? playerNameMap[c.from_name] : undefined}
+			{@const toId = c.to_name ? playerNameMap[c.to_name] : undefined}
 			<div class="pn__row">
 				<span class="pn__rank">#{c.rank_no}</span>
 				<div class="pn__names">
-					<span class="pn__from">{shortName(c.from_name)}</span>
+					{#if fromId}<a href="/players/{fromId}" class="pn__from pn__name-link">{shortName(c.from_name)}</a>{:else}<span class="pn__from">{shortName(c.from_name)}</span>{/if}
 					<span class="pn__arrow">→</span>
-					<span class="pn__to">{shortName(c.to_name)}</span>
+					{#if toId}<a href="/players/{toId}" class="pn__to pn__name-link">{shortName(c.to_name)}</a>{:else}<span class="pn__to">{shortName(c.to_name)}</span>{/if}
 				</div>
 				<div class="pn__bar-wrap">
 					<div class="pn__bar" style="width: {barW}%; background: {teamColorVar(team_b.color)};"></div>
@@ -124,6 +126,10 @@
 		text-overflow: ellipsis;
 		color: var(--ink);
 	}
+	.pn__name-link {
+		text-decoration: none;
+	}
+	.pn__name-link:hover { text-decoration: underline; }
 	.pn__arrow { color: var(--muted); font-size: var(--fs-meta); flex-shrink: 0; }
 
 	.pn__bar-wrap {
