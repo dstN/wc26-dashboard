@@ -1,0 +1,171 @@
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+/* ── Brand Spectrum — theme-independent ─────────────────────────────────── */
+:root {
+	--c-red: #da1e37;
+	--c-orange: #ff5b1e;
+	--c-yellow: #ffd23f;
+	--c-lime: #b6e62e;
+	--c-teal: #16c5a8;
+	--c-blue: #2a57e8;
+	--c-indigo: #6a2ee0;
+	--c-lavender: #a78bfa;
+	--c-pink: #ff7e9d;
+	--c-forest: #0c3b2e;
+
+	--gradient-rainbow: linear-gradient(
+		90deg,
+		#da1e37,
+		#ff5b1e,
+		#ffd23f,
+		#b6e62e,
+		#16c5a8,
+		#2a57e8,
+		#6a2ee0,
+		#ff7e9d
+	);
+
+	/* ── Readable team text colors (adapt per theme) ────────────────────── */
+	--c-yellow-ink: #8a6200;
+	--c-lime-ink: #2d5a00;
+	--c-lavender-ink: #4d1fc7;
+	--c-pink-ink: #c01041;
+
+	/* ── Light theme (default) ───────────────────────────────────────────── */
+	--bg: #f5f2ea;
+	--surface: #ffffff;
+	--border: #e3ded2;
+	--border-soft: #efeadd;
+	--ink: #16140f;
+	--muted: #71685c;
+	--accent: #da1e37;
+	--positive: #16808a;
+	--gold-ink: #b8901a;
+	--pitch: #dfe8d8;
+	--pitch-line: #c3cdb8;
+
+	/* ── Typography ──────────────────────────────────────────────────────── */
+	--font: 'Lexend', system-ui, sans-serif;
+	--fs-hero: 3.75rem;
+	--fs-numeral: 5.75rem;
+	--fs-score: 2.875rem;
+	--fs-stat: 2.5rem;
+	--fs-h2: 1.375rem;
+	--fs-body: 1rem;
+	--fs-ui: 0.875rem;
+	--fs-label: 0.75rem;
+	--fs-meta: 0.6875rem;
+
+	/* ── Spacing ─────────────────────────────────────────────────────────── */
+	--sp-1: 4px;
+	--sp-2: 8px;
+	--sp-3: 12px;
+	--sp-4: 16px;
+	--sp-5: 20px;
+	--sp-6: 28px;
+	--sp-8: 40px;
+	--sp-10: 56px;
+
+	/* ── Radius ──────────────────────────────────────────────────────────── */
+	--r-sm: 6px;
+	--r-md: 10px;
+	--r-lg: 12px;
+	--r-pill: 999px;
+
+	/* ── Elevation ───────────────────────────────────────────────────────── */
+	--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+	/* ── Layout ──────────────────────────────────────────────────────────── */
+	--rail-h: 5px;
+	--max-w: 1440px;
+}
+
+[data-theme='dark'] {
+	--c-yellow-ink: #ffd23f;
+	--c-lime-ink: #b6e62e;
+	--c-lavender-ink: #a78bfa;
+	--c-pink-ink: #ff7e9d;
+	--bg: #0b0b0f;
+	--surface: #111118;
+	--border: rgba(255, 255, 255, 0.08);
+	--border-soft: rgba(255, 255, 255, 0.07);
+	--ink: #ffffff;
+	--muted: rgba(255, 255, 255, 0.55);
+	--accent: #b6e62e;
+	--positive: #16c5a8;
+	--gold-ink: #ffd23f;
+	--pitch: linear-gradient(90deg, #0d2a1c, #103423);
+	--pitch-line: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+html,
+body {
+	font-family: var(--font);
+	background: var(--bg);
+	color: var(--ink);
+	font-size: 16px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+/* ── RTL (Arabic) overrides ──────────────────────────────────────────────── */
+[dir='rtl'] {
+	/* Arabic needs a system font; Lexend has no Arabic glyphs */
+	font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', Arial, sans-serif;
+}
+
+[dir='rtl'] .page-title,
+[dir='rtl'] .hero-line,
+[dir='rtl'] .section-label,
+[dir='rtl'] .page-sub {
+	text-align: right;
+}
+
+/* Flip flex rows that have directional meaning */
+[dir='rtl'] .match-card__score-row {
+	direction: ltr; /* keep score A:B reading order */
+}
+
+[dir='rtl'] .stat-row {
+	flex-direction: row-reverse;
+}
+
+/* Back-links: swap arrow direction */
+[dir='rtl'] .back-link::before {
+	content: '→ ';
+}
+
+/* ── Typography helpers ──────────────────────────────────────────────────── */
+.tabular-nums {
+	font-variant-numeric: tabular-nums;
+}
+
+.label-eyebrow {
+	font-size: var(--fs-label);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--muted);
+}

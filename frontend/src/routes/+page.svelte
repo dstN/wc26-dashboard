@@ -1,0 +1,510 @@
+<script lang="ts">
+	import type { PageData } from './$types';
+	import StripeMotif from '$lib/components/primitives/StripeMotif.svelte';
+	import StatTable from '$lib/components/viz/StatTable.svelte';
+	import PitchSpatial from '$lib/components/viz/PitchSpatial.svelte';
+	import PhasesBar from '$lib/components/viz/PhasesBar.svelte';
+	import LineBreaksBars from '$lib/components/viz/LineBreaksBars.svelte';
+	import { teamColorVar, badgeTextColor } from '$lib/tokens';
+	import { t } from '$lib/i18n';
+
+	let { data }: { data: PageData } = $props();
+	const d = $derived(data.dashboard);
+
+</script>
+
+<svelte:head>
+	<title>EFI Dashboard — Overview</title>
+</svelte:head>
+
+{#if !d}
+	<div class="error-state">
+		<p>Unable to load dashboard data. Is the backend running?</p>
+		{#if data.error}<p class="error-detail">{$t.error.loadFailed}</p>{/if}
+	</div>
+{:else}
+	<!-- ── SECTION 1: HERO ──────────────────────────────────────────────────── -->
+	<section class="hero">
+		<div class="hero__left">
+			<p class="hero__eyebrow">{$t.hero.eyebrow}</p>
+			<h1 class="hero__headline">
+				<span>{$t.hero.line1}</span>
+				<span>{$t.hero.line2}</span>
+				<span>{$t.hero.line3}</span>
+			</h1>
+			<p class="hero__subtitle">
+				{$t.hero.subtitle}
+			</p>
+			<div class="hero__stats">
+				<div class="hero__stat">
+					<span class="hero__stat-value">{d.overview.matches_played}</span>
+					<span class="hero__stat-label">{$t.hero.matchesPlayed}</span>
+				</div>
+				<div class="hero__stat">
+					<span class="hero__stat-value">{d.overview.goals_total}</span>
+					<span class="hero__stat-label">{$t.hero.totalGoals}</span>
+				</div>
+				<div class="hero__stat">
+					<span class="hero__stat-value">{d.overview.avg_in_contest_pct.toFixed(1)}%</span>
+					<span class="hero__stat-label">{$t.hero.avgInContest}</span>
+				</div>
+			</div>
+		</div>
+		<div class="hero__right">
+			<StripeMotif />
+		</div>
+	</section>
+
+	<!-- ── SECTION 2: FEATURED MATCH BAND ─────────────────────────────────── -->
+	<section class="match-band">
+		<div class="match-band__header">
+			<span class="match-band__featured-label">{$t.match.featuredLabel}</span>
+			<span class="match-band__meta">
+				Group {d.featured.group_letter} · Match {d.featured.match_no} · {d.featured.venue} · {d.featured.match_date}
+			</span>
+			<span class="match-band__status">{$t.match.fullTime}</span>
+		</div>
+
+		<a href="/matches/{d.featured.id}" class="match-band__score-link">
+			<div class="match-band__score-row">
+				<div class="match-band__team match-band__team--left">
+					<a href="/teams/{d.featured.team_a.id}" class="match-band__team-name" onclick={(e) => e.stopPropagation()}>{d.featured.team_a.name}</a>
+					<span
+						class="match-band__badge"
+						style="background: {teamColorVar(d.featured.team_a.color)}; color: {badgeTextColor(d.featured.team_a.color)};"
+					>{d.featured.team_a.short_code}</span>
+				</div>
+				<div class="match-band__scoreline">
+					<span class="match-band__score">{d.featured.score_a}</span>
+					<span class="match-band__colon">:</span>
+					<span class="match-band__score">{d.featured.score_b}</span>
+				</div>
+				<div class="match-band__team match-band__team--right">
+					<span
+						class="match-band__badge"
+						style="background: {teamColorVar(d.featured.team_b.color)}; color: {badgeTextColor(d.featured.team_b.color)};"
+					>{d.featured.team_b.short_code}</span>
+					<a href="/teams/{d.featured.team_b.id}" class="match-band__team-name" onclick={(e) => e.stopPropagation()}>{d.featured.team_b.name}</a>
+				</div>
+			</div>
+		</a>
+
+		<a href="/matches/{d.featured.id}" class="featured-cta">Check out full game stats →</a>
+	</section>
+
+	<!-- ── SECTION 3: COMPARISON GRID ─────────────────────────────────────── -->
+	<section class="comparison">
+		<div class="section-divider"></div>
+		<div class="comparison__grid">
+			<div class="comparison__cell">
+				<p class="cell-eyebrow">{$t.detail.headToHead}</p>
+				<StatTable stats={d.head_to_head} team_a={d.featured.team_a} team_b={d.featured.team_b} />
+			</div>
+			<div class="comparison__cell comparison__cell--right">
+				<p class="cell-eyebrow">{$t.detail.spatial}</p>
+				<PitchSpatial
+					spatial_a={d.spatial.team_a}
+					spatial_b={d.spatial.team_b}
+					team_a={d.featured.team_a}
+					team_b={d.featured.team_b}
+					initialScenario="possession"
+				/>
+			</div>
+		</div>
+	</section>
+
+	<!-- ── SECTION 4: PHASES + LINE BREAKS ────────────────────────────────── -->
+	<section class="phases-section">
+		<div class="section-divider"></div>
+		<div class="phases-section__grid">
+			<div class="phases-section__cell">
+				<PhasesBar
+					phases_a={d.phases.team_a}
+					phases_b={d.phases.team_b}
+					team_a={d.featured.team_a}
+					team_b={d.featured.team_b}
+				/>
+			</div>
+			<div class="phases-section__cell phases-section__cell--right">
+				<LineBreaksBars
+					breaks_a={d.line_breaks.team_a}
+					breaks_b={d.line_breaks.team_b}
+					team_a={d.featured.team_a}
+					team_b={d.featured.team_b}
+				/>
+				<div class="kpi-cards">
+					<div class="kpi-card">
+						<span class="kpi-card__value">{(d.possession.ball_recovery_time_avg ?? 0).toFixed(1)}s</span>
+						<span class="kpi-card__label">Ball Recovery</span>
+					</div>
+					<div class="kpi-card">
+						<span class="kpi-card__value">{(d.possession.possession_in_contest ?? 0)}%</span>
+						<span class="kpi-card__label">In Contest</span>
+					</div>
+					<div class="kpi-card">
+						<span class="kpi-card__value">{d.defensive.team_a.forced_turnovers}</span>
+						<span class="kpi-card__label">Forced Turnovers</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+{/if}
+
+<style>
+	/* ── Error state ─────────────────────────────────────────────────── */
+	.error-state {
+		padding: var(--sp-10);
+		text-align: center;
+		color: var(--muted);
+		font-size: var(--fs-body);
+	}
+	.error-detail {
+		font-size: var(--fs-meta);
+		margin-top: var(--sp-2);
+		color: var(--c-red);
+	}
+
+	/* ── Section divider ─────────────────────────────────────────────── */
+	.section-divider {
+		height: 1px;
+		background: var(--border);
+	}
+
+	/* ── SECTION 1: Hero ─────────────────────────────────────────────── */
+	.hero {
+		display: grid;
+		grid-template-columns: 1.1fr 0.9fr;
+		min-height: 440px;
+	}
+
+	.hero__left {
+		padding: 52px 40px;
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-6);
+		justify-content: center;
+		background: var(--surface);
+	}
+
+	.hero__eyebrow {
+		font-size: var(--fs-label);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: var(--c-red);
+	}
+
+	:global([data-theme='dark']) .hero__eyebrow {
+		color: var(--c-lime);
+	}
+
+	.hero__headline {
+		font-size: var(--fs-hero);
+		font-weight: 800;
+		line-height: 1.08;
+		color: var(--ink);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.hero__subtitle {
+		font-size: var(--fs-body);
+		color: var(--muted);
+		max-width: 480px;
+		line-height: 1.6;
+	}
+
+	.hero__stats {
+		display: flex;
+		gap: var(--sp-8);
+		padding-top: var(--sp-2);
+	}
+
+	.hero__stat {
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-1);
+	}
+
+	.hero__stat-value {
+		font-size: var(--fs-stat);
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+		line-height: 1;
+	}
+
+	.hero__stat-label {
+		font-size: var(--fs-label);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+	}
+
+	.hero__right {
+		background: #0b0b0f;
+		min-height: 300px;
+	}
+
+	/* ── SECTION 2: Featured Match Band ─────────────────────────────── */
+	.match-band {
+		padding: 52px 40px;
+		background: var(--surface);
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-6);
+	}
+
+	.match-band__header {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-4);
+	}
+
+	.match-band__featured-label {
+		font-size: var(--fs-label);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--accent);
+	}
+
+	.match-band__meta {
+		font-size: var(--fs-label);
+		font-weight: 500;
+		color: var(--muted);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	.match-band__status {
+		margin-left: auto;
+		font-size: var(--fs-label);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--positive);
+	}
+
+	.match-band__score-link {
+		display: block;
+		text-decoration: none;
+		border-radius: var(--r-md);
+		transition: background 0.15s;
+		margin: 0 -var(--sp-3);
+		padding: var(--sp-2) var(--sp-3);
+	}
+	.match-band__score-link:hover {
+		background: color-mix(in srgb, var(--border) 60%, transparent);
+	}
+
+	.match-band__score-row {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--sp-6);
+	}
+
+	.match-band__team {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-3);
+	}
+
+	.match-band__team--left {
+		flex-direction: row;
+		text-align: right;
+	}
+
+	.match-band__team--right {
+		flex-direction: row;
+		text-align: left;
+	}
+
+	.match-band__team-name {
+		font-size: var(--fs-h2);
+		font-weight: 700;
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.match-band__team-name:hover { color: var(--accent); }
+
+	.match-band__badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--sp-1) var(--sp-3);
+		border-radius: var(--r-sm);
+		font-size: var(--fs-ui);
+		font-weight: 800;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		line-height: 1;
+		min-width: 44px;
+		min-height: 28px;
+	}
+
+	.match-band__scoreline {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-2);
+	}
+
+	.match-band__score {
+		font-size: var(--fs-score);
+		font-weight: 900;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+		line-height: 1;
+	}
+
+	.match-band__colon {
+		font-size: var(--fs-score);
+		font-weight: 300;
+		color: var(--muted);
+		line-height: 1;
+	}
+
+	.featured-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--sp-2);
+		padding: var(--sp-3) var(--sp-5);
+		background: var(--accent);
+		color: var(--bg);
+		border-radius: var(--r-md);
+		font-size: var(--fs-ui);
+		font-weight: 700;
+		text-decoration: none;
+		transition: opacity 0.15s;
+		align-self: center;
+	}
+	.featured-cta:hover { opacity: 0.85; }
+
+	/* ── SECTION 3: Comparison grid ──────────────────────────────────── */
+	.comparison__grid {
+		display: grid;
+		grid-template-columns: 1.1fr 0.9fr;
+		background: var(--border);
+		gap: 1px;
+	}
+
+	.comparison__cell {
+		padding: 52px 40px;
+		background: var(--bg);
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-5);
+	}
+
+	.comparison__cell--right {
+		background: var(--bg);
+	}
+
+	/* ── SECTION 4: Phases + Line Breaks ─────────────────────────────── */
+	.phases-section__grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		background: var(--border);
+		gap: 1px;
+	}
+
+	.phases-section__cell {
+		padding: 52px 40px;
+		background: var(--bg);
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-6);
+	}
+
+	.phases-section__cell--right {
+		background: var(--bg);
+	}
+
+	/* ── Eyebrow labels inside grid cells ────────────────────────────── */
+	.cell-eyebrow {
+		font-size: var(--fs-label);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--muted);
+	}
+
+	/* ── KPI mini-cards ──────────────────────────────────────────────── */
+	.kpi-cards {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--sp-3);
+		margin-top: auto;
+	}
+
+	.kpi-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-1);
+		padding: var(--sp-4) var(--sp-3);
+		background: var(--surface);
+		border-radius: var(--r-md);
+		border: 1px solid var(--border);
+	}
+
+	.kpi-card__value {
+		font-size: var(--fs-h2);
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+		line-height: 1;
+	}
+
+	.kpi-card__label {
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+	}
+
+	/* ── Responsive ──────────────────────────────────────────────────── */
+	@media (max-width: 1024px) {
+		.hero {
+			grid-template-columns: 1fr;
+		}
+		.hero__right {
+			min-height: 240px;
+		}
+		.comparison__grid,
+		.phases-section__grid {
+			grid-template-columns: 1fr;
+		}
+		.kpi-cards {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	@media (max-width: 720px) {
+		.hero__left,
+		.match-band,
+		.comparison__cell,
+		.phases-section__cell {
+			padding: var(--sp-6) var(--sp-4);
+		}
+		.hero__headline {
+			font-size: 2.5rem;
+		}
+		.hero__stats {
+			gap: var(--sp-5);
+			flex-wrap: wrap;
+		}
+		.match-band__score-row {
+			gap: var(--sp-3);
+		}
+		.match-band__team-name {
+			font-size: var(--fs-body);
+		}
+		.kpi-cards {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+</style>
