@@ -270,8 +270,8 @@ export default {
 		contactEmailPlaceholder: 'ihre@email.de',
 		contactMessagePlaceholder: 'Ihre Nachricht…',
 		contactSubmit: 'Nachricht senden',
-		contactSuccess: 'Ihr E-Mail-Client wurde geöffnet. Vielen Dank für Ihre Nachricht.',
+		contactSuccess: 'Nachricht gesendet! Wir melden uns in Kürze.',
 		contactNewMessage: 'Neue Nachricht',
-		contactNote: 'Öffnet Ihren lokalen E-Mail-Client. Es werden keine Daten an Server übertragen.',
+		contactNote: 'Ihre Nachricht wird direkt an uns gesendet. Wir antworten auf die angegebene E-Mail-Adresse.',
 	},
 } as const;

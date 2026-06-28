@@ -270,8 +270,8 @@ export default {
 		contactEmailPlaceholder: 'o.seu@email.com',
 		contactMessagePlaceholder: 'A sua mensagem…',
 		contactSubmit: 'Enviar mensagem',
-		contactSuccess: 'O seu cliente de e-mail foi aberto. Obrigado pela sua mensagem.',
+		contactSuccess: 'Mensagem enviada! Entraremos em contacto em breve.',
 		contactNewMessage: 'Nova mensagem',
-		contactNote: 'Abre o seu cliente de e-mail local. Nenhum dado é transmitido aos nossos servidores.',
+		contactNote: 'A sua mensagem é enviada diretamente para nós. Responderemos ao endereço de e-mail que indicar.',
 	},
 } as const;

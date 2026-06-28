@@ -270,8 +270,8 @@ export default {
 		contactEmailPlaceholder: 'بريدك@الإلكتروني.com',
 		contactMessagePlaceholder: 'رسالتك…',
 		contactSubmit: 'إرسال الرسالة',
-		contactSuccess: 'تم فتح برنامج البريد الإلكتروني. شكراً لرسالتك.',
+		contactSuccess: 'تم إرسال الرسالة! سنتواصل معك قريباً.',
 		contactNewMessage: 'رسالة جديدة',
-		contactNote: 'يفتح برنامج البريد الإلكتروني المحلي. لا تُرسَل بيانات إلى خوادمنا.',
+		contactNote: 'رسالتك تُرسَل مباشرةً إلينا. سنرد على عنوان البريد الإلكتروني الذي تقدّمه.',
 	},
 } as const;

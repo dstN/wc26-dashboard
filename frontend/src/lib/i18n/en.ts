@@ -270,9 +270,9 @@ export default {
 		contactEmailPlaceholder: 'your@email.com',
 		contactMessagePlaceholder: 'Your message…',
 		contactSubmit: 'Send message',
-		contactSuccess: 'Your email client has been opened. Thank you for your message.',
+		contactSuccess: 'Message sent! We'll get back to you shortly.',
 		contactNewMessage: 'New message',
-		contactNote: 'Opens your local email client. No data is transmitted to our servers.',
+		contactNote: 'Your message is sent directly to us. We'll reply to the email address you provide.',
 	},
 } as const;
 
