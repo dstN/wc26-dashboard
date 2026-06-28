@@ -4,6 +4,7 @@
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import { teamColorVar, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -89,7 +90,9 @@
 				<div class="cards-grid">
 					{#each grouped[gKey] as match (match.id)}
 						{@const pending = isPending(match)}
-						<a href="/matches/{match.id}" class="match-card-link">
+						<div class="match-card-link" role="link" tabindex="0"
+							onclick={() => goto(`/matches/${match.id}`)}
+							onkeydown={(e) => e.key === 'Enter' && goto(`/matches/${match.id}`)}>
 						<article class="match-card">
 							<div class="match-card__top">
 								<abbr title="Group {gKey}, Match {match.match_no}" class="group-badge">
@@ -160,7 +163,7 @@
 								{/if}
 							</div>
 						</article>
-						</a>
+						</div>
 					{/each}
 				</div>
 			</section>
@@ -276,7 +279,7 @@
 	/* ── Match card link wrapper ─────────────────────────────────────── */
 	.match-card-link {
 		display: block;
-		text-decoration: none;
+		cursor: pointer;
 		border-radius: var(--r-md);
 		transition: transform 0.12s ease, box-shadow 0.12s ease;
 	}

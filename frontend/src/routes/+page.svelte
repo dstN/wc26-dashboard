@@ -1,12 +1,10 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import StripeMotif from '$lib/components/primitives/StripeMotif.svelte';
-	import StatTable from '$lib/components/viz/StatTable.svelte';
-	import PitchSpatial from '$lib/components/viz/PitchSpatial.svelte';
-	import PhasesBar from '$lib/components/viz/PhasesBar.svelte';
-	import LineBreaksBars from '$lib/components/viz/LineBreaksBars.svelte';
+	import PossessionBar from '$lib/components/viz/PossessionBar.svelte';
 	import { teamColorVar, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 	const d = $derived(data.dashboard);
@@ -65,7 +63,9 @@
 			<span class="match-band__status">{$t.match.fullTime}</span>
 		</div>
 
-		<a href="/matches/{d.featured.id}" class="match-band__score-link">
+		<div class="match-band__score-link" role="link" tabindex="0"
+			onclick={() => goto(`/matches/${d.featured.id}`)}
+			onkeydown={(e) => e.key === 'Enter' && goto(`/matches/${d.featured.id}`)}>
 			<div class="match-band__score-row">
 				<div class="match-band__team match-band__team--left">
 					<a href="/teams/{d.featured.team_a.id}" class="match-band__team-name" onclick={(e) => e.stopPropagation()}>{d.featured.team_a.name}</a>
@@ -87,68 +87,20 @@
 					<a href="/teams/{d.featured.team_b.id}" class="match-band__team-name" onclick={(e) => e.stopPropagation()}>{d.featured.team_b.name}</a>
 				</div>
 			</div>
-		</a>
+		</div>
+
+		<div class="match-band__xg-row">
+			<span class="match-band__xg">{d.head_to_head.xg_a != null ? d.head_to_head.xg_a.toFixed(2) : '—'} xG</span>
+			<span class="match-band__xg match-band__xg--right">{d.head_to_head.xg_b != null ? d.head_to_head.xg_b.toFixed(2) : '—'} xG</span>
+		</div>
+
+		<div class="match-band__possession">
+			<PossessionBar stats={d.head_to_head} team_a={d.featured.team_a} team_b={d.featured.team_b} />
+		</div>
 
 		<a href="/matches/{d.featured.id}" class="featured-cta">Check out full game stats →</a>
 	</section>
 
-	<!-- ── SECTION 3: COMPARISON GRID ─────────────────────────────────────── -->
-	<section class="comparison">
-		<div class="section-divider"></div>
-		<div class="comparison__grid">
-			<div class="comparison__cell">
-				<p class="cell-eyebrow">{$t.detail.headToHead}</p>
-				<StatTable stats={d.head_to_head} team_a={d.featured.team_a} team_b={d.featured.team_b} />
-			</div>
-			<div class="comparison__cell comparison__cell--right">
-				<p class="cell-eyebrow">{$t.detail.spatial}</p>
-				<PitchSpatial
-					spatial_a={d.spatial.team_a}
-					spatial_b={d.spatial.team_b}
-					team_a={d.featured.team_a}
-					team_b={d.featured.team_b}
-					initialScenario="possession"
-				/>
-			</div>
-		</div>
-	</section>
-
-	<!-- ── SECTION 4: PHASES + LINE BREAKS ────────────────────────────────── -->
-	<section class="phases-section">
-		<div class="section-divider"></div>
-		<div class="phases-section__grid">
-			<div class="phases-section__cell">
-				<PhasesBar
-					phases_a={d.phases.team_a}
-					phases_b={d.phases.team_b}
-					team_a={d.featured.team_a}
-					team_b={d.featured.team_b}
-				/>
-			</div>
-			<div class="phases-section__cell phases-section__cell--right">
-				<LineBreaksBars
-					breaks_a={d.line_breaks.team_a}
-					breaks_b={d.line_breaks.team_b}
-					team_a={d.featured.team_a}
-					team_b={d.featured.team_b}
-				/>
-				<div class="kpi-cards">
-					<div class="kpi-card">
-						<span class="kpi-card__value">{(d.possession.ball_recovery_time_avg ?? 0).toFixed(1)}s</span>
-						<span class="kpi-card__label">Ball Recovery</span>
-					</div>
-					<div class="kpi-card">
-						<span class="kpi-card__value">{(d.possession.possession_in_contest ?? 0)}%</span>
-						<span class="kpi-card__label">In Contest</span>
-					</div>
-					<div class="kpi-card">
-						<span class="kpi-card__value">{d.defensive.team_a.forced_turnovers}</span>
-						<span class="kpi-card__label">Forced Turnovers</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
 {/if}
 
 <style>
@@ -290,7 +242,7 @@
 
 	.match-band__score-link {
 		display: block;
-		text-decoration: none;
+		cursor: pointer;
 		border-radius: var(--r-md);
 		transition: background 0.15s;
 		margin: 0 -var(--sp-3);
@@ -367,6 +319,23 @@
 		line-height: 1;
 	}
 
+	.match-band__xg-row {
+		display: flex;
+		justify-content: space-between;
+		padding: 0 var(--sp-3);
+	}
+	.match-band__xg {
+		font-size: var(--fs-ui);
+		font-weight: 600;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+	}
+	.match-band__xg--right { text-align: right; }
+
+	.match-band__possession {
+		padding: 0 var(--sp-3);
+	}
+
 	.featured-cta {
 		display: inline-flex;
 		align-items: center;
@@ -383,89 +352,6 @@
 	}
 	.featured-cta:hover { opacity: 0.85; }
 
-	/* ── SECTION 3: Comparison grid ──────────────────────────────────── */
-	.comparison__grid {
-		display: grid;
-		grid-template-columns: 1.1fr 0.9fr;
-		background: var(--border);
-		gap: 1px;
-	}
-
-	.comparison__cell {
-		padding: 52px 40px;
-		background: var(--bg);
-		display: flex;
-		flex-direction: column;
-		gap: var(--sp-5);
-	}
-
-	.comparison__cell--right {
-		background: var(--bg);
-	}
-
-	/* ── SECTION 4: Phases + Line Breaks ─────────────────────────────── */
-	.phases-section__grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		background: var(--border);
-		gap: 1px;
-	}
-
-	.phases-section__cell {
-		padding: 52px 40px;
-		background: var(--bg);
-		display: flex;
-		flex-direction: column;
-		gap: var(--sp-6);
-	}
-
-	.phases-section__cell--right {
-		background: var(--bg);
-	}
-
-	/* ── Eyebrow labels inside grid cells ────────────────────────────── */
-	.cell-eyebrow {
-		font-size: var(--fs-label);
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		color: var(--muted);
-	}
-
-	/* ── KPI mini-cards ──────────────────────────────────────────────── */
-	.kpi-cards {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: var(--sp-3);
-		margin-top: auto;
-	}
-
-	.kpi-card {
-		display: flex;
-		flex-direction: column;
-		gap: var(--sp-1);
-		padding: var(--sp-4) var(--sp-3);
-		background: var(--surface);
-		border-radius: var(--r-md);
-		border: 1px solid var(--border);
-	}
-
-	.kpi-card__value {
-		font-size: var(--fs-h2);
-		font-weight: 800;
-		font-variant-numeric: tabular-nums;
-		color: var(--ink);
-		line-height: 1;
-	}
-
-	.kpi-card__label {
-		font-size: var(--fs-meta);
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--muted);
-	}
-
 	/* ── Responsive ──────────────────────────────────────────────────── */
 	@media (max-width: 1024px) {
 		.hero {
@@ -474,20 +360,11 @@
 		.hero__right {
 			min-height: 240px;
 		}
-		.comparison__grid,
-		.phases-section__grid {
-			grid-template-columns: 1fr;
-		}
-		.kpi-cards {
-			grid-template-columns: repeat(3, 1fr);
-		}
 	}
 
 	@media (max-width: 720px) {
 		.hero__left,
-		.match-band,
-		.comparison__cell,
-		.phases-section__cell {
+		.match-band {
 			padding: var(--sp-6) var(--sp-4);
 		}
 		.hero__headline {
@@ -502,9 +379,6 @@
 		}
 		.match-band__team-name {
 			font-size: var(--fs-body);
-		}
-		.kpi-cards {
-			grid-template-columns: 1fr 1fr;
 		}
 	}
 </style>

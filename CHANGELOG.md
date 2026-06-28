@@ -788,6 +788,16 @@ wrong page.
 - **Removed empty CSS rule:** Pre-existing empty `.browse-section {}` that caused a
   `svelte-check` warning.
 
+### Post-M9 — Session 18 follow-up (2026-06-28)
+
+#### Bug fixes
+
+- [x] Home page — nested `<a>` compile error fixed: outer match-card wrapper converted from `<a>` to `div[role=link]` with `goto()` onclick; inner team-name links remain real `<a>` elements
+- [x] Matches page — same nested `<a>` fix applied to `.match-card-link` wrapper
+- [x] Home page — xG row and PossessionBar incorrectly removed in session 18; restored below the score row (only the big stat sections below were meant to go)
+- [x] Home page — sections 3 & 4 (StatTable, PitchSpatial, PhasesBar, LineBreaksBars, KPI cards) correctly removed; unused imports cleaned up
+- [x] Comparison feature — added to ROADMAP as a structured backlog item (scope, UX flow, effort estimate)
+
 ### Post-M9 — Session 18 (2026-06-28)
 
 #### Style consistency sweep + UX improvements
