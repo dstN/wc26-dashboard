@@ -234,6 +234,14 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 
 ## Next steps — Golden Plate V2
 
+### Bug — TermTooltip / popover issues
+
+Known problems with the `TermTooltip` component used on Teams ("In Contest") and Players (9 column headers):
+
+- [ ] **Text truncated** — tooltip content is not fully visible in all cases; long definitions get cut off
+- [ ] **Edge overflow causes horizontal scrollbar** — when the tooltip anchor is near the right edge of the viewport, the popover overflows the page horizontally instead of flipping left
+- [ ] Fix: clamp popover position to viewport bounds (use `getBoundingClientRect()` + dynamic left/right offset, or replace with a CSS-only `position: fixed` approach); ensure `max-width` + `white-space: normal` on the tooltip bubble
+
 ### Feature — comparison mode (NOT yet implemented)
 - [ ] Country comparison view: select 2–10 teams, compare key stats side by side
 - [ ] Player comparison view: select 2–10 players, compare stats side by side
