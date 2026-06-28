@@ -32,7 +32,7 @@
 
 <div class="pn">
 	<div class="pn__col">
-		<div class="pn__col-header" style="color: {teamTextColor(team_a.color)}">{team_a.name}</div>
+		<a href="/teams/{team_a.id}" class="pn__col-header" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
 		{#each conns_a as c}
 			{@const pct = Number(c.pct_of_team_passes ?? 0)}
 			{@const barW = (pct / maxPct) * 100}
@@ -54,7 +54,7 @@
 	<div class="pn__divider"></div>
 
 	<div class="pn__col">
-		<div class="pn__col-header" style="color: {teamTextColor(team_b.color)}">{team_b.name}</div>
+		<a href="/teams/{team_b.id}" class="pn__col-header" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 		{#each conns_b as c}
 			{@const pct = Number(c.pct_of_team_passes ?? 0)}
 			{@const barW = (pct / maxPct) * 100}
@@ -89,7 +89,10 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		margin-bottom: var(--sp-3);
+		text-decoration: none;
+		display: block;
 	}
+	.pn__col-header:hover { text-decoration: underline; }
 
 	.pn__row {
 		display: grid;

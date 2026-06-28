@@ -8,11 +8,12 @@
 		team_a,
 		team_b,
 		compact = false,
-		initialScenario = 'defensive'
-	}: { spatial_a: TeamSpatialSplit | null; spatial_b: TeamSpatialSplit | null; team_a: Team; team_b: Team; compact?: boolean; initialScenario?: 'defensive' | 'possession' } = $props();
+		initialScenario = 'defensive',
+		lockedScenario = undefined
+	}: { spatial_a: TeamSpatialSplit | null; spatial_b: TeamSpatialSplit | null; team_a: Team; team_b: Team; compact?: boolean; initialScenario?: 'defensive' | 'possession'; lockedScenario?: 'defensive' | 'possession' } = $props();
 
 	// Scenario tab: defensive = out-of-possession, possession = in-possession
-	let scenario = $state<'defensive' | 'possession'>(initialScenario);
+	let scenario = $state<'defensive' | 'possession'>(lockedScenario ?? initialScenario);
 
 	// Block toggles for each scenario
 	let defBlockA = $state<'high' | 'mid' | 'low'>('mid');
@@ -61,6 +62,7 @@
 </script>
 
 <div class="spatial" class:compact>
+	{#if !lockedScenario}
 	<div class="spatial__header">
 		<div class="scenario-tabs" role="group" aria-label="Scenario">
 			<button
@@ -75,6 +77,7 @@
 			>In Possession</button>
 		</div>
 	</div>
+	{/if}
 
 	<div class="pitches-row">
 		<!-- ── Team A ── -->
