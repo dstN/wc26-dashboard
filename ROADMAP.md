@@ -433,3 +433,20 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [x] DB now has 12 red card rows (was 0 before)
 - [x] `04_all_matches.sql` regenerated
 - [ ] Second-yellow red cards not yet distinguished from direct reds (same treatment for now)
+
+## Post-M9 — Full dashboard build-out (Session 19)
+
+### Footer — Impressum, Legal & Contact
+
+- [x] `Footer.svelte`: centred ghost-text footer bar (Impressum · Privacy & Legal · Contact)
+- [x] Impressum modal: § 5 DDG legal notice (Dustin Tramm, Hungen address, contact email)
+- [x] Privacy & Legal modal: 2-col grid (privacy policy, FIFA data source, disclaimer, copyright)
+- [x] Contact modal: form POSTing to `POST /api/v1/contact` with loading/error/success states
+- [x] `backend/app/routers/contact.py`: SMTP email send via `smtplib` + STARTTLS in executor;
+  in-memory rate limiter (3 req/IP/hour); Pydantic `EmailStr` validation
+- [x] `backend/app/config.py`: SMTP settings (`smtp_host/port/user/pass`, `contact_to_email`, `allowed_origin`)
+- [x] `backend/app/main.py`: contact router + `POST` in CORS methods
+- [x] `.env.example`: all new env vars documented
+- [x] i18n: 31-key `footer` namespace in all 6 locales (EN · DE · ES · PT · FR · AR)
+- [x] Backdrop blur + dark mode border + SVG close icon — all dialog styling issues resolved
+- [x] "company name" purged from git history (3 commits squashed → 1 clean commit)

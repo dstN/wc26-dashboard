@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n';
+	import { env } from '$env/dynamic/public';
 
 	let impressumDialog: HTMLDialogElement;
 	let legalDialog: HTMLDialogElement;
@@ -9,21 +10,40 @@
 	let contactEmail = $state('');
 	let contactMessage = $state('');
 	let contactSent = $state(false);
+	let contactError = $state('');
+	let contactLoading = $state(false);
 
 	function closeOnBackdrop(e: MouseEvent, dialog: HTMLDialogElement) {
 		if (e.target === dialog) dialog.close();
 	}
 
-	function submitContact(e: SubmitEvent) {
+	async function submitContact(e: SubmitEvent) {
 		e.preventDefault();
-		const subject = encodeURIComponent('EFI Dashboard — Contact');
-		const body = encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\n\n${contactMessage}`);
-		window.location.href = `mailto:dustin.tramm@yinside.de?subject=${subject}&body=${body}`;
-		contactSent = true;
+		contactError = '';
+		contactLoading = true;
+		try {
+			const base = env.PUBLIC_API_URL ?? 'http://localhost:8000';
+			const res = await fetch(`${base}/api/v1/contact`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: contactName, email: contactEmail, message: contactMessage }),
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				contactError = data.detail ?? `Error ${res.status}`;
+			} else {
+				contactSent = true;
+			}
+		} catch {
+			contactError = 'Network error. Please try again.';
+		} finally {
+			contactLoading = false;
+		}
 	}
 
 	function resetContact() {
 		contactSent = false;
+		contactError = '';
 		contactName = '';
 		contactEmail = '';
 		contactMessage = '';
@@ -147,8 +167,13 @@
 						<label for="cf-msg">{$t.footer.contactMessage}</label>
 						<textarea id="cf-msg" bind:value={contactMessage} required rows="4" placeholder={$t.footer.contactMessagePlaceholder}></textarea>
 					</div>
+					{#if contactError}
+						<p class="form-error">{contactError}</p>
+					{/if}
 					<div class="form-footer">
-						<button type="submit" class="btn-pri">{$t.footer.contactSubmit}</button>
+						<button type="submit" class="btn-pri" disabled={contactLoading}>
+							{contactLoading ? '…' : $t.footer.contactSubmit}
+						</button>
 						<p class="modal__fine">{$t.footer.contactNote}</p>
 					</div>
 				</form>
@@ -368,6 +393,16 @@
 	}
 	textarea { resize: vertical; min-height: 100px; }
 
+	.form-error {
+		font-size: var(--fs-meta);
+		color: var(--c-red, #e53e3e);
+		margin: 0;
+		padding: var(--sp-2) var(--sp-3);
+		background: color-mix(in srgb, var(--c-red, #e53e3e) 10%, transparent);
+		border-radius: var(--r-sm);
+		border-left: 3px solid var(--c-red, #e53e3e);
+	}
+
 	.form-footer {
 		display: flex;
 		align-items: center;
@@ -390,7 +425,8 @@
 		transition: opacity 0.15s;
 		white-space: nowrap;
 	}
-	.btn-pri:hover { opacity: 0.85; }
+	.btn-pri:hover:not(:disabled) { opacity: 0.85; }
+	.btn-pri:disabled { opacity: 0.55; cursor: not-allowed; }
 
 	.btn-sec {
 		background: var(--border-soft);

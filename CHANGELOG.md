@@ -788,6 +788,70 @@ wrong page.
 - **Removed empty CSS rule:** Pre-existing empty `.browse-section {}` that caused a
   `svelte-check` warning.
 
+### Post-M9 — Session 19 (2026-06-29)
+
+#### Footer — Impressum, Legal & Contact modals
+
+- **`Footer.svelte`** (new component): small centred footer bar with three ghost-text links —
+  Impressum · Privacy & Legal · Contact — each opening a native HTML `<dialog>` modal.
+  No separate pages created; all content is inline.
+- **Impressum modal:** Dustin Tramm, c/o Impressumservice Dein-Impressum, Stettiner Str. 41,
+  35410 Hungen, Germany — § 5 DDG; responsible party, contact email, data source disclosure,
+  trademark note
+- **Privacy & Legal modal:** 2-column grid (820px max-width, collapses to 1 column at ≤640px),
+  4 sections: Privacy Policy, Data & Sources (FIFA Training Centre link), Disclaimer, Copyright
+- **Contact modal:** form with Name / Email / Message fields — sends email via the new
+  `POST /api/v1/contact` backend endpoint (no `mailto:` client, no new npm deps)
+  - Loading state on submit button (`…` label while in-flight, `disabled`)
+  - Error banner rendered inline if API responds with a non-OK status
+  - Success state with "Send another message" secondary action
+- **Backdrop:** `rgba(0,0,0,0.6)` + `backdrop-filter: blur(4px)` via `:global(dialog::backdrop)`
+  (must be `:global()` for Svelte scoped CSS to reach the `::backdrop` pseudo-element)
+- **Close icon:** inline SVG `<path>` (not Unicode ✕ — Lexend doesn't include it);
+  `position: absolute; top: var(--sp-5); right: var(--sp-5)` — reliably top-right on all dialogs
+- **Dark mode:** `border: 1px solid var(--border)` on dialog — invisible without explicit border
+- **`+layout.svelte`:** `<Footer />` imported and mounted after `<main>`
+
+#### i18n — 31-key footer namespace (all 6 locales)
+
+- `footer` block added to `en.ts`, `de.ts`, `es.ts`, `pt.ts`, `fr.ts`, `ar.ts`
+- Keys: `impressum`, `legal`, `contact`, `close`, `impressumTitle`, `impressumSubtitle`,
+  `impressumResponsible`, `impressumContactHeading`, `impressumDataHeading`, `impressumDataText`,
+  `impressumTrademarkText`, `legalTitle`, `privacyHeading`, `privacyText1`, `privacyText2`,
+  `dataHeading`, `dataText`, `dataSource`, `disclaimerHeading`, `disclaimerText`,
+  `copyrightHeading`, `copyrightText`, `contactTitle`, `contactName`, `contactEmail`,
+  `contactMessage`, `contactNamePlaceholder`, `contactEmailPlaceholder`,
+  `contactMessagePlaceholder`, `contactSubmit`, `contactSuccess`, `contactNewMessage`, `contactNote`
+
+#### Backend — contact email endpoint
+
+- **`backend/app/routers/contact.py`** (new): `POST /api/v1/contact`
+  - Pydantic `ContactPayload` (`name`, `email: EmailStr`, `message`)
+  - In-memory rate limiter: 3 requests per IP per hour (`defaultdict(list)` + timestamp cleanup)
+  - SMTP send via Python built-in `smtplib.SMTP` + STARTTLS in `run_in_executor()` (async-safe,
+    no new dependencies)
+  - Error responses: 429 rate limit, 503 SMTP not configured, 502 SMTP delivery failure
+- **`backend/app/config.py`:** `smtp_host`, `smtp_port`, `smtp_user`, `smtp_pass`,
+  `contact_to_email`, `allowed_origin` fields added to `Settings`
+- **`backend/app/main.py`:** `contact` router imported + `app.include_router(contact.router)`;
+  `allow_methods` extended with `"POST"`; `allow_origins=[settings.allowed_origin]` wired up
+- **`.env.example`:** `ALLOWED_ORIGIN`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
+  `CONTACT_TO_EMAIL` documented with inline notes (use Gmail app password)
+
+#### Legal review — FIFA data usage
+
+- EFI Post Match Summary PDFs are freely downloadable at FIFA Training Centre without login.
+  No ToS restrictions on download page.
+- Only sovereign national flags used (not FIFA IP).
+- "World Cup 2026" used descriptively, not as a registered trademark.
+- Dashboard is non-commercial.
+- Legal disclaimer, data attribution, and Impressum are sufficient. No FIFA permission needed.
+
+#### Git history — "company name" purge
+
+- 3 footer commits that contained "company name" in content/message squashed via
+  `git reset --soft <base-commit>` and recommitted clean as a single commit.
+
 ### Post-M9 — Session 18 follow-up (2026-06-28)
 
 #### Bug fixes
