@@ -270,9 +270,9 @@ export default {
 		contactEmailPlaceholder: 'your@email.com',
 		contactMessagePlaceholder: 'Your message…',
 		contactSubmit: 'Send message',
-		contactSuccess: 'Message sent! We'll get back to you shortly.',
+		contactSuccess: "Message sent! We'll get back to you shortly.",
 		contactNewMessage: 'New message',
-		contactNote: 'Your message is sent directly to us. We'll reply to the email address you provide.',
+		contactNote: "Your message is sent directly to us. We'll reply to the email address you provide.",
 	},
 } as const;
 
