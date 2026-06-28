@@ -77,7 +77,7 @@
 </dialog>
 
 <!-- ── Privacy & Legal ────────────────────────────────────────── -->
-<dialog bind:this={legalDialog} onclick={(e) => closeOnBackdrop(e, legalDialog)}>
+<dialog bind:this={legalDialog} class="dialog--wide" onclick={(e) => closeOnBackdrop(e, legalDialog)}>
 	<div class="modal">
 		<button class="modal__close" onclick={() => legalDialog.close()} aria-label={$t.footer.close}>
 			<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -87,29 +87,31 @@
 
 		<h2 class="modal__title">{$t.footer.legalTitle}</h2>
 
-		<div class="modal__section">
-			<p class="modal__label">{$t.footer.privacyHeading}</p>
-			<p class="modal__body">{$t.footer.privacyText1}</p>
-			<p class="modal__body">{$t.footer.privacyText2}</p>
-		</div>
+		<div class="modal__grid">
+			<div class="modal__section">
+				<p class="modal__label">{$t.footer.privacyHeading}</p>
+				<p class="modal__body">{$t.footer.privacyText1}</p>
+				<p class="modal__body">{$t.footer.privacyText2}</p>
+			</div>
 
-		<div class="modal__section">
-			<p class="modal__label">{$t.footer.dataHeading}</p>
-			<p class="modal__body">{$t.footer.dataText}</p>
-			<p class="modal__body">
-				<a href="https://www.fifatrainingcentre.com/en/fifa-world-cup-2026/match-report-hub.php"
-					target="_blank" rel="noopener">{$t.footer.dataSource} ↗</a>
-			</p>
-		</div>
+			<div class="modal__section">
+				<p class="modal__label">{$t.footer.dataHeading}</p>
+				<p class="modal__body">{$t.footer.dataText}</p>
+				<p class="modal__body">
+					<a href="https://www.fifatrainingcentre.com/en/fifa-world-cup-2026/match-report-hub.php"
+						target="_blank" rel="noopener">{$t.footer.dataSource} ↗</a>
+				</p>
+			</div>
 
-		<div class="modal__section">
-			<p class="modal__label">{$t.footer.disclaimerHeading}</p>
-			<p class="modal__body">{$t.footer.disclaimerText}</p>
-		</div>
+			<div class="modal__section">
+				<p class="modal__label">{$t.footer.disclaimerHeading}</p>
+				<p class="modal__body">{$t.footer.disclaimerText}</p>
+			</div>
 
-		<div class="modal__section">
-			<p class="modal__label">{$t.footer.copyrightHeading}</p>
-			<p class="modal__body">{$t.footer.copyrightText}</p>
+			<div class="modal__section">
+				<p class="modal__label">{$t.footer.copyrightHeading}</p>
+				<p class="modal__body">{$t.footer.copyrightText}</p>
+			</div>
 		</div>
 	</div>
 </dialog>
@@ -207,6 +209,11 @@
 		box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.15);
 	}
 
+	:global(dialog.dialog--wide) {
+		max-width: 820px;
+		max-height: none;
+	}
+
 	/* ── Modal inner ─────────────────────────────────────────── */
 	.modal {
 		position: relative;
@@ -254,6 +261,28 @@
 	}
 
 	/* ── Sections ────────────────────────────────────────────── */
+	.modal__grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0;
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.modal__grid .modal__section {
+		border-top: none;
+		padding: var(--sp-5);
+		border-right: 1px solid var(--border-soft);
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.modal__grid .modal__section:nth-child(even) {
+		border-right: none;
+	}
+
+	.modal__grid .modal__section:nth-last-child(-n+2) {
+		border-bottom: none;
+	}
+
 	.modal__section {
 		display: flex;
 		flex-direction: column;
@@ -378,7 +407,10 @@
 	}
 	.btn-sec:hover { background: var(--border); }
 
-	@media (max-width: 480px) {
+	@media (max-width: 640px) {
+		.modal__grid { grid-template-columns: 1fr; }
+		.modal__grid .modal__section { border-right: none; border-bottom: 1px solid var(--border-soft); }
+		.modal__grid .modal__section:last-child { border-bottom: none; }
 		.modal { padding: var(--sp-6); }
 	}
 </style>
