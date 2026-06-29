@@ -821,6 +821,24 @@ wrong page.
 - Match detail mobile layout marked as fully resolved (all responsive breakpoints were
   implemented in sessions 16–21).
 
+### Post-M9 — Session 26 (2026-06-29)
+
+#### i18n — playerDetail + compare namespaces (full coverage)
+
+- **`playerDetail` namespace** (70 keys × 6 locales): all strings on `/players/[id]` page now translated — section labels (Tournament Totals, Match-by-Match, All Stats per Match, Line Breaks per Match), all stat card labels, table headers, status badges (Started/Sub), zone distance labels (Walk/Jog/Run/High Speed/Sprint), yellow/red card labels, all per-match mini stat abbreviations.
+- **`compare` namespace** (25 keys × 6 locales): page title, search placeholder (Add a team/player/match…), empty state text (pick-type landing, single-entity hint, select-range hint), metric group labels (Possession/Attacking/Defensive/General/Passing/Physical/Score), match entity header ("Match N").
+- **`players/[id]/+page.svelte`:** Added `import { t } from '$lib/i18n'`; `posLabel` map converted from static object to `$derived` reusing `$t.players.pos{GK|DF|MF|FW}`; all 30+ stat labels now use `$t.playerDetail.*`; reuses `$t.keyStats.*` (interceptions, clearances, blocks, regains, aerialDuels, physicalDuels, pressures, goals) and `$t.players.col{TopSpeed|Sprints|HsRuns|PassPct}` where keys already existed.
+- **`compare/+page.svelte`:** Added `import { t } from '$lib/i18n'`; `TEAM_METRICS` and `PLAYER_METRICS` converted from `const` arrays to `$derived` so group names react to locale changes; renamed `{@const t = entity.team}` → `{@const tm = ...}` and `const t = entity?.totals` → `const totals = ...` to eliminate store shadowing; all page-level UI strings use `$t.compare.*`.
+
+### Post-M9 — Session 25d (2026-06-29)
+
+#### Feature — Comparison view: match comparison + Matches checkbox
+
+- **`frontend/src/lib/stores/comparison.svelte.ts`:** Extended `ComparisonType` from `'teams' | 'players'` to `'teams' | 'players' | 'matches'`.
+- **`frontend/src/routes/matches/+page.svelte`:** Comparison checkbox (cmp-check) added to each match card header; uses `getComparisonIds()` / `toggleComparison(match.id, 'matches')`; `e.stopPropagation()` prevents card click-to-navigate firing; disabled when max 5 reached.
+- **`frontend/src/routes/compare/+page.svelte`:** Match comparison grid: Score group (Total Goals, Goals Home/Away) + Possession group (xG Home/Away, Possession%, In Contest%, Total Shots); match entity header shows flag + score + flags + team short codes + match number/venue; remove button removes from URL.
+- **`frontend/src/routes/compare/+page.ts`:** Matches type loads `GET /api/v1/matches/{id}` + `GET /api/v1/matches/{id}/possession` in parallel; `loadSearchOptions` for matches fetches `/api/v1/matches/` and formats as `SHO 1-0 ARG · Match 23`.
+
 ### Post-M9 — Session 25c (2026-06-29)
 
 #### Feature — Comparison view Session C (polish + edge cases)

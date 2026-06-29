@@ -378,7 +378,7 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [ ] Full crawl verification in live Docker container
 - [ ] CI: `npm install` + `pip install` + fresh-volume seed test
 - [ ] Contract drift gate (openapi-typescript diff on schema changes)
-- [ ] Missing tons of i18n translations in the whole app.
+- [x] Missing tons of i18n translations in the whole app. (Session 26: playerDetail + compare namespaces, 70+25 keys × 6 locales)
 
 ## Post-M9 — Full dashboard build-out (Session 15)
 
@@ -499,3 +499,12 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [x] i18n: 31-key `footer` namespace in all 6 locales (EN · DE · ES · PT · FR · AR)
 - [x] Backdrop blur + dark mode border + SVG close icon — all dialog styling issues resolved
 - [x] Company name purged from git history (3 commits squashed → 1 clean commit)
+
+## Post-M9 — Session 26 (2026-06-29)
+
+### i18n — full player detail + compare pages
+
+- [x] `playerDetail` namespace: 70 keys × 6 locales — section labels, all stat card labels, table headers, status badges, zone distance labels, per-match mini labels
+- [x] `compare` namespace: 25 keys × 6 locales — page titles, search placeholders, empty states, metric group names, match entity header
+- [x] `players/[id]/+page.svelte`: fully i18n'd — `posLabel` map → `$derived` from `$t.players.*`; all stat labels use `$t.playerDetail.*` or reuse existing keyStats/players keys
+- [x] `compare/+page.svelte`: fully i18n'd — `TEAM_METRICS`/`PLAYER_METRICS` → `$derived` so group names react to locale changes; all page UI strings use `$t.compare.*`; `t` variable shadowing eliminated

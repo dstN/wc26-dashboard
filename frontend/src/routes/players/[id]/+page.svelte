@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
+	import { t } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -11,7 +12,9 @@
 	const perMatch = $derived(data.per_match ?? []);
 	const lineBreaks = $derived(data.lineBreaks ?? []);
 
-	const posLabel: Record<string, string> = { GK: 'Goalkeeper', DF: 'Defender', MF: 'Midfielder', FW: 'Forward' };
+	const posLabel = $derived<Record<string, string>>({
+		GK: $t.players.posGK, DF: $t.players.posDF, MF: $t.players.posMF, FW: $t.players.posFW
+	});
 	const posColor: Record<string, string> = {
 		GK: 'var(--c-lime)', DF: 'var(--c-teal)', MF: 'var(--c-blue)', FW: 'var(--c-red)'
 	};
@@ -34,14 +37,14 @@
 
 {#if data.error || !player}
 	<div class="error-state">
-		<a href="/players" class="back-link">← All Players</a>
-		<p class="error-text">Player not found.</p>
+		<a href="/players" class="back-link">{$t.playerDetail.backToPlayers}</a>
+		<p class="error-text">{$t.playerDetail.notFound}</p>
 	</div>
 {:else}
 	<!-- ── HEADER ─────────────────────────────────────────────────────────── -->
 	<section class="player-header">
 		<div class="player-header__nav">
-			<a href="/players" class="back-link">← All Players</a>
+			<a href="/players" class="back-link">{$t.playerDetail.backToPlayers}</a>
 			{#if team}
 				<a href="/teams/{team.id}" class="back-link" style="color: {teamTextColor(team.color)};">
 					{team.name}
@@ -78,214 +81,214 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="TOURNAMENT TOTALS" />
+				<SectionLabel label={$t.playerDetail.tournamentTotals} />
 				<div class="totals-grid">
 					<div class="total-card">
 						<span class="total-val">{totals.appearances ?? 0}</span>
-						<span class="total-lbl">Appearances</span>
+						<span class="total-lbl">{$t.playerDetail.appearances}</span>
 					</div>
 					<div class="total-card">
 						<span class="total-val">{totals.goals ?? 0}</span>
-						<span class="total-lbl">Goals</span>
+						<span class="total-lbl">{$t.keyStats.goals}</span>
 					</div>
 					<div class="total-card">
 						<span class="total-val">{totals.minutes_played ?? 0}</span>
-						<span class="total-lbl">Minutes</span>
+						<span class="total-lbl">{$t.playerDetail.minutes}</span>
 					</div>
 					{#if totals.passes_attempted != null}
 						<div class="total-card">
 							<span class="total-val">{totals.passes_attempted}</span>
-							<span class="total-lbl">Passes Attempted</span>
+							<span class="total-lbl">{$t.playerDetail.passesAttempted}</span>
 						</div>
 						<div class="total-card">
 							<span class="total-val">{totals.pass_completion_pct != null ? `${totals.pass_completion_pct}%` : '—'}</span>
-							<span class="total-lbl">Pass Completion</span>
+							<span class="total-lbl">{$t.playerDetail.passCompletion}</span>
 						</div>
 					{/if}
 					{#if totals.attempts_at_goal != null}
 						<div class="total-card">
 							<span class="total-val">{totals.attempts_at_goal}</span>
-							<span class="total-lbl">Shots</span>
+							<span class="total-lbl">{$t.playerDetail.shots}</span>
 						</div>
 					{/if}
 					{#if totals.tackles_made != null}
 						<div class="total-card">
 							<span class="total-val">{totals.tackles_made}</span>
-							<span class="total-lbl">Tackles Made</span>
+							<span class="total-lbl">{$t.playerDetail.tacklesMade}</span>
 						</div>
 						<div class="total-card">
 							<span class="total-val">{totals.tackles_won ?? '—'}</span>
-							<span class="total-lbl">Tackles Won</span>
+							<span class="total-lbl">{$t.playerDetail.tacklesWon}</span>
 						</div>
 						<div class="total-card">
 							<span class="total-val">{totals.interceptions ?? '—'}</span>
-							<span class="total-lbl">Interceptions</span>
+							<span class="total-lbl">{$t.keyStats.interceptions}</span>
 						</div>
 						<div class="total-card">
 							<span class="total-val">{totals.clearances ?? '—'}</span>
-							<span class="total-lbl">Clearances</span>
+							<span class="total-lbl">{$t.keyStats.clearances}</span>
 						</div>
 						{#if totals.blocks != null}
 							<div class="total-card">
 								<span class="total-val">{totals.blocks}</span>
-								<span class="total-lbl">Blocks</span>
+								<span class="total-lbl">{$t.keyStats.blocks}</span>
 							</div>
 						{/if}
 						{#if totals.possession_regains != null}
 							<div class="total-card">
 								<span class="total-val">{totals.possession_regains}</span>
-								<span class="total-lbl">Possession Regains</span>
+								<span class="total-lbl">{$t.keyStats.regains}</span>
 							</div>
 						{/if}
 						{#if totals.duels_won_aerial != null}
 							<div class="total-card">
 								<span class="total-val">{totals.duels_won_aerial}</span>
-								<span class="total-lbl">Aerial Duels Won</span>
+								<span class="total-lbl">{$t.keyStats.aerialDuels}</span>
 							</div>
 						{/if}
 						{#if totals.duels_won_physical != null}
 							<div class="total-card">
 								<span class="total-val">{totals.duels_won_physical}</span>
-								<span class="total-lbl">Physical Duels Won</span>
+								<span class="total-lbl">{$t.keyStats.physicalDuels}</span>
 							</div>
 						{/if}
 						{#if totals.pressing_direct != null}
 							<div class="total-card">
 								<span class="total-val">{totals.pressing_direct}</span>
-								<span class="total-lbl">Direct Pressures</span>
+								<span class="total-lbl">{$t.keyStats.pressures}</span>
 							</div>
 						{/if}
 						{#if totals.pressing_indirect != null}
 							<div class="total-card">
 								<span class="total-val">{totals.pressing_indirect}</span>
-								<span class="total-lbl">Indirect Pressures</span>
+								<span class="total-lbl">{$t.playerDetail.indirectPressures}</span>
 							</div>
 						{/if}
 						{#if totals.possession_contests_won != null}
 							<div class="total-card">
 								<span class="total-val">{totals.possession_contests_won}</span>
-								<span class="total-lbl">Contests Won</span>
+								<span class="total-lbl">{$t.playerDetail.contestsWon}</span>
 							</div>
 						{/if}
 						{#if totals.pushing_on_into_pressing != null}
 							<div class="total-card">
 								<span class="total-val">{totals.pushing_on_into_pressing}</span>
-								<span class="total-lbl">Push → Pressing</span>
+								<span class="total-lbl">{$t.playerDetail.pushToPressing}</span>
 							</div>
 						{/if}
 					{/if}
 					{#if totals.total_distance_m != null}
 						<div class="total-card">
 							<span class="total-val">{fkm(totals.total_distance_m)}</span>
-							<span class="total-lbl">Total Distance</span>
+							<span class="total-lbl">{$t.playerDetail.totalDistance}</span>
 						</div>
 					{/if}
 					{#if totals.top_speed_kmh != null}
 						<div class="total-card total-card--highlight">
 							<span class="total-val">{totals.top_speed_kmh} km/h</span>
-							<span class="total-lbl">Top Speed</span>
+							<span class="total-lbl">{$t.players.colTopSpeed}</span>
 						</div>
 					{/if}
 					{#if totals.sprints != null}
 						<div class="total-card">
 							<span class="total-val">{totals.sprints}</span>
-							<span class="total-lbl">Sprints</span>
+							<span class="total-lbl">{$t.players.colSprints}</span>
 						</div>
 					{/if}
 					{#if totals.high_speed_runs != null}
 						<div class="total-card">
 							<span class="total-val">{totals.high_speed_runs}</span>
-							<span class="total-lbl">High Speed Runs</span>
+							<span class="total-lbl">{$t.players.colHsRuns}</span>
 						</div>
 					{/if}
 					{#if totals.total_offers != null}
 						<div class="total-card">
 							<span class="total-val">{totals.total_offers}</span>
-							<span class="total-lbl">Total Offers</span>
+							<span class="total-lbl">{$t.playerDetail.totalOffers}</span>
 						</div>
 					{/if}
 					{#if totals.offers_received != null}
 						<div class="total-card">
 							<span class="total-val">{totals.offers_received}</span>
-							<span class="total-lbl">Offers Received</span>
+							<span class="total-lbl">{$t.playerDetail.offersReceived}</span>
 						</div>
 					{/if}
 					{#if totals.switches_of_play != null}
 						<div class="total-card">
 							<span class="total-val">{totals.switches_of_play}</span>
-							<span class="total-lbl">Switches of Play</span>
+							<span class="total-lbl">{$t.playerDetail.switchesOfPlay}</span>
 						</div>
 					{/if}
 					{#if totals.step_ins != null}
 						<div class="total-card">
 							<span class="total-val">{totals.step_ins}</span>
-							<span class="total-lbl">Step-Ins</span>
+							<span class="total-lbl">{$t.playerDetail.stepIns}</span>
 						</div>
 					{/if}
 					{#if totals.lb_attempted != null}
 						<div class="total-card">
 							<span class="total-val">{totals.lb_completed ?? '—'} / {totals.lb_attempted}</span>
-							<span class="total-lbl">Line Breaks Comp/Att</span>
+							<span class="total-lbl">{$t.playerDetail.lineBreaksCompAtt}</span>
 						</div>
 					{/if}
 					{#if totals.loose_ball_receptions != null}
 						<div class="total-card">
 							<span class="total-val">{totals.loose_ball_receptions}</span>
-							<span class="total-lbl">Loose Ball Receptions</span>
+							<span class="total-lbl">{$t.playerDetail.looseBallReceptions}</span>
 						</div>
 					{/if}
 					{#if totals.pushing_on != null}
 						<div class="total-card">
 							<span class="total-val">{totals.pushing_on}</span>
-							<span class="total-lbl">Pushing On</span>
+							<span class="total-lbl">{$t.playerDetail.pushingOn}</span>
 						</div>
 					{/if}
 					{#if totals.possession_interrupted != null}
 						<div class="total-card">
 							<span class="total-val">{totals.possession_interrupted}</span>
-							<span class="total-lbl">Possession Interrupted</span>
+							<span class="total-lbl">{$t.playerDetail.possessionInterrupted}</span>
 						</div>
 					{/if}
 					{#if totals.dist_zone1_m != null}
 						<div class="total-card">
 							<span class="total-val">{(totals.dist_zone1_m / 1000).toFixed(2)} km</span>
-							<span class="total-lbl">Walk (Zone 1)</span>
+							<span class="total-lbl">{$t.playerDetail.walkZone}</span>
 						</div>
 					{/if}
 					{#if totals.dist_zone2_m != null}
 						<div class="total-card">
 							<span class="total-val">{(totals.dist_zone2_m / 1000).toFixed(2)} km</span>
-							<span class="total-lbl">Jog (Zone 2)</span>
+							<span class="total-lbl">{$t.playerDetail.jogZone}</span>
 						</div>
 					{/if}
 					{#if totals.dist_zone3_m != null}
 						<div class="total-card">
 							<span class="total-val">{(totals.dist_zone3_m / 1000).toFixed(2)} km</span>
-							<span class="total-lbl">Run (Zone 3)</span>
+							<span class="total-lbl">{$t.playerDetail.runZone}</span>
 						</div>
 					{/if}
 					{#if totals.dist_zone4_m != null}
 						<div class="total-card">
 							<span class="total-val">{(totals.dist_zone4_m / 1000).toFixed(2)} km</span>
-							<span class="total-lbl">High Speed (Zone 4)</span>
+							<span class="total-lbl">{$t.playerDetail.highSpeedZone}</span>
 						</div>
 					{/if}
 					{#if totals.dist_zone5_m != null}
 						<div class="total-card">
 							<span class="total-val">{(totals.dist_zone5_m / 1000).toFixed(2)} km</span>
-							<span class="total-lbl">Sprint (Zone 5)</span>
+							<span class="total-lbl">{$t.playerDetail.sprintZone}</span>
 						</div>
 					{/if}
 					{#if totals.yellow_cards}
 						<div class="total-card total-card--yellow">
 							<span class="total-val">{totals.yellow_cards}</span>
-							<span class="total-lbl">Yellow Cards</span>
+							<span class="total-lbl">{$t.playerDetail.yellowCards}</span>
 						</div>
 					{/if}
 					{#if totals.red_cards}
 						<div class="total-card total-card--red">
 							<span class="total-val">{totals.red_cards}</span>
-							<span class="total-lbl">Red Cards</span>
+							<span class="total-lbl">{$t.playerDetail.redCards}</span>
 						</div>
 					{/if}
 				</div>
@@ -298,23 +301,23 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="MATCH-BY-MATCH" />
+				<SectionLabel label={$t.playerDetail.matchByMatch} />
 				<div class="matches-table-wrap">
 					<table class="matches-table">
 						<thead>
 							<tr>
-								<th>Match</th>
-								<th>Opponent</th>
-								<th>Status</th>
-								<th class="num">Min</th>
-								<th class="num">Goals</th>
-								<th class="num">Passes</th>
-								<th class="num">Pass%</th>
-								<th class="num">Shots</th>
-								<th class="num">Tkl</th>
-								<th class="num">Int</th>
-								<th class="num">Dist (km)</th>
-								<th class="num">Speed</th>
+								<th>{$t.playerDetail.colMatch}</th>
+								<th>{$t.playerDetail.colOpponent}</th>
+								<th>{$t.playerDetail.colStatus}</th>
+								<th class="num">{$t.playerDetail.colMin}</th>
+								<th class="num">{$t.keyStats.goals}</th>
+								<th class="num">{$t.playerDetail.colPasses}</th>
+								<th class="num">{$t.players.colPassPct}</th>
+								<th class="num">{$t.playerDetail.shots}</th>
+								<th class="num">{$t.playerDetail.colTkl}</th>
+								<th class="num">{$t.playerDetail.colInt}</th>
+								<th class="num">{$t.playerDetail.colDist}</th>
+								<th class="num">{$t.playerDetail.colSpeed}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -332,7 +335,7 @@
 									</td>
 									<td>
 										<span class="status-badge" class:status-started={m.started}>
-											{m.started ? 'Started' : 'Sub'}
+											{m.started ? $t.playerDetail.statusStarted : $t.playerDetail.statusSub}
 										</span>
 									</td>
 									<td class="num">{f(m.minutes_played)}</td>
@@ -356,7 +359,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="ALL STATS PER MATCH" />
+				<SectionLabel label={$t.playerDetail.allStatsPerMatch} />
 				{#each perMatch as m}
 					{#if m.passes_attempted != null || m.tackles_made != null || m.total_distance_m != null}
 						<div class="match-detail-block">
@@ -369,66 +372,66 @@
 							</div>
 							<div class="stat-grid">
 								{#if m.passes_attempted != null}
-									<div class="stat-item"><span class="si-v">{m.passes_attempted}</span><span class="si-l">Passes Att.</span></div>
-									<div class="stat-item"><span class="si-v">{m.passes_completed ?? '—'}</span><span class="si-l">Completed</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.pass_completion_pct, '%')}</span><span class="si-l">Pass%</span></div>
+									<div class="stat-item"><span class="si-v">{m.passes_attempted}</span><span class="si-l">{$t.playerDetail.passesAtt}</span></div>
+									<div class="stat-item"><span class="si-v">{m.passes_completed ?? '—'}</span><span class="si-l">{$t.playerDetail.completed}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.pass_completion_pct, '%')}</span><span class="si-l">{$t.players.colPassPct}</span></div>
 								{/if}
 								{#if m.crosses_attempted != null}
-									<div class="stat-item"><span class="si-v">{m.crosses_attempted}</span><span class="si-l">Crosses Att.</span></div>
-									<div class="stat-item"><span class="si-v">{m.crosses_completed ?? '—'}</span><span class="si-l">Comp.</span></div>
+									<div class="stat-item"><span class="si-v">{m.crosses_attempted}</span><span class="si-l">{$t.playerDetail.crossesAtt}</span></div>
+									<div class="stat-item"><span class="si-v">{m.crosses_completed ?? '—'}</span><span class="si-l">{$t.playerDetail.comp}</span></div>
 								{/if}
 								{#if m.crosses_inswing != null || m.crosses_outswing != null}
-									<div class="stat-item"><span class="si-v">{f(m.crosses_inswing)}</span><span class="si-l">Inswing</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.crosses_outswing)}</span><span class="si-l">Outswing</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.crosses_driven)}</span><span class="si-l">Driven</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.crosses_lofted)}</span><span class="si-l">Lofted</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.crosses_cutback)}</span><span class="si-l">Cutback</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.crosses_push_cross)}</span><span class="si-l">Push Cross</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.crosses_inswing)}</span><span class="si-l">{$t.playerDetail.inswing}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.crosses_outswing)}</span><span class="si-l">{$t.playerDetail.outswing}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.crosses_driven)}</span><span class="si-l">{$t.playerDetail.driven}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.crosses_lofted)}</span><span class="si-l">{$t.playerDetail.lofted}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.crosses_cutback)}</span><span class="si-l">{$t.playerDetail.cutback}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.crosses_push_cross)}</span><span class="si-l">{$t.playerDetail.pushCross}</span></div>
 								{/if}
 								{#if m.ball_progressions != null}
-									<div class="stat-item"><span class="si-v">{m.ball_progressions}</span><span class="si-l">Ball Progs.</span></div>
+									<div class="stat-item"><span class="si-v">{m.ball_progressions}</span><span class="si-l">{$t.playerDetail.ballProgs}</span></div>
 								{/if}
 								{#if m.take_ons != null}
-									<div class="stat-item"><span class="si-v">{m.take_ons}</span><span class="si-l">Take-Ons</span></div>
+									<div class="stat-item"><span class="si-v">{m.take_ons}</span><span class="si-l">{$t.playerDetail.takeOns}</span></div>
 								{/if}
 								{#if m.attempts_at_goal != null}
-									<div class="stat-item"><span class="si-v">{m.attempts_at_goal}</span><span class="si-l">Shots</span></div>
+									<div class="stat-item"><span class="si-v">{m.attempts_at_goal}</span><span class="si-l">{$t.playerDetail.shots}</span></div>
 								{/if}
 								{#if m.total_offers != null}
-									<div class="stat-item"><span class="si-v">{m.total_offers}</span><span class="si-l">Offers</span></div>
-									<div class="stat-item"><span class="si-v">{m.offers_received ?? '—'}</span><span class="si-l">Received</span></div>
+									<div class="stat-item"><span class="si-v">{m.total_offers}</span><span class="si-l">{$t.playerDetail.offers}</span></div>
+									<div class="stat-item"><span class="si-v">{m.offers_received ?? '—'}</span><span class="si-l">{$t.playerDetail.received}</span></div>
 								{/if}
 								{#if m.tackles_made != null}
-									<div class="stat-item"><span class="si-v">{m.tackles_made}</span><span class="si-l">Tackles</span></div>
-									<div class="stat-item"><span class="si-v">{m.tackles_won ?? '—'}</span><span class="si-l">Tkl Won</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.interceptions)}</span><span class="si-l">Intercep.</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.blocks)}</span><span class="si-l">Blocks</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.clearances)}</span><span class="si-l">Clearances</span></div>
+									<div class="stat-item"><span class="si-v">{m.tackles_made}</span><span class="si-l">{$t.playerDetail.tackles}</span></div>
+									<div class="stat-item"><span class="si-v">{m.tackles_won ?? '—'}</span><span class="si-l">{$t.playerDetail.tklWon}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.interceptions)}</span><span class="si-l">{$t.playerDetail.intercep}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.blocks)}</span><span class="si-l">{$t.keyStats.blocks}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.clearances)}</span><span class="si-l">{$t.keyStats.clearances}</span></div>
 								{/if}
 								{#if m.pressing_direct != null}
-									<div class="stat-item"><span class="si-v">{m.pressing_direct}</span><span class="si-l">Direct Press.</span></div>
+									<div class="stat-item"><span class="si-v">{m.pressing_direct}</span><span class="si-l">{$t.playerDetail.directPress}</span></div>
 								{/if}
 								{#if m.pressing_indirect != null}
-									<div class="stat-item"><span class="si-v">{m.pressing_indirect}</span><span class="si-l">Indirect Press.</span></div>
+									<div class="stat-item"><span class="si-v">{m.pressing_indirect}</span><span class="si-l">{$t.playerDetail.indirectPress}</span></div>
 								{/if}
 								{#if m.possession_contests_won != null}
-									<div class="stat-item"><span class="si-v">{m.possession_contests_won}</span><span class="si-l">Contests Won</span></div>
+									<div class="stat-item"><span class="si-v">{m.possession_contests_won}</span><span class="si-l">{$t.playerDetail.contestsWon}</span></div>
 								{/if}
 								{#if m.pushing_on_into_pressing != null}
-									<div class="stat-item"><span class="si-v">{m.pushing_on_into_pressing}</span><span class="si-l">Push→Press.</span></div>
+									<div class="stat-item"><span class="si-v">{m.pushing_on_into_pressing}</span><span class="si-l">{$t.playerDetail.pushToPressing}</span></div>
 								{/if}
 								{#if m.duels_won_aerial != null}
-									<div class="stat-item"><span class="si-v">{m.duels_won_aerial}</span><span class="si-l">Aerial Duels</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.duels_won_physical)}</span><span class="si-l">Phys. Duels</span></div>
+									<div class="stat-item"><span class="si-v">{m.duels_won_aerial}</span><span class="si-l">{$t.playerDetail.aerialDuels}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.duels_won_physical)}</span><span class="si-l">{$t.playerDetail.physDuels}</span></div>
 								{/if}
 								{#if m.possession_regains != null}
-									<div class="stat-item"><span class="si-v">{m.possession_regains}</span><span class="si-l">Poss. Regains</span></div>
+									<div class="stat-item"><span class="si-v">{m.possession_regains}</span><span class="si-l">{$t.playerDetail.possRegains}</span></div>
 								{/if}
 								{#if m.total_distance_m != null}
-									<div class="stat-item"><span class="si-v">{(m.total_distance_m / 1000).toFixed(1)} km</span><span class="si-l">Distance</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.high_speed_runs)}</span><span class="si-l">HS Runs</span></div>
-									<div class="stat-item"><span class="si-v">{f(m.sprints)}</span><span class="si-l">Sprints</span></div>
-									<div class="stat-item"><span class="si-v">{m.top_speed_kmh ?? '—'} km/h</span><span class="si-l">Top Speed</span></div>
+									<div class="stat-item"><span class="si-v">{(m.total_distance_m / 1000).toFixed(1)} km</span><span class="si-l">{$t.playerDetail.distance}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.high_speed_runs)}</span><span class="si-l">{$t.players.colHsRuns}</span></div>
+									<div class="stat-item"><span class="si-v">{f(m.sprints)}</span><span class="si-l">{$t.players.colSprints}</span></div>
+									<div class="stat-item"><span class="si-v">{m.top_speed_kmh ?? '—'} km/h</span><span class="si-l">{$t.players.colTopSpeed}</span></div>
 								{/if}
 							</div>
 						</div>
@@ -443,20 +446,20 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="LINE BREAKS PER MATCH" />
+				<SectionLabel label={$t.playerDetail.lineBreaksPerMatch} />
 				<div class="matches-table-wrap">
 					<table class="matches-table">
 						<thead>
 							<tr>
-								<th>Match</th>
-								<th class="num">Att</th>
-								<th class="num">Comp</th>
-								<th class="num">Through</th>
-								<th class="num">Around</th>
-								<th class="num">Over</th>
-								<th class="num">Pass</th>
-								<th class="num">Cross</th>
-								<th class="num">Ball Prog</th>
+								<th>{$t.playerDetail.colMatch}</th>
+								<th class="num">{$t.playerDetail.lbAtt}</th>
+								<th class="num">{$t.playerDetail.lbComp}</th>
+								<th class="num">{$t.playerDetail.lbThrough}</th>
+								<th class="num">{$t.playerDetail.lbAround}</th>
+								<th class="num">{$t.playerDetail.lbOver}</th>
+								<th class="num">{$t.playerDetail.lbPass}</th>
+								<th class="num">{$t.playerDetail.lbCross}</th>
+								<th class="num">{$t.playerDetail.lbBallProg}</th>
 							</tr>
 						</thead>
 						<tbody>

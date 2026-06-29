@@ -3,6 +3,7 @@
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import { teamColorVar, badgeTextColor, flagCode } from '$lib/tokens';
 	import { goto } from '$app/navigation';
+	import { t } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -42,9 +43,9 @@
 	}
 
 	// ── Team metrics ───────────────────────────────────────────────────────────
-	const TEAM_METRICS = [
+	const TEAM_METRICS = $derived([
 		{
-			group: 'Possession',
+			group: $t.compare.grpPossession,
 			rows: [
 				{ label: 'Avg xG', key: 'xg', fmt: (v: number) => v.toFixed(2) },
 				{ label: 'Avg Possession', key: 'possession_pct', fmt: (v: number) => `${v.toFixed(1)}%` },
@@ -52,7 +53,7 @@
 			],
 		},
 		{
-			group: 'Attacking',
+			group: $t.compare.grpAttacking,
 			rows: [
 				{ label: 'Avg Goals', key: 'goals', fmt: (v: number) => v.toFixed(1) },
 				{ label: 'Avg Shots', key: 'shots_total', fmt: (v: number) => v.toFixed(0) },
@@ -64,7 +65,7 @@
 			],
 		},
 		{
-			group: 'Defensive',
+			group: $t.compare.grpDefensive,
 			rows: [
 				{
 					label: 'Avg Goals Conceded',
@@ -75,7 +76,7 @@
 				{ label: 'Avg Interceptions', key: 'interceptions', fmt: (v: number) => v.toFixed(0) },
 			],
 		},
-	];
+	]);
 
 	function getTeamVal(entity: any, key: string): number | null {
 		const avgs = entity?.avgStats?.averages;
@@ -89,9 +90,9 @@
 	}
 
 	// ── Player metrics ─────────────────────────────────────────────────────────
-	const PLAYER_METRICS = [
+	const PLAYER_METRICS = $derived([
 		{
-			group: 'General',
+			group: $t.compare.grpGeneral,
 			rows: [
 				{ label: 'Apps', key: 'appearances', fmt: (v: number) => String(v) },
 				{ label: 'Goals', key: 'goals', fmt: (v: number) => String(v) },
@@ -102,7 +103,7 @@
 			],
 		},
 		{
-			group: 'Passing',
+			group: $t.compare.grpPassing,
 			rows: [
 				{
 					label: 'Passes Att.',
@@ -127,7 +128,7 @@
 			],
 		},
 		{
-			group: 'Defensive',
+			group: $t.compare.grpDefensive,
 			rows: [
 				{ label: 'Tackles Won', key: 'tackles_won', fmt: (v: number) => String(v ?? 0) },
 				{
@@ -150,7 +151,7 @@
 			],
 		},
 		{
-			group: 'Physical',
+			group: $t.compare.grpPhysical,
 			rows: [
 				{
 					label: 'Distance (km)',
@@ -170,12 +171,12 @@
 				},
 			],
 		},
-	];
+	]);
 
 	function getPlayerVal(entity: any, key: string): number | null {
-		const t = entity?.totals;
-		if (!t) return null;
-		const v = t[key];
+		const totals = entity?.totals;
+		if (!totals) return null;
+		const v = totals[key];
 		return v != null ? Number(v) : null;
 	}
 
@@ -197,20 +198,22 @@
 </script>
 
 <svelte:head>
-	<title>Compare {type === 'teams' ? 'Teams' : type === 'players' ? 'Players' : type === 'matches' ? 'Matches' : ''} — EFI Data Engine</title>
+	<title>
+		{type === 'teams' ? $t.compare.titleTeams : type === 'players' ? $t.compare.titlePlayers : type === 'matches' ? $t.compare.titleMatches : $t.compare.titleGeneric} — EFI Data Engine
+	</title>
 </svelte:head>
 
 <div class="page">
 	<header class="page-header">
-		<SectionLabel label="COMPARE" />
+		<SectionLabel label={$t.compare.label} />
 		<h1 class="page-title">
-			{type === 'teams' ? 'Team Comparison' : type === 'players' ? 'Player Comparison' : type === 'matches' ? 'Match Comparison' : 'Comparison'}
+			{type === 'teams' ? $t.compare.titleTeams : type === 'players' ? $t.compare.titlePlayers : type === 'matches' ? $t.compare.titleMatches : $t.compare.titleGeneric}
 		</h1>
 		<p class="page-sub">
 			{#if entities.length >= 2}
-				{entities.length} {type} selected · <a href="/{type}" class="back-link">← Change selection</a>
+				{entities.length} {type} {$t.compare.selectedCount} · <a href="/{type}" class="back-link">{$t.compare.changeSelection}</a>
 			{:else}
-				<a href="/{type ?? 'teams'}" class="back-link">← Select entities to compare</a>
+				<a href="/{type ?? 'teams'}" class="back-link">{$t.compare.selectEntities}</a>
 			{/if}
 		</p>
 	</header>
@@ -223,8 +226,8 @@
 					class="search-input"
 					type="text"
 					placeholder={isFull
-						? 'Maximum 5 selected'
-						: `Add ${type === 'teams' ? 'a team' : type === 'players' ? 'a player' : 'a match'}…`}
+						? $t.compare.maxSelected
+						: type === 'teams' ? $t.compare.addTeam : type === 'players' ? $t.compare.addPlayer : $t.compare.addMatch}
 					disabled={isFull}
 					autocomplete="off"
 					bind:value={searchQuery}
@@ -250,7 +253,7 @@
 				{/if}
 			</div>
 			{#if ids.length >= 2}
-				<p class="search-hint">{ids.length}/{MAX} selected · type to add more</p>
+				<p class="search-hint">{ids.length}/{MAX} {$t.compare.selectedCount} · {$t.compare.typeToAddMore}</p>
 			{/if}
 		</div>
 	{/if}
@@ -259,38 +262,38 @@
 	{#if entities.length < 2}
 		{#if !type}
 			<div class="empty-state empty-state--pick">
-				<p class="empty-title">What would you like to compare?</p>
+				<p class="empty-title">{$t.compare.pickTitle}</p>
 				<div class="pick-row">
 					<a href="/teams" class="pick-card">
 						<span class="pick-card__icon">🏳️</span>
-						<span class="pick-card__label">Teams</span>
-						<span class="pick-card__sub">Compare up to 5 nations</span>
+						<span class="pick-card__label">{$t.nav.teams}</span>
+						<span class="pick-card__sub">{$t.compare.pickTeamsSub}</span>
 					</a>
 					<a href="/players" class="pick-card">
 						<span class="pick-card__icon">👤</span>
-						<span class="pick-card__label">Players</span>
-						<span class="pick-card__sub">Compare up to 5 players</span>
+						<span class="pick-card__label">{$t.nav.players}</span>
+						<span class="pick-card__sub">{$t.compare.pickPlayersSub}</span>
 					</a>
 					<a href="/matches" class="pick-card">
 						<span class="pick-card__icon">⚽</span>
-						<span class="pick-card__label">Matches</span>
-						<span class="pick-card__sub">Compare up to 5 matches</span>
+						<span class="pick-card__label">{$t.nav.matches}</span>
+						<span class="pick-card__sub">{$t.compare.pickMatchesSub}</span>
 					</a>
 				</div>
 			</div>
 		{:else if ids.length === 1}
 			<div class="empty-state">
 				<p>
-					1 {type === 'teams' ? 'team' : type === 'players' ? 'player' : 'match'} selected — add at least one more using the search above, or go back to the
-					<a href="/{type}">listing page</a>.
+					1 {type === 'teams' ? $t.compare.singleTeam : type === 'players' ? $t.compare.singlePlayer : $t.compare.singleMatch} {$t.compare.singleHintAfter}
+					<a href="/{type}">{$t.compare.listingPage}</a>.
 				</p>
 			</div>
 		{:else}
 			<div class="empty-state">
 				<p>
-					Select 2–{MAX}
-					{type} from the
-					<a href="/{type}">ranking page</a>
+					{$t.compare.selectHintBefore}
+					{type} {$t.compare.selectHintFrom}
+					<a href="/{type}">{$t.compare.rankingPage}</a>
 					or search above.
 				</p>
 			</div>
@@ -303,28 +306,28 @@
 			<div class="compare-body">
 				<div class="compare-grid" style="--cols: {entities.length}">
 					<div class="metric-col">
-						<div class="metric-header">Metric</div>
+						<div class="metric-header">{$t.compare.metricLabel}</div>
 					</div>
 					{#each entities as entity}
-						{@const t = entity.team}
+						{@const tm = entity.team}
 						<div class="entity-col">
 							<div class="entity-header">
 								<div class="entity-header__top">
-									{#if flagCode(t.short_code)}
-										<span class="fi fi-{flagCode(t.short_code)} entity-flag" aria-hidden="true"
+									{#if flagCode(tm.short_code)}
+										<span class="fi fi-{flagCode(tm.short_code)} entity-flag" aria-hidden="true"
 										></span>
 									{/if}
 									<span
 										class="entity-badge"
-										style="background:{teamColorVar(t.color)};color:{badgeTextColor(t.color)};"
-										>{t.short_code}</span
+										style="background:{teamColorVar(tm.color)};color:{badgeTextColor(tm.color)};"
+										>{tm.short_code}</span
 									>
 								</div>
-								<a href="/teams/{t.id}" class="entity-name">{t.name}</a>
+								<a href="/teams/{tm.id}" class="entity-name">{tm.name}</a>
 								<button
 									class="entity-remove"
-									aria-label="Remove {t.name}"
-									onclick={() => removeEntity(t.id)}>✕</button
+									aria-label="Remove {tm.name}"
+									onclick={() => removeEntity(tm.id)}>✕</button
 								>
 							</div>
 						</div>
@@ -346,7 +349,7 @@
 										<div class="bar-wrap">
 											<div
 												class="bar"
-												style="width:{(val / max) * 100}%; background:{teamColorVar(entity.team.color)};"
+												style="width:{(val / max) * 100}%; background:{teamColorVar(entity?.team?.color)};"
 											></div>
 										</div>
 										<span class="metric-val">{row.fmt(val)}</span>
@@ -368,11 +371,10 @@
 			<div class="compare-body">
 				<div class="compare-grid" style="--cols: {entities.length}">
 					<div class="metric-col">
-						<div class="metric-header">Metric</div>
+						<div class="metric-header">{$t.compare.metricLabel}</div>
 					</div>
 					{#each entities as entity}
 						{@const m = entity}
-						{@const poss = m.possession}
 						<div class="entity-col">
 							<div class="entity-header">
 								<div class="entity-header__top">
@@ -388,7 +390,7 @@
 									{m.team_a?.short_code ?? '?'} vs {m.team_b?.short_code ?? '?'}
 								</span>
 								<span class="match-meta-line">
-									Match {m.match_no}{m.venue ? ` · ${m.venue}` : ''}
+									{$t.compare.matchNo} {m.match_no}{m.venue ? ` · ${m.venue}` : ''}
 								</span>
 								<button
 									class="entity-remove"
@@ -400,7 +402,7 @@
 					{/each}
 
 					<!-- Score group -->
-					<div class="metric-group-label metric-col">Score</div>
+					<div class="metric-group-label metric-col">{$t.compare.grpScore}</div>
 					{#each Array(entities.length) as _}
 						<div class="metric-group-label"></div>
 					{/each}
@@ -425,7 +427,7 @@
 					{/each}
 
 					<!-- Possession group -->
-					<div class="metric-group-label metric-col">Possession</div>
+					<div class="metric-group-label metric-col">{$t.compare.grpPossessionShooting}</div>
 					{#each Array(entities.length) as _}
 						<div class="metric-group-label"></div>
 					{/each}
@@ -468,7 +470,7 @@
 			<div class="compare-body">
 				<div class="compare-grid" style="--cols: {entities.length}">
 					<div class="metric-col">
-						<div class="metric-header">Metric</div>
+						<div class="metric-header">{$t.compare.metricLabel}</div>
 					</div>
 					{#each entities as entity}
 						{@const p = entity}
