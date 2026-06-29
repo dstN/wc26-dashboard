@@ -77,18 +77,20 @@
 				<SectionLabel label="TEAM COMPARISON" />
 				<div class="sort-pills">
 					<span class="sort-label">Sort by:</span>
-					{#each ([
-						{ key: 'goals', label: 'Goals' },
-						{ key: 'possession', label: 'Possession' },
-						{ key: 'xg', label: 'xG' },
-						{ key: 'conceded', label: 'Conceded' },
-					] as const) as s}
-						<button
-							class="sort-pill"
-							class:sort-pill--active={rankSort === s.key}
-							onclick={() => setRankSort(s.key)}
-						>{s.label}{rankSort === s.key ? (rankDir === -1 ? ' ↓' : ' ↑') : ''}</button>
-					{/each}
+					<div class="sort-pill-group">
+						{#each ([
+							{ key: 'goals', label: 'Goals' },
+							{ key: 'possession', label: 'Possession' },
+							{ key: 'xg', label: 'xG' },
+							{ key: 'conceded', label: 'Conceded' },
+						] as const) as s}
+							<button
+								class="sort-pill"
+								class:sort-pill--active={rankSort === s.key}
+								onclick={() => setRankSort(s.key)}
+							>{s.label}{rankSort === s.key ? (rankDir === -1 ? ' ↓' : ' ↑') : ''}</button>
+						{/each}
+					</div>
 				</div>
 			</div>
 			<div class="rank-table-wrap">
@@ -276,7 +278,7 @@
 	.sort-pills {
 		display: flex;
 		align-items: center;
-		gap: var(--sp-2);
+		gap: var(--sp-3);
 		flex-wrap: wrap;
 	}
 	.sort-label {
@@ -286,9 +288,17 @@
 		letter-spacing: 0.06em;
 		color: var(--muted);
 	}
+	.sort-pill-group {
+		display: flex;
+		gap: 2px;
+		background: var(--border);
+		border-radius: var(--r-pill);
+		padding: 2px;
+		flex-wrap: wrap;
+	}
 	.sort-pill {
-		padding: var(--sp-1) var(--sp-3);
-		border: 1px solid var(--border);
+		padding: 4px var(--sp-3);
+		border: none;
 		border-radius: var(--r-pill);
 		background: transparent;
 		font-size: var(--fs-meta);
@@ -296,12 +306,12 @@
 		font-family: inherit;
 		color: var(--muted);
 		cursor: pointer;
-		transition: all 0.15s;
+		transition: background 0.15s, color 0.15s;
+		white-space: nowrap;
 	}
-	.sort-pill:hover { color: var(--ink); border-color: var(--ink); }
+	.sort-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
 	.sort-pill--active {
 		background: var(--accent);
-		border-color: var(--accent);
 		color: #fff;
 	}
 	.rank-table-wrap { overflow-x: auto; }
