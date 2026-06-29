@@ -60,10 +60,10 @@
 			<span>Outcome</span>
 		</div>
 		{#each allShots as shot}
+			{@const pColor = shot.side === 'a' ? teamTextColor(team_a.color) : teamTextColor(team_b.color)}
+			{@const pId = shot.player_name ? playerNameMap[shot.player_name] : undefined}
 			<div class="stl__row stl__row--{shot.side}" class:stl__row--goal={shot.outcome?.includes('Goal')}>
 				<span class="stl__min">{shot.minute}'</span>
-				{@const pColor = shot.side === 'a' ? teamTextColor(team_a.color) : teamTextColor(team_b.color)}
-				{@const pId = shot.player_name ? playerNameMap[shot.player_name] : undefined}
 				{#if pId}
 					<a href="/players/{pId}" class="stl__player stl__player--link" style="color: {pColor}">
 						{#if shot.player_jersey != null}#{shot.player_jersey} {/if}{shot.player_name}
