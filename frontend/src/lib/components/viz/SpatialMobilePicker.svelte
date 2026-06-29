@@ -112,7 +112,7 @@
 	.smp { display: flex; flex-direction: column; gap: var(--sp-4); }
 	.controls-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; }
 
-	.pill-group { display: flex; gap: 2px; background: var(--border); border-radius: var(--r-pill); padding: 2px; }
+	.pill-group { display: flex; gap: 2px; background: var(--border); border-radius: var(--r-pill); padding: 2px; align-self: flex-start; }
 	.pill {
 		padding: 5px var(--sp-4); font-size: var(--fs-meta); font-weight: 600; font-family: inherit;
 		border-radius: var(--r-pill); cursor: pointer; color: var(--muted); background: transparent; border: none;
