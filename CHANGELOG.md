@@ -1000,9 +1000,9 @@ Team name labels in every visualisation component were plain `<span>` elements. 
 - Dashboard is non-commercial.
 - Legal disclaimer, data attribution, and Impressum are sufficient. No FIFA permission needed.
 
-#### Git history — "company name" purge
+#### Git history — company name purge
 
-- 3 footer commits that contained "company name" in content/message squashed via
+- 3 footer commits that contained the company name in content/message squashed via
   `git reset --soft <base-commit>` and recommitted clean as a single commit.
 
 ### Post-M9 — Session 18 follow-up (2026-06-28)

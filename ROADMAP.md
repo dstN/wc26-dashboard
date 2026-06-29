@@ -498,4 +498,4 @@ Known problems with the `TermTooltip` component used on Teams ("In Contest") and
 - [x] `.env.example`: all new env vars documented
 - [x] i18n: 31-key `footer` namespace in all 6 locales (EN · DE · ES · PT · FR · AR)
 - [x] Backdrop blur + dark mode border + SVG close icon — all dialog styling issues resolved
-- [x] "company name" purged from git history (3 commits squashed → 1 clean commit)
+- [x] Company name purged from git history (3 commits squashed → 1 clean commit)
