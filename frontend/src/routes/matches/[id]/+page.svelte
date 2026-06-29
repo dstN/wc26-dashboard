@@ -115,26 +115,6 @@
 			<div class="section-body">
 				<SectionLabel label="{$t.detail.possession}" />
 				<PossessionBar stats={possession} team_a={m.team_a} team_b={m.team_b} />
-				<div class="kpi-row">
-					<div class="kpi">
-						<span class="kpi__value">{(possession.possession_in_contest ?? 0).toFixed(1)}%</span>
-						<span class="kpi__label">{$t.detail.inContest}</span>
-					</div>
-					{#if possession.ball_recovery_time_avg != null}
-						<div class="kpi">
-							<span class="kpi__value">{possession.ball_recovery_time_avg.toFixed(1)}s</span>
-							<span class="kpi__label">{$t.detail.ballRecovery}</span>
-						</div>
-					{/if}
-					<div class="kpi">
-						<span class="kpi__value">{possession.goals_a ?? 0}</span>
-						<span class="kpi__label" style="color: {teamColorVar(m.team_a.color)};">{m.team_a.short_code} Goals</span>
-					</div>
-					<div class="kpi">
-						<span class="kpi__value">{possession.goals_b ?? 0}</span>
-						<span class="kpi__label" style="color: {teamColorVar(m.team_b.color)};">{m.team_b.short_code} Goals</span>
-					</div>
-				</div>
 			</div>
 		</section>
 	{/if}
