@@ -15,6 +15,8 @@
 	import DefensiveDetail from '$lib/components/viz/DefensiveDetail.svelte';
 	import GkDetail from '$lib/components/viz/GkDetail.svelte';
 	import SpatialMobilePicker from '$lib/components/viz/SpatialMobilePicker.svelte';
+	import LineupPanel from '$lib/components/viz/LineupPanel.svelte';
+	import PhaseFingerprint from '$lib/components/modules/PhaseFingerprint.svelte';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
@@ -37,6 +39,7 @@
 	const pressure = $derived(data.pressure);
 	const gkStats = $derived(data.gkStats);
 	const playerNameMap = $derived((data.playerNameMap ?? {}) as Record<string, number>);
+	const lineup = $derived(data.lineup ?? null);
 
 	function formatDate(raw: string): string {
 		if (!raw) return '';
@@ -142,6 +145,22 @@
 		</section>
 	{/if}
 
+	<!-- ── LINEUP ────────────────────────────────────────────────────────── -->
+	{#if lineup && (lineup.team_a?.starters?.length || lineup.team_b?.starters?.length)}
+		<section class="detail-section">
+			<div class="section-divider"></div>
+			<div class="section-body">
+				<SectionLabel label="Lineup" />
+				<LineupPanel
+					lineup_a={lineup.team_a}
+					lineup_b={lineup.team_b}
+					team_a={m.team_a}
+					team_b={m.team_b}
+				/>
+			</div>
+		</section>
+	{/if}
+
 	<!-- ── PHASES + LINE BREAKS ───────────────────────────────────────────── -->
 	{#if phases || lineBreaks}
 		<section class="detail-section">
@@ -169,6 +188,23 @@
 						/>
 					</div>
 				{/if}
+			</div>
+		</section>
+	{/if}
+
+	<!-- ── PHASE FINGERPRINT ─────────────────────────────────────────────── -->
+	{#if phases && (phases.team_a?.length || phases.team_b?.length)}
+		<section class="detail-section">
+			<div class="section-divider"></div>
+			<div class="section-body">
+				<SectionLabel label="Phase Fingerprint" />
+				<div class="fingerprint-wrap">
+					<PhaseFingerprint
+						{phases}
+						team_a={m.team_a}
+						team_b={m.team_b}
+					/>
+				</div>
 			</div>
 		</section>
 	{/if}
@@ -532,6 +568,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--sp-5);
+	}
+
+	/* ── Phase fingerprint ──────────────────────────────────────────── */
+	.fingerprint-wrap {
+		max-width: 360px;
 	}
 
 	/* ── Spatial ────────────────────────────────────────────────────── */

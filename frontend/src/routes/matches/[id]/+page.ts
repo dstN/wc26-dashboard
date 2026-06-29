@@ -15,7 +15,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 		const [
 			match, possession, phases, spatial, lineBreaks, finalThird,
 			defensive, keyStats, shots, passingNetwork, crosses, offerings, movement, pressure, gkStats,
-			playerNameMap
+			playerNameMap, lineup
 		] = await Promise.all([
 			get(`/api/v1/matches/${id}`),
 			get(`/api/v1/matches/${id}/possession`),
@@ -33,6 +33,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 			get(`/api/v1/matches/${id}/pressure`),
 			get(`/api/v1/matches/${id}/gk-stats`),
 			get(`/api/v1/matches/${id}/player-name-map`),
+			get(`/api/v1/matches/${id}/lineup`),
 		]);
 
 		if (!match) {
@@ -43,6 +44,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 			match, possession, phases, spatial, lineBreaks, finalThird,
 			defensive, keyStats, shots, passingNetwork, crosses, offerings, movement, pressure, gkStats,
 			playerNameMap: (playerNameMap ?? {}) as Record<string, number>,
+			lineup: lineup ?? null,
 		};
 	} catch (err) {
 		return { error: String(err), match: null };

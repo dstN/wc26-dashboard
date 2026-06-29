@@ -821,6 +821,38 @@ wrong page.
 - Match detail mobile layout marked as fully resolved (all responsive breakpoints were
   implemented in sessions 16–21).
 
+### Post-M9 — Session 25 (2026-06-29)
+
+#### Feature — second-yellow card detection in parser
+
+- **`ingestion/ingestion/parse_pmsr.py` — `reclassify_red_cards()`:** Extended to detect second-yellow dismissals. When a sub-off marker has no matching sub-on, the function now checks if a yellow card already exists within ±1 minute of the sub-off event; if so, the yellow is reclassified in-place to `"second_yellow"` instead of appending a `"red"`. Direct red cards are unchanged. `pmsr_to_sql.py` already counts `second_yellow` as a red card in the `red_cards` column.
+
+#### Feature — lineup panel on match detail pages
+
+- **`backend/app/routers/matches.py` — `GET /api/v1/matches/{id}/lineup`:** New endpoint returning starting XI and substitutes (with goals + cards) for both teams. Filters by `scope='match'` and `minutes_played > 0`; separates starters from subs via `stat.started`; sorts by position group (GK→DF→MF→FW) then jersey number.
+- **`frontend/src/lib/components/viz/LineupPanel.svelte`** (new): Two-column team layout with starters and subs. Position colour chips (lime=GK, teal=DF, blue=MF, red=FW). Event icons (⚽ goals, 🟨 yellow, 🟥 red). Player names link to `/players/[id]`. Grid: `26px 28px 1fr auto auto`; collapses to single column at 720px.
+- **`frontend/src/routes/matches/[id]/+page.ts`:** Lineup added as 17th parallel request.
+- **`frontend/src/routes/matches/[id]/+page.svelte`:** Lineup section rendered before Phases section when data is available.
+
+#### Feature — team performance trend sparklines on team detail
+
+- **`frontend/src/routes/teams/[id]/+page.svelte` — "Performance Trend" section:** Two SVG sparkline cards (Possession % and xG per match) drawn from existing match-history data. Inline polyline with computed normalization; min/max value labels + match-number x-axis. Section inserted between Phase Profile and Top Performers.
+
+#### Feature — PhaseFingerprint wired to real `match_phases` data
+
+- **`frontend/src/lib/components/modules/PhaseFingerprint.svelte`:** Removed the hardcoded verdict paragraph — the component was already fully data-driven via `phases.team_a` / `phases.team_b` props. Hardcoded string was a leftover stub.
+- **`frontend/src/routes/matches/[id]/+page.svelte`:** PhaseFingerprint section added (after PhasesBar/LineBreaks, before Spatial), wrapped in `max-width: 360px` container.
+
+#### Feature — Comparison view Session A
+
+- **`frontend/src/lib/stores/comparison.svelte.ts`** (new): Svelte 5 module-level `$state` store. Exports `getComparisonIds()`, `getComparisonType()`, `isSelected()`, `toggleComparison()`, `clearComparison()`, `compareUrl()`. Max 5 entities; resets when entity type changes; URL format `/compare?type=teams&ids=3,7,12`.
+- **`frontend/src/lib/components/layout/FloatingCompareBar.svelte`** (new): Fixed bottom-center bar, appears when ≥2 entities are selected. Count badge, "Compare →" link to `compareUrl()`, ✕ clear button. Slide-up `bar-in` animation on first render.
+- **`frontend/src/routes/+layout.svelte`:** `<FloatingCompareBar />` appended after `<Footer />`.
+- **`frontend/src/routes/teams/+page.svelte`:** `cmp-col` header + `cmp-check` toggle button on each ranking row; `cmp-selected` row highlight.
+- **`frontend/src/routes/players/+page.svelte`:** Same comparison checkboxes on all 5 ranking tabs (Scorers, Defenders, Midfielders, Forwards, Physical). GK and Discipline tabs excluded (no stable player ID in those views).
+- **`frontend/src/routes/compare/+page.ts`** (new): Extracts `type` + `ids` from URL; fetches team general+avgStats or player data in parallel; returns `{ type, ids, entities, error }`.
+- **`frontend/src/routes/compare/+page.svelte`** (new): Team comparison renders CSS Grid (`--cols` variable) with metric header row and proportional bar chart rows across 3 groups (Possession, Attacking, Defensive). Player comparison shows placeholder cards with a "coming in next session" note.
+
 ### Post-M9 — Session 23 (2026-06-29)
 
 #### Fix — accent button text and team pill contrast (proper token)

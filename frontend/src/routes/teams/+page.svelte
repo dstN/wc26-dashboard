@@ -4,6 +4,7 @@
 	import TermTooltip from '$lib/components/layout/TermTooltip.svelte';
 	import { teamTextColor, flagCode } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { toggleComparison, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -54,6 +55,9 @@
 	);
 
 	const f = (v: number | null | undefined, suffix = '') => v != null ? `${v}${suffix}` : '—';
+
+	const cmpIds = $derived(getComparisonIds());
+	const cmpFull = $derived(cmpIds.length >= MAX_COMPARISON);
 </script>
 
 <svelte:head>
@@ -97,6 +101,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
+							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rk">#</th>
 							<th>Nation</th>
 							<th class="num">Played</th>
@@ -110,7 +115,18 @@
 					</thead>
 					<tbody>
 						{#each sortedRankings as r, i}
-							<tr>
+							{@const isCmpSelected = cmpIds.includes(r.team.id)}
+							<tr class:cmp-selected={isCmpSelected}>
+								<td class="cmp-col">
+									<button
+										class="cmp-check"
+										class:cmp-check--on={isCmpSelected}
+										disabled={!isCmpSelected && cmpFull}
+										onclick={() => toggleComparison(r.team.id, 'teams')}
+										aria-label="{isCmpSelected ? 'Remove' : 'Add'} {r.team.name} from comparison"
+										title={!isCmpSelected && cmpFull ? `Max ${MAX_COMPARISON} teams` : ''}
+									>{isCmpSelected ? '✓' : '+'}</button>
+								</td>
 								<td class="rk rank-num">{i + 1}</td>
 								<td>
 									<a href="/teams/{r.team.id}" class="nation-link">
@@ -343,6 +359,31 @@
 	.positive { color: var(--c-lime-dark, var(--c-teal)); font-weight: 700; }
 	.negative { color: var(--c-red); font-weight: 700; }
 	.muted { color: var(--muted); }
+
+	/* ── Comparison checkbox ────────────────────────────────────────── */
+	.cmp-col { width: 32px; padding-left: var(--sp-2) !important; padding-right: 0 !important; }
+	.cmp-check {
+		width: 22px;
+		height: 22px;
+		border: 2px solid var(--border);
+		border-radius: var(--r-sm);
+		background: transparent;
+		color: var(--muted);
+		font-size: 13px;
+		font-weight: 800;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		transition: border-color 0.15s, background 0.15s, color 0.15s;
+		font-family: inherit;
+		line-height: 1;
+	}
+	.cmp-check:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+	.cmp-check--on { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+	.cmp-check:disabled { opacity: 0.35; cursor: not-allowed; }
+	.cmp-selected { background: color-mix(in srgb, var(--accent) 5%, transparent) !important; }
 
 	/* ── Nation link ─────────────────────────────────────────────────── */
 	.nation-link {

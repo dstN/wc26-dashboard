@@ -4,6 +4,7 @@
 	import TermTooltip from '$lib/components/layout/TermTooltip.svelte';
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { toggleComparison, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -212,6 +213,9 @@
 		return `${label}${sort === key ? (dir === -1 ? ' ↓' : ' ↑') : ''}`;
 	}
 
+	const cmpIds = $derived(getComparisonIds());
+	const cmpFull = $derived(cmpIds.length >= MAX_COMPARISON);
+
 	// ── Browse section ────────────────────────────────────────────────────────
 	let filterTeam = $state('');
 	let filterPos = $state('');
@@ -291,6 +295,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
+							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
 							<th>Player</th>
 							<th>Team</th>
@@ -304,7 +309,15 @@
 					</thead>
 					<tbody>
 						{#each sortedScorers.slice(0, 20) as p, i}
-							<tr>
+							{@const isCmpP = cmpIds.includes(p.id)}
+							<tr class:cmp-selected={isCmpP}>
+								<td class="cmp-col">
+									<button class="cmp-check" class:cmp-check--on={isCmpP}
+										disabled={!isCmpP && cmpFull}
+										onclick={() => toggleComparison(p.id, 'players')}
+										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
+									>{isCmpP ? '✓' : '+'}</button>
+								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
 									<a href="/players/{p.id}" class="player-link">
@@ -332,6 +345,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
+							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
 							<th>Player</th>
 							<th>Team</th>
@@ -345,7 +359,15 @@
 					</thead>
 					<tbody>
 						{#each sortedDefenders.slice(0, 20) as p, i}
-							<tr>
+							{@const isCmpP = cmpIds.includes(p.id)}
+							<tr class:cmp-selected={isCmpP}>
+								<td class="cmp-col">
+									<button class="cmp-check" class:cmp-check--on={isCmpP}
+										disabled={!isCmpP && cmpFull}
+										onclick={() => toggleComparison(p.id, 'players')}
+										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
+									>{isCmpP ? '✓' : '+'}</button>
+								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
 									<a href="/players/{p.id}" class="player-link">
@@ -373,6 +395,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
+							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
 							<th>Player</th>
 							<th>Team</th>
@@ -386,7 +409,15 @@
 					</thead>
 					<tbody>
 						{#each sortedMidfielders.slice(0, 20) as p, i}
-							<tr>
+							{@const isCmpP = cmpIds.includes(p.id)}
+							<tr class:cmp-selected={isCmpP}>
+								<td class="cmp-col">
+									<button class="cmp-check" class:cmp-check--on={isCmpP}
+										disabled={!isCmpP && cmpFull}
+										onclick={() => toggleComparison(p.id, 'players')}
+										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
+									>{isCmpP ? '✓' : '+'}</button>
+								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
 									<a href="/players/{p.id}" class="player-link">
@@ -414,6 +445,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
+							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
 							<th>Player</th>
 							<th>Team</th>
@@ -427,7 +459,15 @@
 					</thead>
 					<tbody>
 						{#each sortedForwards.slice(0, 20) as p, i}
-							<tr>
+							{@const isCmpP = cmpIds.includes(p.id)}
+							<tr class:cmp-selected={isCmpP}>
+								<td class="cmp-col">
+									<button class="cmp-check" class:cmp-check--on={isCmpP}
+										disabled={!isCmpP && cmpFull}
+										onclick={() => toggleComparison(p.id, 'players')}
+										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
+									>{isCmpP ? '✓' : '+'}</button>
+								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
 									<a href="/players/{p.id}" class="player-link">
@@ -455,6 +495,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
+							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
 							<th>Player</th>
 							<th>Team</th>
@@ -469,7 +510,15 @@
 					</thead>
 					<tbody>
 						{#each sortedPhysical.slice(0, 20) as p, i}
-							<tr>
+							{@const isCmpP = cmpIds.includes(p.id)}
+							<tr class:cmp-selected={isCmpP}>
+								<td class="cmp-col">
+									<button class="cmp-check" class:cmp-check--on={isCmpP}
+										disabled={!isCmpP && cmpFull}
+										onclick={() => toggleComparison(p.id, 'players')}
+										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
+									>{isCmpP ? '✓' : '+'}</button>
+								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
 									<a href="/players/{p.id}" class="player-link">
@@ -769,6 +818,24 @@
 	.rank-col {
 		width: 40px;
 	}
+	.cmp-col { width: 32px; padding-left: var(--sp-2) !important; padding-right: 0 !important; }
+	.cmp-check {
+		width: 22px; height: 22px;
+		border: 2px solid var(--border);
+		border-radius: var(--r-sm);
+		background: transparent;
+		color: var(--muted);
+		font-size: 13px; font-weight: 800;
+		cursor: pointer;
+		display: inline-flex; align-items: center; justify-content: center;
+		padding: 0;
+		transition: border-color 0.15s, background 0.15s, color 0.15s;
+		font-family: inherit; line-height: 1;
+	}
+	.cmp-check:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+	.cmp-check--on { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+	.cmp-check:disabled { opacity: 0.35; cursor: not-allowed; }
+	.cmp-selected { background: color-mix(in srgb, var(--accent) 5%, transparent) !important; }
 	.rank-num {
 		font-size: var(--fs-meta);
 		font-weight: 700;

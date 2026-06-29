@@ -483,6 +483,45 @@ async def get_pressure(match_id: int, db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/{match_id}/lineup", response_model=dict)
+async def get_lineup(match_id: int, db: AsyncSession = Depends(get_db)):
+    """Return starting XI and substitutes with goals/cards for both teams."""
+    match = await _get_match_or_404(db, match_id)
+    POS_ORDER = {"GK": 0, "DF": 1, "MF": 2, "FW": 3}
+
+    async def team_lineup(team_id: int) -> dict:
+        rows = (await db.execute(
+            select(Player, PlayerStat)
+            .join(PlayerStat,
+                  (PlayerStat.player_id == Player.id) &
+                  (PlayerStat.match_id == match_id) &
+                  (PlayerStat.scope == "match"))
+            .where(Player.team_id == team_id, PlayerStat.minutes_played > 0)
+        )).all()
+        starters, subs = [], []
+        for player, stat in rows:
+            entry = {
+                "id": player.id,
+                "name": player.name,
+                "position": player.position,
+                "jersey_number": player.jersey_number,
+                "minutes_played": stat.minutes_played,
+                "goals": stat.goals or 0,
+                "yellow_cards": stat.yellow_cards or 0,
+                "red_cards": stat.red_cards or 0,
+            }
+            (starters if stat.started else subs).append(entry)
+        sort_key = lambda p: (POS_ORDER.get(p["position"] or "", 9), p["jersey_number"] or 99)
+        starters.sort(key=sort_key)
+        subs.sort(key=sort_key)
+        return {"starters": starters, "subs": subs}
+
+    return {
+        "team_a": await team_lineup(match.team_a_id),
+        "team_b": await team_lineup(match.team_b_id),
+    }
+
+
 @router.get("/{match_id}/player-name-map", response_model=dict[str, int])
 async def get_player_name_map(match_id: int, db: AsyncSession = Depends(get_db)):
     """Return {player_name: player_id} for all players with stats in this match."""

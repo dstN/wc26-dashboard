@@ -108,6 +108,31 @@
 	const avgStats = $derived(data.avgStats ?? null);
 	let statsMode = $state<'avg' | 'total'>('avg');
 
+	const trendData = $derived(
+		matchList
+			.filter((e: any) => e.stats?.possession_team_a != null || e.stats?.xg_a != null)
+			.map((e: any, i: number) => ({
+				i,
+				matchNo: e.match.match_no,
+				poss: e.stats?.possession_team_a ?? null,
+				xg: e.stats?.xg_a ?? null,
+			}))
+	);
+
+	function sparkPoints(values: (number | null)[], height: number, maxVal?: number): string {
+		const n = values.length;
+		if (n < 2) return '';
+		const max = maxVal ?? Math.max(...values.filter((v): v is number => v != null), 0.01);
+		return values
+			.map((v, i) => {
+				const x = n === 1 ? 50 : (i / (n - 1)) * 100;
+				const y = v != null ? height - (v / max) * (height - 4) : null;
+				return y != null ? `${x.toFixed(1)},${y.toFixed(1)}` : null;
+			})
+			.filter(Boolean)
+			.join(' ');
+	}
+
 	function fv(totals: Record<string, number>, avgs: Record<string, number>, key: string, suffix = '', decimals = 1): string {
 		const v = statsMode === 'avg' ? avgs[key] : totals[key];
 		if (v == null) return '—';
@@ -228,6 +253,86 @@
 							{/each}
 						</div>
 					{/if}
+				</div>
+			</div>
+		</section>
+	{/if}
+
+	<!-- ── PERFORMANCE TREND ────────────────────────────────────────────── -->
+	{#if trendData.length >= 2}
+		<section class="matches-section">
+			<div class="section-divider"></div>
+			<div class="section-body">
+				<SectionLabel label="Performance Trend" />
+				<div class="trend-grid">
+					<div class="trend-card">
+						<span class="trend-label">Possession % per match</span>
+						<svg viewBox="0 0 100 44" class="trend-svg" aria-hidden="true">
+							<line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
+							{#each [25, 50, 75] as pct}
+								<line x1="0" y1={40 - pct * 0.36} x2="100" y2={40 - pct * 0.36}
+									stroke="var(--border-soft)" stroke-width="0.5" stroke-dasharray="2 2" />
+							{/each}
+							<polyline
+								points={sparkPoints(trendData.map(d => d.poss), 40, 100)}
+								fill="none"
+								stroke={teamColorVar(team.color)}
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+							{#each trendData as d, i}
+								{@const x = trendData.length === 1 ? 50 : (i / (trendData.length - 1)) * 100}
+								{@const y = d.poss != null ? 40 - (d.poss / 100) * 36 : null}
+								{#if y != null}
+									<circle cx={x} cy={y} r="2.5" fill={teamColorVar(team.color)} />
+								{/if}
+							{/each}
+						</svg>
+						<div class="trend-values">
+							{#each trendData as d}
+								<span class="trend-val">{d.poss != null ? d.poss.toFixed(0) + '%' : '—'}</span>
+							{/each}
+						</div>
+						<div class="trend-labels">
+							{#each trendData as d}
+								<span class="trend-match-no">M{d.matchNo}</span>
+							{/each}
+						</div>
+					</div>
+
+					<div class="trend-card">
+						<span class="trend-label">xG per match</span>
+						{@const maxXg = Math.max(...trendData.map(d => d.xg ?? 0), 1)}
+						<svg viewBox="0 0 100 44" class="trend-svg" aria-hidden="true">
+							<line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
+							<polyline
+								points={sparkPoints(trendData.map(d => d.xg), 40, maxXg)}
+								fill="none"
+								stroke="var(--accent)"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+							{#each trendData as d, i}
+								{@const x = trendData.length === 1 ? 50 : (i / (trendData.length - 1)) * 100}
+								{@const y = d.xg != null ? 40 - (d.xg / maxXg) * 36 : null}
+								{#if y != null}
+									<circle cx={x} cy={y} r="2.5" fill="var(--accent)" />
+								{/if}
+							{/each}
+						</svg>
+						<div class="trend-values">
+							{#each trendData as d}
+								<span class="trend-val">{d.xg != null ? d.xg.toFixed(2) : '—'}</span>
+							{/each}
+						</div>
+						<div class="trend-labels">
+							{#each trendData as d}
+								<span class="trend-match-no">M{d.matchNo}</span>
+							{/each}
+						</div>
+					</div>
 				</div>
 			</div>
 		</section>
@@ -636,6 +741,54 @@
 		text-align: right;
 	}
 
+	/* ── Performance trend ──────────────────────────────────────────── */
+	.trend-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--sp-6);
+	}
+	.trend-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-2);
+		padding: var(--sp-5);
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--r-md);
+	}
+	.trend-label {
+		font-size: var(--fs-meta);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+	}
+	.trend-svg {
+		width: 100%;
+		height: auto;
+		display: block;
+		overflow: visible;
+	}
+	.trend-values, .trend-labels {
+		display: flex;
+		justify-content: space-between;
+	}
+	.trend-val {
+		font-size: var(--fs-meta);
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+		text-align: center;
+		flex: 1;
+	}
+	.trend-match-no {
+		font-size: 10px;
+		font-weight: 600;
+		color: var(--muted);
+		text-align: center;
+		flex: 1;
+	}
+
 	/* ── Top performers grid ─────────────────────────────────────────── */
 	.performers-grid {
 		display: grid;
@@ -973,6 +1126,7 @@
 
 	/* ── Responsive ──────────────────────────────────────────────────── */
 	@media (max-width: 900px) {
+		.trend-grid { grid-template-columns: 1fr; }
 		.phase-bars { grid-template-columns: 1fr; }
 		.phase-row { grid-template-columns: 130px 1fr 36px; }
 	}

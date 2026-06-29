@@ -5,6 +5,7 @@
 	import RainbowRail from '$lib/components/primitives/RainbowRail.svelte';
 	import TopBar from '$lib/components/layout/TopBar.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
+	import FloatingCompareBar from '$lib/components/layout/FloatingCompareBar.svelte';
 	import { onMount } from 'svelte';
 	import { initLocale } from '$lib/i18n';
 	import type { Snippet } from 'svelte';
@@ -22,6 +23,7 @@
 		{@render children()}
 	</main>
 	<Footer />
+	<FloatingCompareBar />
 </Tooltip.Provider>
 
 <style>
