@@ -215,8 +215,8 @@
 		</p>
 	</header>
 
-	<!-- ── Search bar ─────────────────────────────────────────────────────── -->
-	{#if type}
+	<!-- ── Search bar (only when type known) ─────────────────────────────── -->
+	{#if type && searchOptions.length > 0}
 		<div class="search-section">
 			<div class="search-wrap">
 				<input
@@ -257,14 +257,39 @@
 
 	<!-- ── Empty state ────────────────────────────────────────────────────── -->
 	{#if entities.length < 2}
-		<div class="empty-state">
-			<p>
-				Select 2–{MAX}
-				{type ?? 'entities'} from the
-				<a href="/{type ?? 'teams'}">ranking page</a>
-				or search above to compare.
-			</p>
-		</div>
+		{#if !type}
+			<div class="empty-state empty-state--pick">
+				<p class="empty-title">What would you like to compare?</p>
+				<div class="pick-row">
+					<a href="/teams" class="pick-card">
+						<span class="pick-card__icon">🏳️</span>
+						<span class="pick-card__label">Teams</span>
+						<span class="pick-card__sub">Compare up to 5 nations</span>
+					</a>
+					<a href="/players" class="pick-card">
+						<span class="pick-card__icon">👤</span>
+						<span class="pick-card__label">Players</span>
+						<span class="pick-card__sub">Compare up to 5 players</span>
+					</a>
+				</div>
+			</div>
+		{:else if ids.length === 1}
+			<div class="empty-state">
+				<p>
+					1 {type === 'teams' ? 'team' : 'player'} selected — add at least one more using the search above, or go back to the
+					<a href="/{type}">ranking page</a>.
+				</p>
+			</div>
+		{:else}
+			<div class="empty-state">
+				<p>
+					Select 2–{MAX}
+					{type} from the
+					<a href="/{type}">ranking page</a>
+					or search above.
+				</p>
+			</div>
+		{/if}
 
 	<!-- ── TEAM comparison ────────────────────────────────────────────────── -->
 	{:else if type === 'teams'}
@@ -679,6 +704,47 @@
 	}
 	.empty-state a {
 		color: var(--accent);
+	}
+	.empty-state--pick {
+		font-size: inherit;
+	}
+	.empty-title {
+		font-size: var(--fs-h2);
+		font-weight: 300;
+		color: var(--muted);
+		margin-bottom: var(--sp-6);
+	}
+	.pick-row {
+		display: flex;
+		gap: var(--sp-4);
+		flex-wrap: wrap;
+	}
+	.pick-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--sp-2);
+		padding: var(--sp-6) var(--sp-8);
+		border: 1px solid var(--border);
+		border-radius: var(--r-md);
+		text-decoration: none;
+		transition: border-color 0.15s, box-shadow 0.15s;
+		min-width: 160px;
+	}
+	.pick-card:hover {
+		border-color: var(--accent);
+		box-shadow: var(--shadow-card);
+	}
+	.pick-card__icon {
+		font-size: 2rem;
+	}
+	.pick-card__label {
+		font-size: var(--fs-ui);
+		font-weight: 700;
+		color: var(--ink);
+	}
+	.pick-card__sub {
+		font-size: var(--fs-meta);
+		color: var(--muted);
 	}
 
 	/* ── Responsive ────────────────────────────────────────────────────────── */
