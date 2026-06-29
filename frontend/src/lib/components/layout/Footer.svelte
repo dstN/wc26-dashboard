@@ -414,7 +414,7 @@
 	.btn-pri {
 		flex-shrink: 0;
 		background: var(--accent);
-		color: var(--bg);
+		color: var(--accent-fg);
 		border: none;
 		border-radius: var(--r-sm);
 		padding: var(--sp-2) var(--sp-5);

@@ -46,6 +46,7 @@
 	--ink: #16140f;
 	--muted: #71685c;
 	--accent: #da1e37;
+	--accent-fg: #ffffff;
 	--positive: #16808a;
 	--gold-ink: #b8901a;
 	--pitch: #dfe8d8;
@@ -99,6 +100,7 @@
 	--ink: #ffffff;
 	--muted: rgba(255, 255, 255, 0.55);
 	--accent: #b6e62e;
+	--accent-fg: #0b0b0f;
 	--positive: #16c5a8;
 	--gold-ink: #ffd23f;
 	--pitch: linear-gradient(90deg, #0d2a1c, #103423);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { TeamSpatialSplit, Team } from '$lib/types/efi';
-	import { teamColorVar } from '$lib/tokens';
+	import { teamColorVar, badgeTextColor } from '$lib/tokens';
 
 	let {
 		spatial_a,
@@ -56,8 +56,8 @@
 	<div class="controls-row">
 		{#if hasSpatialB}
 			<div class="pill-group" role="group" aria-label="Nation">
-				<button class="pill pill--team" class:active={selectedTeam === 'a'} style="--tc:{teamColorVar(team_a.color)}" onclick={() => selectedTeam = 'a'}>{team_a.short_code}</button>
-				<button class="pill pill--team" class:active={selectedTeam === 'b'} style="--tc:{teamColorVar(team_b.color)}" onclick={() => selectedTeam = 'b'}>{team_b.short_code}</button>
+				<button class="pill pill--team" class:active={selectedTeam === 'a'} style="--tc:{teamColorVar(team_a.color)};--tc-text:{badgeTextColor(team_a.color)}" onclick={() => selectedTeam = 'a'}>{team_a.short_code}</button>
+				<button class="pill pill--team" class:active={selectedTeam === 'b'} style="--tc:{teamColorVar(team_b.color)};--tc-text:{badgeTextColor(team_b.color)}" onclick={() => selectedTeam = 'b'}>{team_b.short_code}</button>
 			</div>
 		{/if}
 		<div class="pill-group" role="group" aria-label="Block">
@@ -120,8 +120,8 @@
 	}
 	/* Scenario pills — same as desktop scenario-tab */
 	.pill--scenario.active { background: var(--ink); color: var(--bg); }
-	/* Team nation pills — team color background */
-	.pill--team.active { background: var(--tc, var(--ink)); color: #fff; }
+	/* Team nation pills — team color background, computed contrast text */
+	.pill--team.active { background: var(--tc, var(--ink)); color: var(--tc-text, #fff); }
 	/* Block type pills — same yellow/forest as desktop toggle-item */
 	.pill--block.active { background: var(--c-yellow); color: var(--c-forest); }
 	.pill--sm { padding: 4px var(--sp-3); }

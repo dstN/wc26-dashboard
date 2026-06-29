@@ -312,7 +312,7 @@
 	.sort-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
 	.sort-pill--active {
 		background: var(--accent);
-		color: var(--bg);
+		color: var(--accent-fg);
 	}
 	.rank-table-wrap { overflow-x: auto; }
 	.rank-table {

@@ -342,7 +342,7 @@
 		gap: var(--sp-2);
 		padding: var(--sp-3) var(--sp-5);
 		background: var(--accent);
-		color: var(--bg);
+		color: var(--accent-fg);
 		border-radius: var(--r-md);
 		font-size: var(--fs-ui);
 		font-weight: 700;

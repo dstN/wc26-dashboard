@@ -937,7 +937,7 @@
 		color: var(--muted);
 		transition: background 0.15s, color 0.15s;
 	}
-	.mode-btn--active { background: var(--accent); color: var(--bg); }
+	.mode-btn--active { background: var(--accent); color: var(--accent-fg); }
 	.stats-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
