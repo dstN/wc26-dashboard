@@ -821,6 +821,25 @@ wrong page.
 - Match detail mobile layout marked as fully resolved (all responsive breakpoints were
   implemented in sessions 16–21).
 
+### Post-M9 — Session 25c (2026-06-29)
+
+#### Feature — Comparison view Session C (polish + edge cases)
+
+- **`/compare` with no `type` param:** New "What would you like to compare?" landing with two pick cards (Teams → `/teams`, Players → `/players`). Replaces the generic "Select entities" text.
+- **`/compare` with exactly 1 entity in URL:** Targeted message "1 team/player selected — add at least one more" instead of the generic empty state.
+- **Search bar guard:** Search input is hidden until `searchOptions` have loaded (prevents a flash of a disabled input with no type set).
+
+### Post-M9 — Session 25b (2026-06-29)
+
+#### Feature — Comparison view Session B (full player comparison + search)
+
+- **`frontend/src/routes/compare/+page.ts`:** Now always loads `searchOptions` regardless of whether IDs ≥ 2. For teams: fetches `/api/v1/stats/leaderboards` → `team_rankings`. For players: fetches `/api/v1/players/` (all 1248 players). Returns `{ id, name, sub }` shape for both.
+- **`frontend/src/routes/compare/+page.svelte` — Player comparison:** Full stat grid with 4 metric groups (General: apps/goals/minutes/shots/take-ons/yellows; Passing: passes/pass%/ball-progs/line-breaks; Defensive: tackles/interceptions/blocks/clearances/regains/aerial-duels; Physical: distance-km/HS-runs/sprints/top-speed). Same proportional bar chart pattern as team comparison. Position colour chip (lime=GK, teal=DF, blue=MF, red=FW) in entity header.
+- **Search/autocomplete:** Text input with client-side filtering (≥2 chars). Dropdown hides on blur (150ms delay) while `onmousedown` + `preventDefault` allows clicks to register first. Adds entity by navigating to `/compare?type=…&ids=…+newId`.
+- **Remove buttons:** ✕ on each entity column header; navigates to URL without that ID; redirects to listing page if all removed.
+- **`safeColorVar()`:** Null-safe wrapper around `teamColorVar` — prevents crash when `entity.team?.color` is undefined.
+- **Responsive:** Metric column narrows to 140px and entity columns use `minmax(100px, 1fr)` at ≤720px. Search section spans full width on mobile.
+
 ### Post-M9 — Session 25 (2026-06-29)
 
 #### Feature — second-yellow card detection in parser

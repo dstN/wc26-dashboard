@@ -263,8 +263,8 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [x] Checkbox UI on Teams ranking table (`cmp-check` button + `cmp-selected` row highlight)
 - [x] Checkbox UI on Players ranking table (all 5 position tabs; GK + Discipline tabs excluded)
 - [x] `/compare` route — team comparison with CSS Grid + proportional bar chart rows (3 metric groups); player comparison placeholder
-- [ ] Session B: full player stat comparison, position-aware metric selection, search/autocomplete to add entities not on screen
-- [ ] Session C: polish, responsive layout, empty/loading states, edge cases (pending matches, missing stats)
+- [x] Session B: full player stat comparison (4 metric groups + proportional bars); search/autocomplete to add entities; ✕ remove buttons on entity headers — Session 25b
+- [x] Session C: type-pick landing, single-entity hint, search guard, responsive layout — Session 25c
 - [ ] Match comparison view: select 2–5 matches, compare head-to-head stats side by side
 
 ### Feature — missing visualizations
@@ -445,6 +445,17 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [x] `FloatingCompareBar.svelte` (new) — fixed bottom-center bar; slide-up animation; compare link + clear button
 - [x] Teams + Players ranking pages — `cmp-check` toggle buttons + `cmp-selected` row highlight
 - [x] `/compare` route — team comparison grid (3 metric groups, proportional bar charts); player placeholder
+
+## Post-M9 — Full dashboard build-out (Session 25b/c)
+
+- [x] `/compare` — full player comparison: 4 metric groups (General, Passing, Defensive, Physical) with proportional bars, position colour chips, team badges
+- [x] Search/autocomplete: text input filters all teams or players client-side (≥2 chars); add by clicking option; navigates to updated URL
+- [x] ✕ remove buttons on each entity column header; redirects to listing page if all removed
+- [x] `safeColorVar()` — null-safe wrapper preventing crash on undefined team color
+- [x] Empty state `/compare` with no type: pick cards for Teams and Players
+- [x] Single-entity hint: "add at least one more" message when only 1 ID in URL
+- [x] Search bar hidden until options loaded (no flash of disabled input)
+- [x] Responsive: 140px metric column + minmax(100px, 1fr) at ≤720px; search full-width on mobile
 
 ## Post-M9 — Full dashboard build-out (Session 23)
 
