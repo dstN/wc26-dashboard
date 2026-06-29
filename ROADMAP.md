@@ -107,7 +107,7 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [x] Schema: `UNIQUE KEY uq_player (team_id, jersey_number)` added to `players` table
 - [ ] `npm install` / `pip install` in CI (dependencies not yet verified in fresh container)
 - [ ] Live Docker run with fresh volume to verify all seeds apply cleanly
-- [ ] `parse_efi_pdf.py` deprecation (superseded by `parse_pmsr.py` + `pmsr_to_sql.py`)
+- [x] `parse_efi_pdf.py` deprecation — `DeprecationWarning` added; docstring updated to redirect to `parse_pmsr.py + pmsr_to_sql.py`
 
 ## Post-M9 — Full dashboard build-out (Session 1)
 
@@ -234,33 +234,25 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 
 ## Next steps — Golden Plate V2
 
-### Bug — Match detail page mobile layout
+### Bug — Match detail page mobile layout ✓ fixed
 
-`/matches/[id]` is not optimised for small screens and degrades severely on mobile:
+- [x] **Two-column stat sections** — `.two-col` collapses to single column at 1024px; `.two-col__cell` padding drops to `var(--sp-4)` at 720px
+- [x] **PitchSpatial** — desktop two-pitch layout hidden ≤600px; `SpatialMobilePicker` single-pitch shown on mobile (Session 21)
+- [x] **ShotTimeline** — 4th column hidden at 720px; 3rd column hidden at 520px
+- [x] **PassingNetwork** — `.pn` collapses to `grid-template-columns: 1fr` at 720px
+- [x] **Score header** — `flex-wrap: wrap` on scoreline; team name hides at 480px; score font shrinks at 720px and 480px
+- [x] **Section body padding** — drops from `var(--sp-8)` to `var(--sp-4)` on `.section-body`, `.match-header`, `.two-col__cell` at 720px
 
-- [ ] **Two-column stat sections** (`.two-col`, `.spatial-ft-grid`) don't collapse cleanly — content is cramped or overflows horizontally
-- [ ] **PitchSpatial** — two side-by-side pitches in compact mode are too narrow on a phone; should stack vertically at ≤600px
-- [ ] **KeyStatsTable** — three-column header (team A | label | team B) wraps awkwardly; consider hiding team names in the header and colouring values instead
-- [ ] **ShotTimeline** — delivery and body columns should be hidden below ~500px (already partially done but verify breakpoints)
-- [ ] **PassingNetwork** — two-column layout needs a single-column stacked view on mobile
-- [ ] **Score header** — team name + badge + flag row can overflow; needs `flex-wrap` + smaller font
-- [ ] General: all `padding: var(--sp-8)` section bodies need to drop to `var(--sp-4)` on mobile; `gap` values need tightening throughout the page
+### Bug — Mobile navigation menu ✓ fixed
 
-### Bug — Mobile navigation menu
+- [x] **Offcanvas overlay** — `.mobile-menu` converted to `position: fixed; top: 57px; left/right: 0; bottom: 0; z-index: 150; overflow-y: auto` with `animation: menu-in 0.18s ease` (fade + 6px translateY slide)
+- [x] **Hamburger → X animation** — `.topbar__burger--open` class added when `menuOpen`; CSS transforms rotate bar 1 to +45°, fade+scale bar 2 to 0, rotate bar 3 to −45°; all bars use `transition: transform 0.22s ease, opacity 0.22s ease`
 
-Known problems with the hamburger nav on `≤960px` breakpoint (`TopBar.svelte`):
+### Bug — TermTooltip / popover issues ✓ fixed
 
-- [ ] **No offcanvas slide-in** — menu currently expands inline, pushing page content down instead of overlaying it as a full-screen or slide-in drawer
-- [ ] **Hamburger doesn't animate** — icon stays as `☰` when open; should morph/animate to `✕` (e.g. CSS transform on the three bars, or swap SVG path)
-- [ ] Fix: convert open state to `position: fixed; inset: 0; z-index: 200` overlay with a slide-in transform (`translateX` from right or top); add `backdrop-filter` dim behind it; animate hamburger bars with CSS `transform` + `transition` on open/close
-
-### Bug — TermTooltip / popover issues
-
-Known problems with the `TermTooltip` component used on Teams ("In Contest") and Players (9 column headers):
-
-- [ ] **Text truncated** — tooltip content is not fully visible in all cases; long definitions get cut off
-- [ ] **Edge overflow causes horizontal scrollbar** — when the tooltip anchor is near the right edge of the viewport, the popover overflows the page horizontally instead of flipping left
-- [ ] Fix: clamp popover position to viewport bounds (use `getBoundingClientRect()` + dynamic left/right offset, or replace with a CSS-only `position: fixed` approach); ensure `max-width` + `white-space: normal` on the tooltip bubble
+- [x] `avoidCollisions={true}` + `collisionPadding={12}` on `Tooltip.Content` — Bits UI/Floating UI now flips side at viewport edges
+- [x] `white-space: normal; word-break: break-word; line-height: 1.45` added to tooltip CSS — no more truncation
+- [x] `z-index` raised to 200 (above mobile menu at 150); `box-shadow` added for depth
 
 ### Feature — comparison mode (NOT yet implemented)
 - [ ] Country comparison view: select 2–10 teams, compare key stats side by side
@@ -400,7 +392,7 @@ Known problems with the `TermTooltip` component used on Teams ("In Contest") and
 - [x] PressureDetail/DefensiveDetail Decimal crashes fixed (Session 14)
 - [x] total_movements 2026 bug fixed (Session 14)
 - [x] Extra shot-log page detection fixed for 5 affected matches (Session 14)
-- [ ] `parse_efi_pdf.py` deprecation (superseded by `parse_pmsr.py` + `pmsr_to_sql.py`)
+- [x] `parse_efi_pdf.py` deprecation — `DeprecationWarning` added; docstring updated to redirect to `parse_pmsr.py + pmsr_to_sql.py`
 - [ ] Full crawl verification in live Docker container
 - [ ] CI: `npm install` + `pip install` + fresh-volume seed test
 - [ ] Contract drift gate (openapi-typescript diff on schema changes)
@@ -449,7 +441,7 @@ Known problems with the `TermTooltip` component used on Teams ("In Contest") and
 - [x] Spatial control — empty right panel removed when `!hasSpatialB`
 - [x] TermTooltip — "In Contest" (Teams), 9 stat column headers (Players)
 - [x] Home page — removed xG/possession stats; match card clickable; CTA added
-- [ ] Player name links in shot log / passing network — backlog (needs name→ID endpoint)
+- [x] Player name links in shot log / passing network — `player-name-map` endpoint + ShotTimeline + PassingNetwork (Session 20)
 
 ## Post-M9 — Full dashboard build-out (Session 17)
 

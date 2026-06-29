@@ -788,6 +788,39 @@ wrong page.
 - **Removed empty CSS rule:** Pre-existing empty `.browse-section {}` that caused a
   `svelte-check` warning.
 
+### Post-M9 — Session 24 (2026-06-29)
+
+#### Fix — TermTooltip edge-of-viewport collision avoidance
+
+- **`TermTooltip.svelte`:** Added `avoidCollisions={true}` and `collisionPadding={12}` to
+  `Tooltip.Content` — tooltips near the right or bottom edge of the viewport now flip to the
+  opposite side instead of clipping. Additional CSS: `max-width: 260px`, `white-space: normal`,
+  `word-break: break-word`, `line-height: 1.45`, `box-shadow: 0 4px 12px rgba(0,0,0,0.25)`;
+  `.tooltip-def` gets `line-height: 1.5` for taller definitions.
+
+#### Feature — mobile nav offcanvas + hamburger → X animation
+
+- **`TopBar.svelte`:** Burger button gains `class:topbar__burger--open={menuOpen}`. When open:
+  - Top bar rotates `+45°` with `translateY(7px)`
+  - Middle bar fades out + `scaleX(0)`
+  - Bottom bar rotates `−45°` with `translateY(-7px)`
+  - Transition: `transform 0.22s ease, opacity 0.22s ease` on all three `burger-line` spans
+- **Mobile menu** converted from inline-flow (which pushed content down) to `position: fixed`
+  overlay (`top: 57px; left: 0; right: 0; bottom: 0; z-index: 150`). Enters with a
+  `menu-in` keyframe (`opacity 0→1; translateY -6px→0`). `overflow-y: auto` handles long nav
+  lists; `padding-bottom: env(safe-area-inset-bottom, 0)` for iOS home-bar clearance.
+
+#### Deprecation — `parse_efi_pdf.py`
+
+- **`ingestion/ingestion/parse_efi_pdf.py`:** Replaced docstring with a DEPRECATED header and
+  added `warnings.warn("parse_efi_pdf is deprecated ...", DeprecationWarning, stacklevel=2)` —
+  all production ingestion now goes through `parse_pmsr.py` + `pmsr_to_sql.py`.
+
+#### ROADMAP bookkeeping
+
+- Match detail mobile layout marked as fully resolved (all responsive breakpoints were
+  implemented in sessions 16–21).
+
 ### Post-M9 — Session 23 (2026-06-29)
 
 #### Fix — accent button text and team pill contrast (proper token)

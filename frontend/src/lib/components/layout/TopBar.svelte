@@ -54,6 +54,7 @@
 		{/if}
 		<button
 			class="topbar__burger"
+			class:topbar__burger--open={menuOpen}
 			aria-label={menuOpen ? 'Close menu' : 'Open menu'}
 			aria-expanded={menuOpen}
 			onclick={() => (menuOpen = !menuOpen)}
@@ -222,16 +223,39 @@
 		height: 2px;
 		background: var(--ink);
 		border-radius: 2px;
-		transition: opacity 0.15s;
+		transition: transform 0.22s ease, opacity 0.22s ease;
+		transform-origin: center;
+	}
+	.topbar__burger--open .burger-line:nth-child(1) {
+		transform: translateY(7px) rotate(45deg);
+	}
+	.topbar__burger--open .burger-line:nth-child(2) {
+		opacity: 0;
+		transform: scaleX(0);
+	}
+	.topbar__burger--open .burger-line:nth-child(3) {
+		transform: translateY(-7px) rotate(-45deg);
 	}
 
 	/* ── Mobile menu ─────────────────────────────────────────────────── */
 	:global(.mobile-menu) {
 		display: flex;
 		flex-direction: column;
+		position: fixed;
+		top: 57px;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 150;
 		background: var(--surface);
-		border-bottom: 1px solid var(--border);
-		padding: var(--sp-2) 0;
+		border-top: 1px solid var(--border);
+		overflow-y: auto;
+		padding-bottom: env(safe-area-inset-bottom, 0);
+		animation: menu-in 0.18s ease;
+	}
+	@keyframes menu-in {
+		from { opacity: 0; transform: translateY(-6px); }
+		to   { opacity: 1; transform: translateY(0); }
 	}
 	:global(.mobile-menu__link) {
 		padding: var(--sp-4) var(--sp-6);
