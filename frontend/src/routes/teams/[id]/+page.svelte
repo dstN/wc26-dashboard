@@ -652,6 +652,8 @@
 		border-radius: var(--r-md);
 		text-decoration: none;
 		transition: border-color 0.15s, transform 0.15s;
+		min-width: 0;
+		overflow: hidden;
 	}
 	.performer-card:hover {
 		border-color: var(--accent);
@@ -935,7 +937,7 @@
 		color: var(--muted);
 		transition: background 0.15s, color 0.15s;
 	}
-	.mode-btn--active { background: var(--accent); color: #fff; }
+	.mode-btn--active { background: var(--accent); color: var(--bg); }
 	.stats-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -976,8 +978,7 @@
 	}
 	@media (max-width: 720px) {
 		.team-header__body, .section-body {
-			padding-left: var(--sp-4);
-			padding-right: var(--sp-4);
+			padding: var(--sp-8) var(--sp-4);
 		}
 		.team-header__flag { width: 120px; height: 80px; right: var(--sp-4); }
 		.team-name { font-size: 2.25rem; }

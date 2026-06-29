@@ -21,11 +21,11 @@
 </script>
 
 <header class="topbar">
-	<div class="topbar__brand">
+	<a href="/" class="topbar__brand" aria-label="EFI Data Engine — Home">
 		<span class="efi-dot" aria-hidden="true"></span>
 		<span class="topbar__efi">EFI</span>
 		<span class="topbar__sub">DATA ENGINE</span>
-	</div>
+	</a>
 	<nav class="topbar__nav" aria-label="Main navigation">
 		{#each navItems as item}
 			<a
@@ -106,6 +106,7 @@
 		align-items: center;
 		gap: 12px;
 		flex: none;
+		text-decoration: none;
 	}
 	.efi-dot {
 		width: 22px;
