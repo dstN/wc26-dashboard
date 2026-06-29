@@ -788,6 +788,74 @@ wrong page.
 - **Removed empty CSS rule:** Pre-existing empty `.browse-section {}` that caused a
   `svelte-check` warning.
 
+### Post-M9 — Session 20 (2026-06-29)
+
+#### Bug fixes — contact form & i18n
+
+- **Backend — `pydantic[email]` extra:** `requirements.txt` changed `pydantic>=2.7.0` →
+  `pydantic[email]>=2.7.0`; fixes `ModuleNotFoundError: No module named 'email_validator'`
+  crash on startup introduced when `POST /api/v1/contact` was added last session
+- **i18n — stale contact strings:** All 6 locales still referenced the old `mailto:` approach
+  ("Opens your local email client…"). `contactNote` updated to "Your message is sent directly
+  to us. We'll reply to the email address you provide." and `contactSuccess` to
+  "Message sent! We'll get back to you shortly." across EN · DE · ES · PT · FR · AR
+- **`en.ts` apostrophe fix:** `sed` had introduced curly apostrophes inside single-quoted
+  TypeScript strings, causing a `Transform failed: Expected "}" but found "ll"` build error.
+  Fixed by switching `contactNote` and `contactSuccess` to double-quoted strings.
+
+#### Feature — contact form wired to API
+
+- **`Footer.svelte`:** `submitContact()` replaced the old `window.open(mailto:...)` stub with a
+  full `fetch()` `POST /api/v1/contact` call — JSON body (`name`/`email`/`message`), loading
+  state (`contactLoading` disables and relabels the button to `…`), inline error banner via
+  `.form-error`, and success state with "Send another message" secondary action.
+- `import { env } from '$env/dynamic/public'` moved to top of `<script>` block (was
+  accidentally placed after variable declarations — caused a build error in strict mode)
+
+#### Spatial Control — In / Out of Possession side-by-side
+
+- **`PitchSpatial.svelte`:** New `lockedScenario?: 'defensive' | 'possession'` prop.
+  When set, the scenario tab bar is hidden and the component is locked to that scenario.
+  `scenario` state initialised from `lockedScenario ?? initialScenario`.
+- **`matches/[id]/+page.svelte`:** Replaced the previous `PitchSpatial` + `FinalThirdZones`
+  side-by-side layout (which left the right half empty when FinalThirdZones had no data) with
+  two `PitchSpatial` instances — "Out of Possession" (left, `lockedScenario="defensive"`) and
+  "In Possession" (right, `lockedScenario="possession"`). Both columns are always filled.
+  `FinalThirdZones` moved to its own standalone `<section>` below.
+
+#### Feature — team names clickable in all viz components (8 components)
+
+Team name labels in every visualisation component were plain `<span>` elements. Converted to
+`<a href="/teams/{team.id}">` with `text-decoration: none` + hover underline:
+
+- `PossessionBar.svelte` (`.possession__team`)
+- `LineBreaksBars.svelte` (`.lb__team-name`)
+- `KeyStatsTable.svelte` (`.kst__tname`)
+- `GkDetail.svelte` (`.gk__tname`)
+- `DefensiveDetail.svelte` (`.dd__tname`)
+- `PressureDetail.svelte` (`.pr__tname`)
+- `PassingNetwork.svelte` (`.pn__col-header` — `div` → `a`, `display: block`)
+- `ShotTimeline.svelte` (`.stl__team`)
+
+#### Feature — player names clickable in shot log & passing network
+
+- **`GET /api/v1/matches/{id}/player-name-map`** (new endpoint): returns `{player_name: player_id}`
+  for all players with a `player_stats` row in the given match. Uses an exact-match join between
+  `Player.name` and `PlayerStat` — no fuzzy matching needed since both use the same PDF source.
+- **`matches/[id]/+page.ts`:** Fetches `player-name-map` as a 16th parallel request; passed as
+  `playerNameMap: Record<string, number>` in page data.
+- **`ShotTimeline.svelte`:** `playerNameMap?: Record<string, number>` prop (default `{}`).
+  Player cell renders as `<a href="/players/{id}">` when the name resolves; falls back to plain
+  `<span>` for names not in the map.
+- **`PassingNetwork.svelte`:** Same `playerNameMap` prop. `from_name` and `to_name` render as
+  links using the full name for lookup and `shortName()` for display.
+
+#### ROADMAP notes added (bugs tracked, not yet fixed)
+
+- TermTooltip / popover edge overflow + text truncation
+- Mobile navigation — content push instead of offcanvas + hamburger no animate-to-X
+- Match detail page — layout degrades severely on mobile (two-col grids, pitch pitches, tables)
+
 ### Post-M9 — Session 19 (2026-06-29)
 
 #### Footer — Impressum, Legal & Contact modals

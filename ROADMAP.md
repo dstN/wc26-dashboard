@@ -234,6 +234,18 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 
 ## Next steps — Golden Plate V2
 
+### Bug — Match detail page mobile layout
+
+`/matches/[id]` is not optimised for small screens and degrades severely on mobile:
+
+- [ ] **Two-column stat sections** (`.two-col`, `.spatial-ft-grid`) don't collapse cleanly — content is cramped or overflows horizontally
+- [ ] **PitchSpatial** — two side-by-side pitches in compact mode are too narrow on a phone; should stack vertically at ≤600px
+- [ ] **KeyStatsTable** — three-column header (team A | label | team B) wraps awkwardly; consider hiding team names in the header and colouring values instead
+- [ ] **ShotTimeline** — delivery and body columns should be hidden below ~500px (already partially done but verify breakpoints)
+- [ ] **PassingNetwork** — two-column layout needs a single-column stacked view on mobile
+- [ ] **Score header** — team name + badge + flag row can overflow; needs `flex-wrap` + smaller font
+- [ ] General: all `padding: var(--sp-8)` section bodies need to drop to `var(--sp-4)` on mobile; `gap` values need tightening throughout the page
+
 ### Bug — Mobile navigation menu
 
 Known problems with the hamburger nav on `≤960px` breakpoint (`TopBar.svelte`):
