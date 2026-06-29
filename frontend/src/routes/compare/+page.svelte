@@ -197,14 +197,14 @@
 </script>
 
 <svelte:head>
-	<title>Compare {type === 'teams' ? 'Teams' : 'Players'} — EFI Data Engine</title>
+	<title>Compare {type === 'teams' ? 'Teams' : type === 'players' ? 'Players' : type === 'matches' ? 'Matches' : ''} — EFI Data Engine</title>
 </svelte:head>
 
 <div class="page">
 	<header class="page-header">
 		<SectionLabel label="COMPARE" />
 		<h1 class="page-title">
-			{type === 'teams' ? 'Team Comparison' : type === 'players' ? 'Player Comparison' : 'Comparison'}
+			{type === 'teams' ? 'Team Comparison' : type === 'players' ? 'Player Comparison' : type === 'matches' ? 'Match Comparison' : 'Comparison'}
 		</h1>
 		<p class="page-sub">
 			{#if entities.length >= 2}
@@ -224,7 +224,7 @@
 					type="text"
 					placeholder={isFull
 						? 'Maximum 5 selected'
-						: `Add ${type === 'teams' ? 'a team' : 'a player'}…`}
+						: `Add ${type === 'teams' ? 'a team' : type === 'players' ? 'a player' : 'a match'}…`}
 					disabled={isFull}
 					autocomplete="off"
 					bind:value={searchQuery}
@@ -271,13 +271,18 @@
 						<span class="pick-card__label">Players</span>
 						<span class="pick-card__sub">Compare up to 5 players</span>
 					</a>
+					<a href="/matches" class="pick-card">
+						<span class="pick-card__icon">⚽</span>
+						<span class="pick-card__label">Matches</span>
+						<span class="pick-card__sub">Compare up to 5 matches</span>
+					</a>
 				</div>
 			</div>
 		{:else if ids.length === 1}
 			<div class="empty-state">
 				<p>
-					1 {type === 'teams' ? 'team' : 'player'} selected — add at least one more using the search above, or go back to the
-					<a href="/{type}">ranking page</a>.
+					1 {type === 'teams' ? 'team' : type === 'players' ? 'player' : 'match'} selected — add at least one more using the search above, or go back to the
+					<a href="/{type}">listing page</a>.
 				</p>
 			</div>
 		{:else}
@@ -350,6 +355,106 @@
 									{/if}
 								</div>
 							{/each}
+						{/each}
+					{/each}
+				</div>
+			</div>
+		</section>
+
+	<!-- ── MATCH comparison ───────────────────────────────────────────────── -->
+	{:else if type === 'matches'}
+		<section class="compare-section">
+			<div class="section-divider"></div>
+			<div class="compare-body">
+				<div class="compare-grid" style="--cols: {entities.length}">
+					<div class="metric-col">
+						<div class="metric-header">Metric</div>
+					</div>
+					{#each entities as entity}
+						{@const m = entity}
+						{@const poss = m.possession}
+						<div class="entity-col">
+							<div class="entity-header">
+								<div class="entity-header__top">
+									{#if flagCode(m.team_a?.short_code)}
+										<span class="fi fi-{flagCode(m.team_a.short_code)} entity-flag" aria-hidden="true"></span>
+									{/if}
+									<span class="match-score">{m.score_a ?? '–'}:{m.score_b ?? '–'}</span>
+									{#if flagCode(m.team_b?.short_code)}
+										<span class="fi fi-{flagCode(m.team_b.short_code)} entity-flag" aria-hidden="true"></span>
+									{/if}
+								</div>
+								<span class="entity-name match-teams">
+									{m.team_a?.short_code ?? '?'} vs {m.team_b?.short_code ?? '?'}
+								</span>
+								<span class="match-meta-line">
+									Match {m.match_no}{m.venue ? ` · ${m.venue}` : ''}
+								</span>
+								<button
+									class="entity-remove"
+									aria-label="Remove match"
+									onclick={() => removeEntity(m.id)}>✕</button
+								>
+							</div>
+						</div>
+					{/each}
+
+					<!-- Score group -->
+					<div class="metric-group-label metric-col">Score</div>
+					{#each Array(entities.length) as _}
+						<div class="metric-group-label"></div>
+					{/each}
+
+					{#each [
+						{ label: 'Total Goals', fn: (e: any) => (e.score_a ?? 0) + (e.score_b ?? 0), fmt: (v: number) => String(v) },
+						{ label: 'Goals (Home)', fn: (e: any) => e.score_a ?? 0, fmt: (v: number) => String(v) },
+						{ label: 'Goals (Away)', fn: (e: any) => e.score_b ?? 0, fmt: (v: number) => String(v) },
+					] as row}
+						{@const vals = entities.map((e: any) => row.fn(e))}
+						{@const maxV = Math.max(...vals, 0.01)}
+						<div class="metric-col metric-label">{row.label}</div>
+						{#each entities as entity, i}
+							{@const val = vals[i]}
+							<div class="entity-col metric-cell">
+								<div class="bar-wrap">
+									<div class="bar" style="width:{(val / maxV) * 100}%; background: var(--accent);"></div>
+								</div>
+								<span class="metric-val">{row.fmt(val)}</span>
+							</div>
+						{/each}
+					{/each}
+
+					<!-- Possession group -->
+					<div class="metric-group-label metric-col">Possession</div>
+					{#each Array(entities.length) as _}
+						<div class="metric-group-label"></div>
+					{/each}
+
+					{#each [
+						{ label: 'xG (Home)', key: 'xg_a', fmt: (v: number) => v.toFixed(2) },
+						{ label: 'xG (Away)', key: 'xg_b', fmt: (v: number) => v.toFixed(2) },
+						{ label: 'Possession %', key: 'possession_team_a', fmt: (v: number) => `${v.toFixed(1)}%` },
+						{ label: 'In Contest %', key: 'possession_in_contest', fmt: (v: number) => `${v.toFixed(1)}%` },
+						{ label: 'Total Shots', key: 'shots_total', fmt: (v: number) => String(v) },
+					] as row}
+						{@const vals = entities.map((e: any) => {
+							const v = e.possession?.[row.key];
+							return v != null ? Number(v) : null;
+						})}
+						{@const maxV = Math.max(...vals.map((v: any) => v ?? 0), 0.01)}
+						<div class="metric-col metric-label">{row.label}</div>
+						{#each entities as entity, i}
+							{@const val = vals[i]}
+							<div class="entity-col metric-cell">
+								{#if val != null}
+									<div class="bar-wrap">
+										<div class="bar" style="width:{(val / maxV) * 100}%; background: var(--accent);"></div>
+									</div>
+									<span class="metric-val">{row.fmt(val)}</span>
+								{:else}
+									<span class="metric-dash">—</span>
+								{/if}
+							</div>
 						{/each}
 					{/each}
 				</div>
@@ -745,6 +850,26 @@
 	.pick-card__sub {
 		font-size: var(--fs-meta);
 		color: var(--muted);
+	}
+
+	/* ── Match entity header extras ────────────────────────────────────────── */
+	.match-score {
+		font-size: var(--fs-h2);
+		font-weight: 900;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+		line-height: 1;
+	}
+	.match-teams {
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		color: var(--muted);
+		white-space: normal;
+	}
+	.match-meta-line {
+		font-size: var(--fs-meta);
+		color: var(--muted);
+		font-weight: 400;
 	}
 
 	/* ── Responsive ────────────────────────────────────────────────────────── */

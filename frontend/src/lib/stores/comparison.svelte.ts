@@ -1,4 +1,4 @@
-export type ComparisonType = 'teams' | 'players';
+export type ComparisonType = 'teams' | 'players' | 'matches';
 export const MAX_COMPARISON = 5;
 
 let _ids = $state<number[]>([]);

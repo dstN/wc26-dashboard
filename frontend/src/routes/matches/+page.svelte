@@ -5,8 +5,12 @@
 	import { teamColorVar, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 	import { goto } from '$app/navigation';
+	import { toggleComparison, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	const cmpIds = $derived(getComparisonIds());
+	const cmpFull = $derived(cmpIds.length >= MAX_COMPARISON);
 
 	const matches: MatchMeta[] = $derived(data.matches ?? []);
 
@@ -98,11 +102,23 @@
 								<abbr title="Group {gKey}, Match {match.match_no}" class="group-badge">
 									{gKey}<span class="group-badge__num">·{match.match_no}</span>
 								</abbr>
-								{#if pending}
-									<span class="status-badge status-badge--pending">{$t.match.pending}</span>
-								{:else}
-									<span class="status-badge status-badge--played">{$t.match.played}</span>
-								{/if}
+								<div class="card-top-right">
+									{#if pending}
+										<span class="status-badge status-badge--pending">{$t.match.pending}</span>
+									{:else}
+										<span class="status-badge status-badge--played">{$t.match.played}</span>
+									{/if}
+									{@const isCmpSelected = cmpIds.includes(match.id)}
+									<button
+										class="cmp-check"
+										class:cmp-check--on={isCmpSelected}
+										disabled={!isCmpSelected && cmpFull}
+										aria-label={isCmpSelected ? 'Remove from comparison' : 'Add to comparison'}
+										onclick={(e) => { e.stopPropagation(); toggleComparison(match.id, 'matches'); }}
+									>
+										{isCmpSelected ? '✓' : '+'}
+									</button>
+								</div>
 							</div>
 
 							<div class="match-card__score-row">
@@ -308,6 +324,28 @@
 		align-items: center;
 		justify-content: space-between;
 	}
+	.card-top-right {
+		display: flex;
+		align-items: center;
+		gap: var(--sp-2);
+	}
+	.cmp-check {
+		width: 22px; height: 22px;
+		border: 2px solid var(--border);
+		border-radius: var(--r-sm);
+		background: transparent;
+		color: var(--muted);
+		font-size: 13px; font-weight: 800;
+		cursor: pointer;
+		display: inline-flex; align-items: center; justify-content: center;
+		padding: 0;
+		transition: border-color 0.15s, background 0.15s, color 0.15s;
+		font-family: inherit; line-height: 1;
+		flex-shrink: 0;
+	}
+	.cmp-check:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+	.cmp-check--on { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); }
+	.cmp-check:disabled { opacity: 0.35; cursor: not-allowed; }
 
 	/* Group badge */
 	abbr.group-badge { text-decoration: none; cursor: help; }

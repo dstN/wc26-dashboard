@@ -25,14 +25,21 @@ export const load: PageLoad = async ({ fetch, url }) => {
 
 	try {
 		const entities = await Promise.all(
-			ids.map((id) =>
-				type === 'teams'
-					? Promise.all([
-							get(`/api/v1/teams/${id}/general`),
-							get(`/api/v1/teams/${id}/avg-stats`),
-						]).then(([gen, avg]) => (gen ? { ...gen, avgStats: avg } : null))
-					: get(`/api/v1/players/${id}`)
-			)
+			ids.map((id) => {
+				if (type === 'teams') {
+					return Promise.all([
+						get(`/api/v1/teams/${id}/general`),
+						get(`/api/v1/teams/${id}/avg-stats`),
+					]).then(([gen, avg]) => (gen ? { ...gen, avgStats: avg } : null));
+				} else if (type === 'matches') {
+					return Promise.all([
+						get(`/api/v1/matches/${id}`),
+						get(`/api/v1/matches/${id}/possession`),
+					]).then(([meta, poss]) => (meta ? { ...meta, possession: poss } : null));
+				} else {
+					return get(`/api/v1/players/${id}`);
+				}
+			})
 		);
 		return { type, ids, entities: entities.filter(Boolean), error: null, searchOptions };
 	} catch (err) {
@@ -59,6 +66,14 @@ async function loadSearchOptions(
 			id: p.id,
 			name: p.name,
 			sub: `${p.position ?? ''} · ${p.team?.short_code ?? ''}`,
+		}));
+	}
+	if (type === 'matches') {
+		const matches = await get('/api/v1/matches/');
+		return (matches ?? []).map((m: any) => ({
+			id: m.id,
+			name: `${m.team_a?.short_code ?? '?'} ${m.score_a ?? '–'}–${m.score_b ?? '–'} ${m.team_b?.short_code ?? '?'}`,
+			sub: `Match ${m.match_no}`,
 		}));
 	}
 	return [];
