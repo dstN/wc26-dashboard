@@ -14,6 +14,7 @@
 	import PressureDetail from '$lib/components/viz/PressureDetail.svelte';
 	import DefensiveDetail from '$lib/components/viz/DefensiveDetail.svelte';
 	import GkDetail from '$lib/components/viz/GkDetail.svelte';
+	import SpatialMobilePicker from '$lib/components/viz/SpatialMobilePicker.svelte';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
@@ -169,9 +170,37 @@
 	{#if spatial}
 		<section class="detail-section">
 			<div class="section-divider"></div>
-			<div class="section-body">
+
+			<!-- Desktop: two columns, each locked to a scenario (hidden on mobile) -->
+			<div class="spatial-desktop">
+				<div class="section-body">
+					<SectionLabel label="Out of Possession" />
+					<PitchSpatial
+						spatial_a={spatial.team_a}
+						spatial_b={spatial.team_b}
+						team_a={m.team_a}
+						team_b={m.team_b}
+						compact
+						lockedScenario="defensive"
+					/>
+				</div>
+				<div class="section-body">
+					<SectionLabel label="In Possession" />
+					<PitchSpatial
+						spatial_a={spatial.team_a}
+						spatial_b={spatial.team_b}
+						team_a={m.team_a}
+						team_b={m.team_b}
+						compact
+						lockedScenario="possession"
+					/>
+				</div>
+			</div>
+
+			<!-- Mobile: single pitch with scenario + team pickers (hidden on desktop) -->
+			<div class="spatial-mobile section-body">
 				<SectionLabel label="{$t.detail.spatial}" />
-				<PitchSpatial
+				<SpatialMobilePicker
 					spatial_a={spatial.team_a}
 					spatial_b={spatial.team_b}
 					team_a={m.team_a}
@@ -459,6 +488,22 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--sp-5);
+	}
+
+	/* ── Spatial ────────────────────────────────────────────────────── */
+	.spatial-desktop {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0;
+	}
+	.spatial-desktop > .section-body + .section-body {
+		border-left: 1px solid var(--border);
+	}
+	.spatial-mobile { display: none; }
+
+	@media (max-width: 600px) {
+		.spatial-desktop { display: none; }
+		.spatial-mobile { display: flex; flex-direction: column; gap: var(--sp-5); }
 	}
 
 	/* ── KPI row ─────────────────────────────────────────────────────── */
