@@ -185,33 +185,18 @@
 		</section>
 	{/if}
 
-	<!-- ── SPATIAL CONTROL — Out of Possession | In Possession ──────────── -->
+	<!-- ── SPATIAL CONTROL ───────────────────────────────────────────────── -->
 	{#if spatial}
 		<section class="detail-section">
 			<div class="section-divider"></div>
-			<div class="spatial-ft-grid">
-				<div class="section-body">
-					<SectionLabel label="Out of Possession" />
-					<PitchSpatial
-						spatial_a={spatial.team_a}
-						spatial_b={spatial.team_b}
-						team_a={m.team_a}
-						team_b={m.team_b}
-						compact
-						lockedScenario="defensive"
-					/>
-				</div>
-				<div class="section-body">
-					<SectionLabel label="In Possession" />
-					<PitchSpatial
-						spatial_a={spatial.team_a}
-						spatial_b={spatial.team_b}
-						team_a={m.team_a}
-						team_b={m.team_b}
-						compact
-						lockedScenario="possession"
-					/>
-				</div>
+			<div class="section-body">
+				<SectionLabel label="{$t.detail.spatial}" />
+				<PitchSpatial
+					spatial_a={spatial.team_a}
+					spatial_b={spatial.team_b}
+					team_a={m.team_a}
+					team_b={m.team_b}
+				/>
 			</div>
 		</section>
 	{/if}
@@ -494,23 +479,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--sp-5);
-	}
-	.spatial-ft-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0;
-	}
-	.spatial-ft-grid > .section-body + .section-body {
-		border-left: 1px solid var(--border);
-	}
-	@media (max-width: 900px) {
-		.spatial-ft-grid {
-			grid-template-columns: 1fr;
-		}
-		.spatial-ft-grid > .section-body + .section-body {
-			border-left: none;
-			border-top: 1px solid var(--border);
-		}
 	}
 
 	/* ── KPI row ─────────────────────────────────────────────────────── */

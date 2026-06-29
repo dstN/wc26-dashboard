@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TeamSpatial, TeamSpatialSplit, Team } from '$lib/types/efi';
+	import type { TeamSpatialSplit, Team } from '$lib/types/efi';
 	import { teamColorVar } from '$lib/tokens';
 
 	let {
@@ -7,19 +7,12 @@
 		spatial_b,
 		team_a,
 		team_b,
-		compact = false,
-		initialScenario = 'defensive',
-		lockedScenario = undefined
-	}: { spatial_a: TeamSpatialSplit | null; spatial_b: TeamSpatialSplit | null; team_a: Team; team_b: Team; compact?: boolean; initialScenario?: 'defensive' | 'possession'; lockedScenario?: 'defensive' | 'possession' } = $props();
+	}: { spatial_a: TeamSpatialSplit | null; spatial_b: TeamSpatialSplit | null; team_a: Team; team_b: Team } = $props();
 
-	// Scenario tab: defensive = out-of-possession, possession = in-possession
-	let scenario = $state<'defensive' | 'possession'>(lockedScenario ?? initialScenario);
-
-	// Block toggles for each scenario
-	let defBlockA = $state<'high' | 'mid' | 'low'>('mid');
-	let defBlockB = $state<'high' | 'mid' | 'low'>('mid');
-	let posBlockA = $state<'build_up_low' | 'build_up_mid' | 'final_third_phase'>('build_up_mid');
-	let posBlockB = $state<'build_up_low' | 'build_up_mid' | 'final_third_phase'>('build_up_mid');
+	let scenario = $state<'defensive' | 'possession'>('defensive');
+	let selectedTeam = $state<'a' | 'b'>('a');
+	let defBlock = $state<'high' | 'mid' | 'low'>('mid');
+	let posBlock = $state<'build_up_low' | 'build_up_mid' | 'final_third_phase'>('build_up_mid');
 
 	const defBlocks: Array<{ key: 'high' | 'mid' | 'low'; label: string }> = [
 		{ key: 'high', label: 'High' },
@@ -33,19 +26,17 @@
 		{ key: 'final_third_phase', label: 'Final Third' },
 	];
 
-	const blockA = $derived(
-		scenario === 'defensive'
-			? (spatial_a?.defensive ?? []).find((s) => s.block_type === defBlockA)
-			: (spatial_a?.possession ?? []).find((s) => s.block_type === posBlockA)
-	);
-	const blockB = $derived(
-		scenario === 'defensive'
-			? (spatial_b?.defensive ?? []).find((s) => s.block_type === defBlockB)
-			: (spatial_b?.possession ?? []).find((s) => s.block_type === posBlockB)
-	);
-
 	const hasSpatialB = $derived(
 		(spatial_b?.defensive?.length ?? 0) > 0 || (spatial_b?.possession?.length ?? 0) > 0
+	);
+
+	const currentSpatial = $derived(selectedTeam === 'a' ? spatial_a : spatial_b);
+	const currentTeam = $derived(selectedTeam === 'a' ? team_a : team_b);
+
+	const block = $derived(
+		scenario === 'defensive'
+			? (currentSpatial?.defensive ?? []).find((s) => s.block_type === defBlock)
+			: (currentSpatial?.possession ?? []).find((s) => s.block_type === posBlock)
 	);
 
 	const PITCH = 105;
@@ -61,208 +52,120 @@
 	}
 </script>
 
-<div class="spatial" class:compact>
-	{#if !lockedScenario}
-	<div class="spatial__header">
-		<div class="scenario-tabs" role="group" aria-label="Scenario">
-			<button
-				class="scenario-tab"
-				class:active={scenario === 'defensive'}
-				onclick={() => scenario = 'defensive'}
-			>Out of Possession</button>
-			<button
-				class="scenario-tab"
-				class:active={scenario === 'possession'}
-				onclick={() => scenario = 'possession'}
-			>In Possession</button>
+<div class="spatial">
+	<!-- ── Row 1: Scenario (Out of Possession / In Possession) ── -->
+	<div class="control-row">
+		<div class="pill-group" role="group" aria-label="Scenario">
+			<button class="pill" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>Out of Possession</button>
+			<button class="pill" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>In Possession</button>
 		</div>
 	</div>
-	{/if}
 
-	<div class="pitches-row">
-		<!-- ── Team A ── -->
-		<div class="pitch-col">
-			<div class="pitch-header">
-				<span class="team-label" style="color: {teamColorVar(team_a.color)};">{team_a.short_code}</span>
-				<div class="toggle-group" role="group">
-					{#if scenario === 'defensive'}
-						{#each defBlocks as b}
-							<button class="toggle-item" class:active={defBlockA === b.key} onclick={() => defBlockA = b.key}>
-								{b.label}
-							</button>
-						{/each}
-					{:else}
-						{#each posBlocks as b}
-							<button class="toggle-item" class:active={posBlockA === b.key} onclick={() => posBlockA = b.key}>
-								{b.label}
-							</button>
-						{/each}
-					{/if}
-				</div>
-			</div>
-
-			<div class="pitch-wrap">
-				<div class="pitch" role="img" aria-label="Pitch for {team_a.short_code}">
-					<div class="pitch__center-line"></div>
-					<div class="pitch__center-circle"></div>
-					<div class="pitch__box pitch__box--top"></div>
-					<div class="pitch__box pitch__box--bot"></div>
-					{#if blockA}
-						<div
-							class="pitch__block"
-							style="
-								bottom: {pct(blockA.defensive_line_height)};
-								height: {pct(blockA.team_length)};
-								left: {wpct(blockA.width_m)};
-								right: {wpct(blockA.width_m)};
-								background: {teamColorVar(team_a.color)};
-							"
-						></div>
-					{/if}
-				</div>
-				{#if blockA}
-					<!-- Width annotation above block -->
-					{#if blockA.width_m != null}
-						<div class="ann ann--width" style="
-							left: {wpct(blockA.width_m)};
-							right: {wpct(blockA.width_m)};
-							bottom: calc({pct(blockA.defensive_line_height + blockA.team_length)} + 4px);
-						">
-							<span class="ann__line"></span>
-							<span class="ann__val">{blockA.width_m}m</span>
-							<span class="ann__line"></span>
-						</div>
-					{/if}
-					<!-- Height annotation on right side -->
-					<div class="ann ann--height" style="
-						bottom: {pct(blockA.defensive_line_height)};
-						height: {pct(blockA.team_length)};
-						right: calc({wpct(blockA.width_m)} - 20px);
-					">
-						<span class="ann__val ann__val--vert">{blockA.team_length}m</span>
-					</div>
-					<!-- Distance label at bottom of block -->
-					<div class="ann ann--dist" style="
-						bottom: calc({pct(blockA.defensive_line_height)} - 18px);
-						left: {wpct(blockA.width_m)};
-						right: {wpct(blockA.width_m)};
-					">
-						<span class="ann__val ann__val--dist">{blockA.defensive_line_height}m</span>
-					</div>
-				{/if}
-			</div>
-
-			{#if blockA}
-				<div class="kpis">
-					<div class="kpi">
-						<span class="kpi__label">{scenario === 'defensive' ? 'Def. Line' : 'Distance'}</span>
-						<span class="kpi__val" style="color: {teamColorVar(team_a.color)};">{blockA.defensive_line_height}m</span>
-					</div>
-					<div class="kpi">
-						<span class="kpi__label">Length</span>
-						<span class="kpi__val" style="color: {teamColorVar(team_a.color)};">{blockA.team_length}m</span>
-					</div>
-					{#if blockA.width_m != null}
-						<div class="kpi">
-							<span class="kpi__label">Width</span>
-							<span class="kpi__val" style="color: {teamColorVar(team_a.color)};">{blockA.width_m}m</span>
-						</div>
-					{/if}
-				</div>
-			{/if}
-		</div>
-
-		<!-- ── Team B ── -->
+	<!-- ── Row 2: Team selector + Block type ── -->
+	<div class="control-row control-row--spread">
 		{#if hasSpatialB}
-		<div class="pitch-col">
-			<div class="pitch-header">
-				<span class="team-label" style="color: {teamColorVar(team_b.color)};">{team_b.short_code}</span>
-				<div class="toggle-group" role="group">
-					{#if scenario === 'defensive'}
-						{#each defBlocks as b}
-							<button class="toggle-item" class:active={defBlockB === b.key} onclick={() => defBlockB = b.key}>
-								{b.label}
-							</button>
-						{/each}
-					{:else}
-						{#each posBlocks as b}
-							<button class="toggle-item" class:active={posBlockB === b.key} onclick={() => posBlockB = b.key}>
-								{b.label}
-							</button>
-						{/each}
-					{/if}
-				</div>
+			<div class="pill-group" role="group" aria-label="Nation">
+				<button
+					class="pill pill--team"
+					class:active={selectedTeam === 'a'}
+					style="--team-color: {teamColorVar(team_a.color)}"
+					onclick={() => selectedTeam = 'a'}
+				>{team_a.short_code}</button>
+				<button
+					class="pill pill--team"
+					class:active={selectedTeam === 'b'}
+					style="--team-color: {teamColorVar(team_b.color)}"
+					onclick={() => selectedTeam = 'b'}
+				>{team_b.short_code}</button>
 			</div>
+		{:else}
+			<span class="team-label" style="color: {teamColorVar(currentTeam.color)}">{currentTeam.short_code}</span>
+		{/if}
 
-			<div class="pitch-wrap">
-				<div class="pitch" role="img" aria-label="Pitch for {team_b.short_code}">
-					<div class="pitch__center-line"></div>
-					<div class="pitch__center-circle"></div>
-					<div class="pitch__box pitch__box--top"></div>
-					<div class="pitch__box pitch__box--bot"></div>
-					{#if blockB}
-						<div
-							class="pitch__block"
-							style="
-								bottom: {pct(blockB.defensive_line_height)};
-								height: {pct(blockB.team_length)};
-								left: {wpct(blockB.width_m)};
-								right: {wpct(blockB.width_m)};
-								background: {teamColorVar(team_b.color)};
-							"
-						></div>
-					{/if}
-				</div>
-				{#if blockB}
-					{#if blockB.width_m != null}
-						<div class="ann ann--width" style="
-							left: {wpct(blockB.width_m)};
-							right: {wpct(blockB.width_m)};
-							bottom: calc({pct(blockB.defensive_line_height + blockB.team_length)} + 4px);
-						">
-							<span class="ann__line"></span>
-							<span class="ann__val">{blockB.width_m}m</span>
-							<span class="ann__line"></span>
-						</div>
-					{/if}
-					<div class="ann ann--height" style="
-						bottom: {pct(blockB.defensive_line_height)};
-						height: {pct(blockB.team_length)};
-						right: calc({wpct(blockB.width_m)} - 20px);
-					">
-						<span class="ann__val ann__val--vert">{blockB.team_length}m</span>
-					</div>
-					<div class="ann ann--dist" style="
-						bottom: calc({pct(blockB.defensive_line_height)} - 18px);
-						left: {wpct(blockB.width_m)};
-						right: {wpct(blockB.width_m)};
-					">
-						<span class="ann__val ann__val--dist">{blockB.defensive_line_height}m</span>
-					</div>
+		<div class="pill-group" role="group" aria-label="Block type">
+			{#if scenario === 'defensive'}
+				{#each defBlocks as b}
+					<button class="pill pill--sm" class:active={defBlock === b.key} onclick={() => defBlock = b.key}>{b.label}</button>
+				{/each}
+			{:else}
+				{#each posBlocks as b}
+					<button class="pill pill--sm" class:active={posBlock === b.key} onclick={() => posBlock = b.key}>{b.label}</button>
+				{/each}
+			{/if}
+		</div>
+	</div>
+
+	<!-- ── Single Pitch ── -->
+	<div class="pitch-outer">
+		<div class="pitch-wrap">
+			<div class="pitch" role="img" aria-label="Pitch for {currentTeam.short_code}">
+				<div class="pitch__center-line"></div>
+				<div class="pitch__center-circle"></div>
+				<div class="pitch__box pitch__box--top"></div>
+				<div class="pitch__box pitch__box--bot"></div>
+				{#if block}
+					<div
+						class="pitch__block"
+						style="
+							bottom: {pct(block.defensive_line_height)};
+							height: {pct(block.team_length)};
+							left: {wpct(block.width_m)};
+							right: {wpct(block.width_m)};
+							background: {teamColorVar(currentTeam.color)};
+						"
+					></div>
 				{/if}
 			</div>
 
-			{#if blockB}
-				<div class="kpis">
-					<div class="kpi">
-						<span class="kpi__label">{scenario === 'defensive' ? 'Def. Line' : 'Distance'}</span>
-						<span class="kpi__val" style="color: {teamColorVar(team_b.color)};">{blockB.defensive_line_height}m</span>
+			{#if block}
+				{#if block.width_m != null}
+					<div class="ann ann--width" style="
+						left: {wpct(block.width_m)};
+						right: {wpct(block.width_m)};
+						bottom: calc({pct(block.defensive_line_height + block.team_length)} + 4px);
+					">
+						<span class="ann__line"></span>
+						<span class="ann__val">{block.width_m}m</span>
+						<span class="ann__line"></span>
 					</div>
-					<div class="kpi">
-						<span class="kpi__label">Length</span>
-						<span class="kpi__val" style="color: {teamColorVar(team_b.color)};">{blockB.team_length}m</span>
-					</div>
-					{#if blockB.width_m != null}
-						<div class="kpi">
-							<span class="kpi__label">Width</span>
-							<span class="kpi__val" style="color: {teamColorVar(team_b.color)};">{blockB.width_m}m</span>
-						</div>
-					{/if}
+				{/if}
+				<div class="ann ann--height" style="
+					bottom: {pct(block.defensive_line_height)};
+					height: {pct(block.team_length)};
+					right: calc({wpct(block.width_m)} - 20px);
+				">
+					<span class="ann__val ann__val--vert">{block.team_length}m</span>
+				</div>
+				<div class="ann ann--dist" style="
+					bottom: calc({pct(block.defensive_line_height)} - 18px);
+					left: {wpct(block.width_m)};
+					right: {wpct(block.width_m)};
+				">
+					<span class="ann__val ann__val--dist">{block.defensive_line_height}m</span>
 				</div>
 			{/if}
 		</div>
-		{/if}
 	</div>
+
+	<!-- ── KPI row ── -->
+	{#if block}
+		<div class="kpis">
+			<div class="kpi">
+				<span class="kpi__label">{scenario === 'defensive' ? 'Def. Line' : 'Distance'}</span>
+				<span class="kpi__val" style="color: {teamColorVar(currentTeam.color)};">{block.defensive_line_height}m</span>
+			</div>
+			<div class="kpi">
+				<span class="kpi__label">Length</span>
+				<span class="kpi__val" style="color: {teamColorVar(currentTeam.color)};">{block.team_length}m</span>
+			</div>
+			{#if block.width_m != null}
+				<div class="kpi">
+					<span class="kpi__label">Width</span>
+					<span class="kpi__val" style="color: {teamColorVar(currentTeam.color)};">{block.width_m}m</span>
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -272,24 +175,27 @@
 		gap: var(--sp-4);
 	}
 
-	.spatial__header {
+	/* ── Control rows ── */
+	.control-row {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: var(--sp-4);
+		gap: var(--sp-3);
 		flex-wrap: wrap;
 	}
+	.control-row--spread {
+		justify-content: space-between;
+	}
 
-	/* ── Scenario tabs ── */
-	.scenario-tabs {
+	/* ── Pill groups ── */
+	.pill-group {
 		display: flex;
 		gap: 2px;
 		background: var(--border);
 		border-radius: var(--r-pill);
 		padding: 2px;
 	}
-	.scenario-tab {
-		padding: 4px var(--sp-3);
+	.pill {
+		padding: 5px var(--sp-4);
 		font-size: var(--fs-meta);
 		font-weight: 600;
 		font-family: inherit;
@@ -300,37 +206,19 @@
 		border: none;
 		transition: background 0.15s, color 0.15s;
 		white-space: nowrap;
+		line-height: 1;
 	}
-	.scenario-tab.active {
+	.pill.active {
 		background: var(--ink);
 		color: var(--bg);
 	}
-
-	/* ── Two pitches side by side ── */
-	.pitches-row {
-		display: flex;
-		gap: var(--sp-8);
-		flex-wrap: wrap;
+	.pill--sm {
+		padding: 4px var(--sp-3);
 	}
-
-	.pitch-col {
-		display: flex;
-		flex-direction: column;
-		gap: var(--sp-3);
-		flex: 1;
-		min-width: 140px;
-	}
-	.compact .pitch-col {
-		max-width: 320px;
-	}
-
-	/* ── Header above each pitch ── */
-	.pitch-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--sp-2);
-		flex-wrap: wrap;
+	/* Team pills highlight with their team color when active */
+	.pill--team.active {
+		background: var(--team-color);
+		color: #fff;
 	}
 
 	.team-label {
@@ -340,34 +228,20 @@
 		letter-spacing: 0.06em;
 	}
 
-	/* ── Toggle group ── */
-	.toggle-group {
+	/* ── Pitch ── */
+	.pitch-outer {
 		display: flex;
-		gap: 2px;
-		background: var(--border);
-		border-radius: var(--r-pill);
-		padding: 2px;
+		justify-content: center;
 	}
-	.toggle-item {
-		padding: 3px var(--sp-2);
-		font-size: var(--fs-meta);
-		font-weight: 600;
-		font-family: inherit;
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		color: var(--muted);
-		background: transparent;
-		border: none;
-		min-height: 24px;
-		transition: background 0.15s, color 0.15s;
-		white-space: nowrap;
+	.pitch-wrap {
+		position: relative;
+		width: 100%;
+		max-width: 280px;
 	}
-	.toggle-item.active {
-		background: var(--c-yellow);
-		color: var(--c-forest);
+	@media (max-width: 600px) {
+		.pitch-wrap { max-width: 100%; }
 	}
 
-	/* ── Vertical pitch ── */
 	.pitch {
 		position: relative;
 		width: 100%;
@@ -377,63 +251,39 @@
 		border-radius: var(--r-sm);
 		overflow: hidden;
 	}
-
-	/* Center line — horizontal */
 	.pitch__center-line {
 		position: absolute;
-		left: 0;
-		right: 0;
+		left: 0; right: 0;
 		top: 50%;
 		height: 2px;
 		background: var(--pitch-line);
 		transform: translateY(-50%);
 	}
-
-	/* Center circle */
 	.pitch__center-circle {
 		position: absolute;
-		top: 50%;
-		left: 50%;
+		top: 50%; left: 50%;
 		transform: translate(-50%, -50%);
 		width: 40%;
 		aspect-ratio: 1;
 		border: 2px solid var(--pitch-line);
 		border-radius: 50%;
 	}
-
-	/* Penalty boxes — top and bottom */
 	.pitch__box {
 		position: absolute;
-		left: 18%;
-		right: 18%;
+		left: 18%; right: 18%;
 		height: 17%;
 		border: 2px solid var(--pitch-line);
 		background: transparent;
 	}
-	.pitch__box--top {
-		top: 0;
-		border-top: none;
-		border-radius: 0 0 6px 6px;
-	}
-	.pitch__box--bot {
-		bottom: 0;
-		border-bottom: none;
-		border-radius: 6px 6px 0 0;
-	}
-
-	/* Team block */
+	.pitch__box--top { top: 0; border-top: none; border-radius: 0 0 6px 6px; }
+	.pitch__box--bot { bottom: 0; border-bottom: none; border-radius: 6px 6px 0 0; }
 	.pitch__block {
 		position: absolute;
 		opacity: 0.45;
 		z-index: 1;
 	}
 
-	/* Pitch wrapper — annotations live here so they can overflow the pitch element */
-	.pitch-wrap {
-		position: relative;
-	}
-
-	/* Annotations */
+	/* ── Annotations ── */
 	.ann {
 		position: absolute;
 		pointer-events: none;
@@ -445,12 +295,7 @@
 		gap: 3px;
 		height: 14px;
 	}
-	.ann__line {
-		flex: 1;
-		height: 1px;
-		background: var(--muted);
-		opacity: 0.7;
-	}
+	.ann__line { flex: 1; height: 1px; background: var(--muted); opacity: 0.7; }
 	.ann__val {
 		font-size: 10px;
 		font-weight: 700;
@@ -479,20 +324,15 @@
 		align-items: flex-start;
 		height: 16px;
 	}
-	.ann__val--dist {
-		opacity: 0.7;
-	}
+	.ann__val--dist { opacity: 0.7; }
 
-	/* ── KPI row below pitch ── */
+	/* ── KPIs ── */
 	.kpis {
 		display: flex;
 		gap: var(--sp-6);
+		flex-wrap: wrap;
 	}
-	.kpi {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
+	.kpi { display: flex; flex-direction: column; gap: 2px; }
 	.kpi__label {
 		font-size: var(--fs-label);
 		font-weight: 600;
@@ -505,10 +345,5 @@
 		font-weight: 800;
 		font-variant-numeric: tabular-nums;
 		line-height: 1.1;
-	}
-
-	@media (max-width: 700px) {
-		.pitches-row { gap: var(--sp-6); }
-		.pitch-header { flex-direction: column; align-items: flex-start; }
 	}
 </style>
