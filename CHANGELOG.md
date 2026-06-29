@@ -788,6 +788,91 @@ wrong page.
 - **Removed empty CSS rule:** Pre-existing empty `.browse-section {}` that caused a
   `svelte-check` warning.
 
+### Post-M9 — Session 22 (2026-06-29)
+
+#### Fix — accent button contrast (lime-on-white in dark mode)
+
+- `teams/+page.svelte` `.sort-pill--active` and `teams/[id]/+page.svelte` `.mode-btn--active`:
+  changed `color: #fff` → `color: var(--bg)`. In dark mode `--accent` is lime (`#b6e62e`), so
+  white text produced terrible contrast; `var(--bg)` (near-black in dark mode) reads cleanly
+  on lime. In light mode `--bg` is warm beige on red accent — still acceptable. `Footer.svelte`
+  and `+page.svelte` already used `var(--bg)` correctly; this aligns the remaining two files.
+
+#### Fix — teams detail mobile right padding + performer card overflow
+
+- `teams/[id]/+page.svelte`: changed `@media (max-width: 720px)` section-body padding from two
+  separate `padding-left`/`padding-right` overrides to a single `padding: var(--sp-8) var(--sp-4)`
+  shorthand — ensures symmetrical left/right gutter of 16px on mobile.
+- Added `min-width: 0; overflow: hidden` to `.performer-card` — prevents grid items from
+  overflowing their 1fr column and eating the right-side padding when long names/values push
+  the intrinsic minimum width past the cell boundary.
+
+#### Fix — EFI logo links to homepage
+
+- `TopBar.svelte`: changed `.topbar__brand` from `<div>` to `<a href="/">`. Added
+  `text-decoration: none` and `aria-label="EFI Data Engine — Home"`. The dot, "EFI" wordmark,
+  and "DATA ENGINE" subtitle are now all a single clickable link back to the home page.
+
+### Post-M9 — Session 21 (2026-06-29)
+
+#### Feature — ThemeSwitch icon button
+
+- **`ThemeSwitch.svelte`:** Replaced the `bits-ui` Switch toggle + label text with a single
+  32×32px `<button>` that shows a sun SVG in dark mode (click to go light) and a moon SVG in
+  light mode (click to go dark). No external dependencies — pure inline SVG with Heroicons-style
+  paths. Button uses `border: 1px solid var(--border)`, `border-radius: var(--r-sm)`.
+
+#### Bug fix — ShotTimeline build crash
+
+- **`ShotTimeline.svelte`:** `{@const pColor}` and `{@const pId}` were nested inside a `<div>`
+  (invalid in Svelte 5 — `{@const}` must be immediate child of a control block). Moved both
+  declarations to be direct children of the `{#each allShots as shot}` block.
+
+#### Bug fix — mobile lang switcher hidden
+
+- **`TopBar.svelte`:** Media query `.lang-switcher { display: none }` was scoped by Svelte's
+  CSS hash to ALL `.lang-switcher` elements in the component, including the one inside the
+  `.mobile-menu__controls` slot. Fixed selector to `.topbar__right .lang-switcher { display: none }`
+  so only the topbar lang switcher hides on mobile while the hamburger menu one stays visible.
+
+#### Bug fix — error page link text
+
+- **`+error.svelte`:** "← Back to Übersicht" changed to "← Back to Home".
+
+#### Feature — mobile spatial pitch picker
+
+- **`SpatialMobilePicker.svelte`** (new component): mobile-only single-pitch view with three
+  control rows using the filled pill-group container pattern:
+  - Scenario pills (`pill--scenario`): active = `background: var(--ink); color: var(--bg)`
+  - Nation pills (`pill--team`): active = `background: var(--tc, var(--ink)); color: #fff`
+  - Block type pills (`pill--block`): active = `background: var(--c-yellow); color: var(--c-forest)`
+  - `.pill-group { align-self: flex-start }` prevents unwanted full-width stretching
+- **`matches/[id]/+page.svelte`:** Spatial section split at page level into two separate DOM
+  sections — `.spatial-desktop` (two locked `PitchSpatial` side by side, hidden ≤600px) and
+  `.spatial-mobile` (single `SpatialMobilePicker`, shown ≤600px). Desktop layout unchanged.
+
+#### Fix — duplicate KPIs below PossessionBar
+
+- **`matches/[id]/+page.svelte`:** Removed the `.kpi-row` block (In Contest + Ball Recovery +
+  Goals) below the PossessionBar. All three metrics are already shown elsewhere — In Contest
+  in the PossessionBar segments, Ball Recovery in KeyStatsTable, Goals in the scoreline.
+
+#### Fix — match header layout
+
+- **`matches/[id]/+page.svelte`:** Restructured the match header:
+  - Meta bar reduced to "Group H · Match 66" only (venue and date moved)
+  - New `.match-context` above the scoreline: `.match-venue` (centered) + `.match-date` below it
+  - Scoreline team columns are now `flex-direction: column` with `.team-identity` (flag+badge) +
+    `.team-name` + `.team-formation` stacked — formation now appears below the team name,
+    matching the match cards on the overview page
+
+#### Fix — teams page sort pills contrast
+
+- **`teams/+page.svelte`:** Sort pills converted from individual outlined buttons to the
+  filled pill-group container pattern (`background: var(--border)` on container, transparent
+  inactive, `background: var(--accent); color: #fff` active). Matches the desktop spatial
+  scenario tabs and the spatial mobile picker for visual consistency.
+
 ### Post-M9 — Session 20 (2026-06-29)
 
 #### Bug fixes — contact form & i18n

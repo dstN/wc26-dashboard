@@ -462,6 +462,27 @@ Known problems with the `TermTooltip` component used on Teams ("In Contest") and
 - [x] `04_all_matches.sql` regenerated
 - [ ] Second-yellow red cards not yet distinguished from direct reds (same treatment for now)
 
+## Post-M9 — Full dashboard build-out (Session 22)
+
+- [x] `teams/+page.svelte` + `teams/[id]/+page.svelte` — accent active button: `color: #fff` → `color: var(--bg)` (dark-mode lime contrast fix)
+- [x] `teams/[id]/+page.svelte` — mobile section-body padding shorthand; `performer-card` gets `min-width:0; overflow:hidden`
+- [x] `TopBar.svelte` — brand div → `<a href="/">` so EFI logo navigates home
+
+## Post-M9 — Full dashboard build-out (Session 21)
+
+### Mobile UX polish & bug fixes
+
+- [x] `ThemeSwitch.svelte` — replaced bits-ui Switch + label text with single 32×32 sun/moon icon button
+- [x] `ShotTimeline.svelte` — `{@const}` crash fix (moved to direct `{#each}` children, not inside `<div>`)
+- [x] `TopBar.svelte` — mobile lang switcher visibility: scoped selector `.topbar__right .lang-switcher { display: none }` so hamburger menu lang switcher stays visible
+- [x] `+error.svelte` — "Back to Übersicht" → "Back to Home"
+- [x] `SpatialMobilePicker.svelte` (new) — full-width single-pitch with nation/scenario/block pills
+- [x] `matches/[id]/+page.svelte` — spatial split at page level: `.spatial-desktop` (two locked pitches, desktop) + `.spatial-mobile` (picker, mobile)
+- [x] `matches/[id]/+page.svelte` — removed duplicate KPI row below PossessionBar
+- [x] `matches/[id]/+page.svelte` — match header restructured: venue+date above scoreline; formation below team name
+- [x] `SpatialMobilePicker.svelte` — pill modifier classes (`pill--scenario`, `pill--team`, `pill--block`) with correct contrast per type; `align-self: flex-start` on pill groups
+- [x] `teams/+page.svelte` — sort pills converted to filled pill-group container pattern
+
 ## Post-M9 — Full dashboard build-out (Session 19)
 
 ### Footer — Impressum, Legal & Contact
