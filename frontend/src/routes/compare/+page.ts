@@ -17,22 +17,49 @@ export const load: PageLoad = async ({ fetch, url }) => {
 			.then((r) => (r.ok ? r.json() : null))
 			.catch(() => null);
 
+	const searchOptions = await loadSearchOptions(type, get);
+
 	if (!type || ids.length < 2) {
-		return { type, ids, entities: [], error: null };
+		return { type, ids, entities: [], error: null, searchOptions };
 	}
 
 	try {
 		const entities = await Promise.all(
 			ids.map((id) =>
 				type === 'teams'
-					? Promise.all([get(`/api/v1/teams/${id}/general`), get(`/api/v1/teams/${id}/avg-stats`)]).then(
-							([gen, avg]) => (gen ? { ...gen, avgStats: avg } : null)
-					  )
+					? Promise.all([
+							get(`/api/v1/teams/${id}/general`),
+							get(`/api/v1/teams/${id}/avg-stats`),
+						]).then(([gen, avg]) => (gen ? { ...gen, avgStats: avg } : null))
 					: get(`/api/v1/players/${id}`)
 			)
 		);
-		return { type, ids, entities: entities.filter(Boolean), error: null };
+		return { type, ids, entities: entities.filter(Boolean), error: null, searchOptions };
 	} catch (err) {
-		return { type, ids, entities: [], error: String(err) };
+		return { type, ids, entities: [], error: String(err), searchOptions };
 	}
 };
+
+async function loadSearchOptions(
+	type: string | null,
+	get: (path: string) => Promise<any>
+): Promise<Array<{ id: number; name: string; sub: string; color?: string }>> {
+	if (type === 'teams') {
+		const lb = await get('/api/v1/stats/leaderboards');
+		return (lb?.team_rankings ?? []).map((r: any) => ({
+			id: r.team.id,
+			name: r.team.name,
+			sub: r.team.short_code,
+			color: r.team.color,
+		}));
+	}
+	if (type === 'players') {
+		const players = await get('/api/v1/players/');
+		return (players ?? []).map((p: any) => ({
+			id: p.id,
+			name: p.name,
+			sub: `${p.position ?? ''} · ${p.team?.short_code ?? ''}`,
+		}));
+	}
+	return [];
+}
