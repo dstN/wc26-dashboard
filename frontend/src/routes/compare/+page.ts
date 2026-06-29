@@ -1,7 +1,7 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ fetch, url }) => {
-	const type = url.searchParams.get('type') as 'teams' | 'players' | null;
+	const type = url.searchParams.get('type') as 'teams' | 'players' | 'matches' | null;
 	const idsRaw = url.searchParams.get('ids') ?? '';
 	const ids = idsRaw
 		.split(',')

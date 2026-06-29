@@ -265,7 +265,7 @@ Allow up to 5 teams **or** players to be compared in a dedicated view.
 - [x] `/compare` route — team comparison with CSS Grid + proportional bar chart rows (3 metric groups); player comparison placeholder
 - [x] Session B: full player stat comparison (4 metric groups + proportional bars); search/autocomplete to add entities; ✕ remove buttons on entity headers — Session 25b
 - [x] Session C: type-pick landing, single-entity hint, search guard, responsive layout — Session 25c
-- [ ] Match comparison view: select 2–5 matches, compare head-to-head stats side by side
+- [x] Match comparison view: select 2–5 matches, compare head-to-head stats side by side — Session 25d
 
 ### Feature — missing visualizations
 
