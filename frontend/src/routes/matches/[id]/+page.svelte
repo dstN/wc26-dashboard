@@ -70,19 +70,26 @@
 	<section class="match-header">
 		<div class="match-header__nav">
 			<a href="/matches" class="back-link">{$t.match.backToMatches}</a>
-			<span class="match-meta">{$t.match.group} {m.group_letter} · {$t.match.matchNo} {m.match_no}{m.venue ? ' · ' + m.venue : ''}{m.match_date ? ' · ' + formatDate(m.match_date) : ''}{m.formation_a && m.formation_b ? ' · ' + m.formation_a + ' vs ' + m.formation_b : ''}</span>
+			<span class="match-meta">{$t.match.group} {m.group_letter} · {$t.match.matchNo} {m.match_no}</span>
 		</div>
+
+		{#if m.venue || m.match_date}
+			<div class="match-context">
+				{#if m.venue}<span class="match-venue">{m.venue}</span>{/if}
+				{#if m.match_date}<span class="match-date">{formatDate(m.match_date)}</span>{/if}
+			</div>
+		{/if}
 
 		<div class="scoreline">
 			<div class="scoreline__team scoreline__team--left">
-				{#if flagCode(m.team_a.short_code)}
-					<span class="fi fi-{flagCode(m.team_a.short_code)} scoreline__flag" aria-hidden="true"></span>
-				{/if}
-				<span
-					class="team-badge"
-					style="background: {teamColorVar(m.team_a.color)}; color: {badgeTextColor(m.team_a.color)};"
-				>{m.team_a.short_code}</span>
+				<div class="team-identity">
+					{#if flagCode(m.team_a.short_code)}
+						<span class="fi fi-{flagCode(m.team_a.short_code)} scoreline__flag" aria-hidden="true"></span>
+					{/if}
+					<span class="team-badge" style="background:{teamColorVar(m.team_a.color)};color:{badgeTextColor(m.team_a.color)};">{m.team_a.short_code}</span>
+				</div>
 				<a href="/teams/{m.team_a.id}" class="team-name">{m.team_a.name}</a>
+				{#if m.formation_a}<span class="team-formation">{m.formation_a}</span>{/if}
 			</div>
 			<div class="scoreline__score">
 				<span class="score">{m.score_a}</span>
@@ -90,14 +97,14 @@
 				<span class="score">{m.score_b}</span>
 			</div>
 			<div class="scoreline__team scoreline__team--right">
+				<div class="team-identity">
+					<span class="team-badge" style="background:{teamColorVar(m.team_b.color)};color:{badgeTextColor(m.team_b.color)};">{m.team_b.short_code}</span>
+					{#if flagCode(m.team_b.short_code)}
+						<span class="fi fi-{flagCode(m.team_b.short_code)} scoreline__flag" aria-hidden="true"></span>
+					{/if}
+				</div>
 				<a href="/teams/{m.team_b.id}" class="team-name">{m.team_b.name}</a>
-				<span
-					class="team-badge"
-					style="background: {teamColorVar(m.team_b.color)}; color: {badgeTextColor(m.team_b.color)};"
-				>{m.team_b.short_code}</span>
-				{#if flagCode(m.team_b.short_code)}
-					<span class="fi fi-{flagCode(m.team_b.short_code)} scoreline__flag" aria-hidden="true"></span>
-				{/if}
+				{#if m.formation_b}<span class="team-formation">{m.formation_b}</span>{/if}
 			</div>
 		</div>
 
@@ -399,6 +406,26 @@
 		color: var(--muted);
 	}
 
+	/* ── Venue / date above score ────────────────────────────────────── */
+	.match-context {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--sp-1);
+	}
+	.match-venue {
+		font-size: var(--fs-ui);
+		font-weight: 600;
+		color: var(--ink);
+		text-align: center;
+	}
+	.match-date {
+		font-size: var(--fs-label);
+		font-weight: 500;
+		color: var(--muted);
+		text-align: center;
+	}
+
 	/* ── Scoreline ───────────────────────────────────────────────────── */
 	.scoreline {
 		display: flex;
@@ -409,11 +436,28 @@
 	}
 	.scoreline__team {
 		display: flex;
+		flex-direction: column;
+		gap: var(--sp-2);
+	}
+	.scoreline__team--left {
+		align-items: flex-end;
+		text-align: right;
+	}
+	.scoreline__team--right {
+		align-items: flex-start;
+		text-align: left;
+	}
+	.team-identity {
+		display: flex;
 		align-items: center;
 		gap: var(--sp-3);
 	}
-	.scoreline__team--right {
-		flex-direction: row-reverse;
+	.team-formation {
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		color: var(--muted);
+		font-family: var(--font-mono, monospace);
+		letter-spacing: 0.04em;
 	}
 	.scoreline__flag {
 		width: 44px;

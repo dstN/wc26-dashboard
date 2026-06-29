@@ -48,26 +48,26 @@
 <div class="smp">
 	<!-- Row 1: scenario -->
 	<div class="pill-group" role="group" aria-label="Scenario">
-		<button class="pill" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>Out of Possession</button>
-		<button class="pill" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>In Possession</button>
+		<button class="pill pill--scenario" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>Out of Possession</button>
+		<button class="pill pill--scenario" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>In Possession</button>
 	</div>
 
 	<!-- Row 2: team + block type -->
 	<div class="controls-row">
 		{#if hasSpatialB}
 			<div class="pill-group" role="group" aria-label="Nation">
-				<button class="pill" class:active={selectedTeam === 'a'} style="--tc:{teamColorVar(team_a.color)}" onclick={() => selectedTeam = 'a'}>{team_a.short_code}</button>
-				<button class="pill" class:active={selectedTeam === 'b'} style="--tc:{teamColorVar(team_b.color)}" onclick={() => selectedTeam = 'b'}>{team_b.short_code}</button>
+				<button class="pill pill--team" class:active={selectedTeam === 'a'} style="--tc:{teamColorVar(team_a.color)}" onclick={() => selectedTeam = 'a'}>{team_a.short_code}</button>
+				<button class="pill pill--team" class:active={selectedTeam === 'b'} style="--tc:{teamColorVar(team_b.color)}" onclick={() => selectedTeam = 'b'}>{team_b.short_code}</button>
 			</div>
 		{/if}
 		<div class="pill-group" role="group" aria-label="Block">
 			{#if scenario === 'defensive'}
 				{#each defBlocks as b}
-					<button class="pill pill--sm" class:active={defBlock === b.key} onclick={() => defBlock = b.key}>{b.label}</button>
+					<button class="pill pill--sm pill--block" class:active={defBlock === b.key} onclick={() => defBlock = b.key}>{b.label}</button>
 				{/each}
 			{:else}
 				{#each posBlocks as b}
-					<button class="pill pill--sm" class:active={posBlock === b.key} onclick={() => posBlock = b.key}>{b.label}</button>
+					<button class="pill pill--sm pill--block" class:active={posBlock === b.key} onclick={() => posBlock = b.key}>{b.label}</button>
 				{/each}
 			{/if}
 		</div>
@@ -113,8 +113,17 @@
 	.controls-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; }
 
 	.pill-group { display: flex; gap: 2px; background: var(--border); border-radius: var(--r-pill); padding: 2px; }
-	.pill { padding: 5px var(--sp-4); font-size: var(--fs-meta); font-weight: 600; font-family: inherit; border-radius: var(--r-pill); cursor: pointer; color: var(--muted); background: transparent; border: none; transition: background 0.15s, color 0.15s; white-space: nowrap; line-height: 1; }
-	.pill.active { background: var(--tc, var(--ink)); color: #fff; }
+	.pill {
+		padding: 5px var(--sp-4); font-size: var(--fs-meta); font-weight: 600; font-family: inherit;
+		border-radius: var(--r-pill); cursor: pointer; color: var(--muted); background: transparent; border: none;
+		transition: background 0.15s, color 0.15s; white-space: nowrap; line-height: 1;
+	}
+	/* Scenario pills — same as desktop scenario-tab */
+	.pill--scenario.active { background: var(--ink); color: var(--bg); }
+	/* Team nation pills — team color background */
+	.pill--team.active { background: var(--tc, var(--ink)); color: #fff; }
+	/* Block type pills — same yellow/forest as desktop toggle-item */
+	.pill--block.active { background: var(--c-yellow); color: var(--c-forest); }
 	.pill--sm { padding: 4px var(--sp-3); }
 
 	.pitch-wrap { position: relative; }
