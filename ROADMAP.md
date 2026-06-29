@@ -462,6 +462,12 @@ Known problems with the `TermTooltip` component used on Teams ("In Contest") and
 - [x] `04_all_matches.sql` regenerated
 - [ ] Second-yellow red cards not yet distinguished from direct reds (same treatment for now)
 
+## Post-M9 — Full dashboard build-out (Session 23)
+
+- [x] `app.css` — `--accent-fg` token: `#fff` light / `#0b0b0f` dark; replaces `var(--bg)` on accent buttons
+- [x] All accent-background buttons switched to `color: var(--accent-fg)` across 4 files
+- [x] `SpatialMobilePicker.svelte` — `pill--team` active: `badgeTextColor()` → `--tc-text` CSS var → dark text on light team colors, white on dark team colors
+
 ## Post-M9 — Full dashboard build-out (Session 22)
 
 - [x] `teams/+page.svelte` + `teams/[id]/+page.svelte` — accent active button: `color: #fff` → `color: var(--bg)` (dark-mode lime contrast fix)

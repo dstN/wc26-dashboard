@@ -788,6 +788,23 @@ wrong page.
 - **Removed empty CSS rule:** Pre-existing empty `.browse-section {}` that caused a
   `svelte-check` warning.
 
+### Post-M9 — Session 23 (2026-06-29)
+
+#### Fix — accent button text and team pill contrast (proper token)
+
+- **`app.css`:** Added `--accent-fg` token: `#ffffff` in light mode (white on red accent),
+  `#0b0b0f` in dark mode (near-black on lime accent). The previous `color: var(--bg)` gave
+  warm beige (`#f5f2ea`) in light mode instead of crisp white — perceptually off on the
+  red accent background.
+- **All accent-background buttons now use `color: var(--accent-fg)`:** `teams/+page.svelte`
+  sort pills, `teams/[id]/+page.svelte` Avg/Total toggle, `Footer.svelte` submit button,
+  `+page.svelte` featured match CTA.
+- **`SpatialMobilePicker.svelte` `pill--team` active:** Added `badgeTextColor()` call per
+  button, passing `--tc-text` as a CSS custom property. CSS changed from `color: #fff` to
+  `color: var(--tc-text, #fff)`. For light team colors (lime, orange, teal, yellow, lavender,
+  pink) this gives `#0c1a10` (dark green); for dark team colors it gives `#ffffff`. Fixes
+  white-on-lime (MEX) and white-on-orange (RSA) contrast failures.
+
 ### Post-M9 — Session 22 (2026-06-29)
 
 #### Fix — accent button contrast (lime-on-white in dark mode)
