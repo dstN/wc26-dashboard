@@ -4,7 +4,7 @@
 	import TermTooltip from '$lib/components/layout/TermTooltip.svelte';
 	import { teamTextColor, flagCode } from '$lib/tokens';
 	import { t } from '$lib/i18n';
-	import { toggleComparison, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
+	import { toggleComparison, isSelected, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -115,17 +115,20 @@
 					</thead>
 					<tbody>
 						{#each sortedRankings as r, i}
-							{@const isCmpSelected = cmpIds.includes(r.team.id)}
-							<tr class:cmp-selected={isCmpSelected}>
+							<tr class:cmp-selected={isSelected(r.team.id)}>
 								<td class="cmp-col">
 									<button
 										class="cmp-check"
-										class:cmp-check--on={isCmpSelected}
-										disabled={!isCmpSelected && cmpFull}
+										class:cmp-check--on={isSelected(r.team.id)}
+										disabled={!isSelected(r.team.id) && cmpFull}
 										onclick={() => toggleComparison(r.team.id, 'teams')}
-										aria-label="{isCmpSelected ? 'Remove' : 'Add'} {r.team.name} from comparison"
-										title={!isCmpSelected && cmpFull ? `Max ${MAX_COMPARISON} teams` : ''}
-									>{isCmpSelected ? '✓' : '+'}</button>
+										aria-label="{isSelected(r.team.id) ? 'Remove' : 'Add'} {r.team.name} from comparison"
+										title={!isSelected(r.team.id) && cmpFull ? `Max ${MAX_COMPARISON} teams` : ''}
+									>
+										{#if isSelected(r.team.id)}
+											<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+										{:else}+{/if}
+									</button>
 								</td>
 								<td class="rk rank-num">{i + 1}</td>
 								<td>

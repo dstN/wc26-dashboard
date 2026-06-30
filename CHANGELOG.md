@@ -839,6 +839,32 @@ wrong page.
 - **`frontend/src/routes/compare/+page.svelte`:** Match comparison grid: Score group (Total Goals, Goals Home/Away) + Possession group (xG Home/Away, Possession%, In Contest%, Total Shots); match entity header shows flag + score + flags + team short codes + match number/venue; remove button removes from URL.
 - **`frontend/src/routes/compare/+page.ts`:** Matches type loads `GET /api/v1/matches/{id}` + `GET /api/v1/matches/{id}/possession` in parallel; `loadSearchOptions` for matches fetches `/api/v1/matches/` and formats as `SHO 1-0 ARG · Match 23`.
 
+### Post-M9 — Session 26 (2026-06-30)
+
+#### Compare page — fixes and expanded metrics
+
+- **Player entity header:** Fixed player names not showing when comparing players. The API returns `{ player: {…}, team: {…}, totals: {…} }` — player fields are nested under `entity.player`, not at root level. Changed `{@const p = entity}` → `{@const pl = entity.player}` and updated all references (`pl.name`, `pl.id`, `pl.position`). Team badge still reads `entity.team`.
+- **Team entity name inline:** Moved `<a class="entity-name">` from its own row below the flag/badge into `entity-header__top` so nation name appears inline on the same line as the flag and badge instead of on a new line below.
+- **TEAM_METRICS expanded:** 9 rows across 3 groups → 22 rows across 5 groups:
+  - Possession: Avg xG · Avg xG Conceded · Avg Possession · Avg In Contest · Avg Shots · Avg Shots on Target
+  - Attacking: Avg Goals · Avg Line Breaks · Avg Ball Progressions · Avg Take-ons · Avg Crosses · Avg Corners · Avg Set Plays
+  - Passing: Avg Passes Att. · Avg Passes Comp. · Avg Pressing (Dir.)
+  - Defensive: Avg Goals Conceded · Avg Def. Line Breaks · Avg Forced Turnovers · Avg Tackles Won · Avg Interceptions · Avg Clearances · Avg Aerial Duels Won · Avg Physical Duels Won
+  - Physical: Avg Distance (km)
+- **PLAYER_METRICS expanded:** 20 rows across 4 groups → 33 rows across 5 groups — new groups: Off-ball (total offers, offers received, loose ball receptions, pushing on, push→pressing). Added: crosses att/comp, LB att, switches of play, step-ins, tackles made, physical duels won, possession contests won, pressing direct/indirect, red cards.
+
+#### Bug fixes (carried from previous session)
+
+- **`{@const}` placement violations:** Two instances where `{@const}` appeared inside HTML elements instead of as direct children of block tags (`{#each}`, `{#if}`). Fixed by moving to script block as `$derived` or to `{#each}` block level.
+- **TypeScript `as` casts in template `{@const}`:** SSR RollupError "Expected ',' got '?'" caused by TypeScript `as Record<string, number>` casts not being stripped in template context. Fixed by removing the casts.
+- **`shots_total` always empty in compare:** `MatchStatsSchema` was missing `shots_total` and `shots_on_target` fields. Both added.
+- **Cmp button reactivity / red square:** Replaced `{@const isCmpSelected}` pattern with direct `isSelected(id)` calls from the comparison store across matches, teams, and players listing pages. Also replaced `✓` text with SVG checkmark for reliable rendering.
+
+#### UI polish
+
+- **Mobile menu redesign:** Brand accent stripe (`border-top: 3px solid var(--accent)`) at top; left-border active indicator; backdrop overlay; footer with language switcher and theme toggle; improved slide-in animation (`cubic-bezier(0.32, 0.72, 0, 1)`).
+- **Home page featured match layout:** Venue and date now shown centered between the header metadata row and the scoreline, matching the match detail page layout.
+
 ### Post-M9 — Session 25c (2026-06-29)
 
 #### Feature — Comparison view Session C (polish + edge cases)

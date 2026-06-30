@@ -48,32 +48,50 @@
 			group: $t.compare.grpPossession,
 			rows: [
 				{ label: 'Avg xG', key: 'xg', fmt: (v: number) => v.toFixed(2) },
+				{ label: 'Avg xG Conceded', key: 'xg_conceded', fmt: (v: number) => v.toFixed(2) },
 				{ label: 'Avg Possession', key: 'possession_pct', fmt: (v: number) => `${v.toFixed(1)}%` },
 				{ label: 'Avg In Contest', key: 'in_contest_pct', fmt: (v: number) => `${v.toFixed(1)}%` },
+				{ label: 'Avg Shots', key: 'shots_total', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Shots on Target', key: 'shots_on_target', fmt: (v: number) => v.toFixed(0) },
 			],
 		},
 		{
 			group: $t.compare.grpAttacking,
 			rows: [
 				{ label: 'Avg Goals', key: 'goals', fmt: (v: number) => v.toFixed(1) },
-				{ label: 'Avg Shots', key: 'shots_total', fmt: (v: number) => v.toFixed(0) },
-				{
-					label: 'Avg Line Breaks',
-					key: 'completed_line_breaks',
-					fmt: (v: number) => v.toFixed(0),
-				},
+				{ label: 'Avg Line Breaks', key: 'completed_line_breaks', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Ball Progressions', key: 'ball_progressions', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Take-ons', key: 'take_ons', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Crosses', key: 'crosses', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Corners', key: 'corners', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Set Plays', key: 'set_plays', fmt: (v: number) => v.toFixed(0) },
+			],
+		},
+		{
+			group: $t.compare.grpPassing,
+			rows: [
+				{ label: 'Avg Passes Att.', key: 'passes_attempted', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Passes Comp.', key: 'passes_completed', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Pressing (Dir.)', key: 'pressing_direct', fmt: (v: number) => v.toFixed(0) },
 			],
 		},
 		{
 			group: $t.compare.grpDefensive,
 			rows: [
-				{
-					label: 'Avg Goals Conceded',
-					key: 'goals_conceded',
-					fmt: (v: number) => v.toFixed(1),
-				},
+				{ label: 'Avg Goals Conceded', key: 'goals_conceded', fmt: (v: number) => v.toFixed(1) },
+				{ label: 'Avg Def. Line Breaks', key: 'defensive_line_breaks', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Forced Turnovers', key: 'forced_turnovers', fmt: (v: number) => v.toFixed(0) },
 				{ label: 'Avg Tackles Won', key: 'tackles_won', fmt: (v: number) => v.toFixed(0) },
 				{ label: 'Avg Interceptions', key: 'interceptions', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Clearances', key: 'clearances', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Aerial Duels Won', key: 'duels_won_aerial', fmt: (v: number) => v.toFixed(0) },
+				{ label: 'Avg Physical Duels Won', key: 'duels_won_physical', fmt: (v: number) => v.toFixed(0) },
+			],
+		},
+		{
+			group: $t.compare.grpPhysical,
+			rows: [
+				{ label: 'Avg Distance (km)', key: 'total_distance_km', fmt: (v: number) => v.toFixed(1) },
 			],
 		},
 	]);
@@ -99,76 +117,58 @@
 				{ label: 'Minutes', key: 'minutes_played', fmt: (v: number) => `${v}'` },
 				{ label: 'Shots', key: 'attempts_at_goal', fmt: (v: number) => String(v ?? 0) },
 				{ label: 'Take-ons', key: 'take_ons', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Ball Progs.', key: 'ball_progressions', fmt: (v: number) => String(v ?? 0) },
 				{ label: 'Yellow Cards', key: 'yellow_cards', fmt: (v: number) => String(v) },
+				{ label: 'Red Cards', key: 'red_cards', fmt: (v: number) => String(v) },
 			],
 		},
 		{
 			group: $t.compare.grpPassing,
 			rows: [
-				{
-					label: 'Passes Att.',
-					key: 'passes_attempted',
-					fmt: (v: number) => String(v ?? 0),
-				},
-				{
-					label: 'Pass Comp. %',
-					key: 'pass_completion_pct',
-					fmt: (v: number) => (v != null ? `${v}%` : '—'),
-				},
-				{
-					label: 'Ball Progs.',
-					key: 'ball_progressions',
-					fmt: (v: number) => String(v ?? 0),
-				},
-				{
-					label: 'Line Breaks',
-					key: 'lb_completed',
-					fmt: (v: number) => String(v ?? 0),
-				},
+				{ label: 'Passes Att.', key: 'passes_attempted', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Passes Comp.', key: 'passes_completed', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Pass Comp. %', key: 'pass_completion_pct', fmt: (v: number) => v != null ? `${v}%` : '—' },
+				{ label: 'Crosses Att.', key: 'crosses_attempted', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Crosses Comp.', key: 'crosses_completed', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Line Breaks', key: 'lb_completed', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'LB Att.', key: 'lb_attempted', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Switches of Play', key: 'switches_of_play', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Step-ins', key: 'step_ins', fmt: (v: number) => String(v ?? 0) },
 			],
 		},
 		{
 			group: $t.compare.grpDefensive,
 			rows: [
+				{ label: 'Tackles Made', key: 'tackles_made', fmt: (v: number) => String(v ?? 0) },
 				{ label: 'Tackles Won', key: 'tackles_won', fmt: (v: number) => String(v ?? 0) },
-				{
-					label: 'Interceptions',
-					key: 'interceptions',
-					fmt: (v: number) => String(v ?? 0),
-				},
+				{ label: 'Interceptions', key: 'interceptions', fmt: (v: number) => String(v ?? 0) },
 				{ label: 'Blocks', key: 'blocks', fmt: (v: number) => String(v ?? 0) },
 				{ label: 'Clearances', key: 'clearances', fmt: (v: number) => String(v ?? 0) },
-				{
-					label: 'Regains',
-					key: 'possession_regains',
-					fmt: (v: number) => String(v ?? 0),
-				},
-				{
-					label: 'Aerial Duels',
-					key: 'duels_won_aerial',
-					fmt: (v: number) => String(v ?? 0),
-				},
+				{ label: 'Regains', key: 'possession_regains', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Aerial Duels Won', key: 'duels_won_aerial', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Physical Duels Won', key: 'duels_won_physical', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Possession Contests Won', key: 'possession_contests_won', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Pressing (Direct)', key: 'pressing_direct', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Pressing (Indirect)', key: 'pressing_indirect', fmt: (v: number) => String(v ?? 0) },
+			],
+		},
+		{
+			group: 'Off-ball',
+			rows: [
+				{ label: 'Total Offers', key: 'total_offers', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Offers Received', key: 'offers_received', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Loose Ball Rec.', key: 'loose_ball_receptions', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Pushing On', key: 'pushing_on', fmt: (v: number) => String(v ?? 0) },
+				{ label: 'Push → Pressing', key: 'pushing_on_into_pressing', fmt: (v: number) => String(v ?? 0) },
 			],
 		},
 		{
 			group: $t.compare.grpPhysical,
 			rows: [
-				{
-					label: 'Distance (km)',
-					key: 'total_distance_m',
-					fmt: (v: number) => (v != null ? (v / 1000).toFixed(1) : '—'),
-				},
-				{
-					label: 'HS Runs',
-					key: 'high_speed_runs',
-					fmt: (v: number) => String(v ?? 0),
-				},
+				{ label: 'Distance (km)', key: 'total_distance_m', fmt: (v: number) => v != null ? (v / 1000).toFixed(1) : '—' },
+				{ label: 'HS Runs', key: 'high_speed_runs', fmt: (v: number) => String(v ?? 0) },
 				{ label: 'Sprints', key: 'sprints', fmt: (v: number) => String(v ?? 0) },
-				{
-					label: 'Top Speed',
-					key: 'top_speed_kmh',
-					fmt: (v: number) => (v != null ? `${v} km/h` : '—'),
-				},
+				{ label: 'Top Speed (km/h)', key: 'top_speed_kmh', fmt: (v: number) => v != null ? `${v}` : '—' },
 			],
 		},
 	]);
@@ -322,8 +322,8 @@
 										style="background:{teamColorVar(tm.color)};color:{badgeTextColor(tm.color)};"
 										>{tm.short_code}</span
 									>
+									<a href="/teams/{tm.id}" class="entity-name">{tm.name}</a>
 								</div>
-								<a href="/teams/{tm.id}" class="entity-name">{tm.name}</a>
 								<button
 									class="entity-remove"
 									aria-label="Remove {tm.name}"
@@ -473,22 +473,22 @@
 						<div class="metric-header">{$t.compare.metricLabel}</div>
 					</div>
 					{#each entities as entity}
-						{@const p = entity}
-						{@const posColor = POS_COLOR[p.position ?? ''] ?? 'var(--muted)'}
+						{@const pl = entity.player}
+						{@const posColor = POS_COLOR[pl?.position ?? ''] ?? 'var(--muted)'}
 						<div class="entity-col">
 							<div class="entity-header">
 								<div class="entity-header__top">
-									<span class="pos-chip" style="background:{posColor};">{p.position ?? '—'}</span>
+									<span class="pos-chip" style="background:{posColor};">{pl?.position ?? '—'}</span>
 									<span class="entity-badge player-badge"
-										style="background:{safeColorVar(p.team?.color)};color:{badgeTextColor(p.team?.color ?? '--c-lime')};"
-										>{p.team?.short_code ?? '?'}</span
+										style="background:{safeColorVar(entity.team?.color)};color:{badgeTextColor(entity.team?.color ?? '--c-lime')};"
+										>{entity.team?.short_code ?? '?'}</span
 									>
+									<a href="/players/{pl?.id}" class="entity-name">{pl?.name}</a>
 								</div>
-								<a href="/players/{p.id}" class="entity-name">{p.name}</a>
 								<button
 									class="entity-remove"
-									aria-label="Remove {p.name}"
-									onclick={() => removeEntity(p.id)}>✕</button
+									aria-label="Remove {pl?.name}"
+									onclick={() => removeEntity(pl?.id)}>✕</button
 								>
 							</div>
 						</div>

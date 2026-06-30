@@ -2,25 +2,21 @@
 
 ## Feature Ideas (backlog)
 
-### Comparison view — teams & players side-by-side
+### Comparison view — teams & players side-by-side ✅ COMPLETE
 
-Allow up to 5 teams **or** players to be compared in a dedicated view.
+All three sessions delivered. Full feature shipped in Sessions 25 A/B/C + Session 26 polish.
 
-**UX flow:**
+**Delivered:**
+- Shared comparison store + URL param serialisation + checkbox/cmp-button UI on all three listing pages (teams, players, matches) with SVG checkmark
+- `/compare` route — team, player, and match comparison with column layout + proportional bar charts + search/autocomplete
+- Player entity header fix (API nesting `entity.player`), team name inline with flag+badge
+- TEAM_METRICS: 22 rows across 5 groups; PLAYER_METRICS: 33 rows across 5 groups
+- `MatchStatsSchema` extended to expose `shots_total` + `shots_on_target`
+- Polish: empty/loading states, one-entity message, no-type landing with pick cards
 
-- Checkboxes appear on rows in the Teams and Players ranking tables
-- A floating "Compare N selected →" bar appears as soon as ≥2 are checked
-- `/compare` page renders a column-per-entity layout with one stat row per metric; each row has a proportional bar showing relative values
-- Search/autocomplete on `/compare` lets the user add any entity not currently on screen
-- State is held in URL params (`?type=teams&ids=3,7,12`) so comparisons are shareable links
-
-**Effort estimate:** 2–3 sessions
-
-- Session A: shared comparison store + URL param serialisation + checkbox UI on table rows + floating action bar
-- Session B: `/compare` route + column layout + stat rows with bar chart + search/autocomplete
-- Session C: polish, responsive layout, empty/loading states, edge cases (pending matches, missing stats)
-
-**Backend:** existing `/api/v1/teams/` and `/api/v1/players/` endpoints are likely sufficient; may add `?ids=` multi-fetch param to avoid N+1 requests.
+**Remaining (future):**
+- Match entity header improvements (team names as links)
+- Shareable URL copies to clipboard (currently URLs are already shareable)
 
 ---
 

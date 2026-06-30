@@ -67,19 +67,28 @@
 </header>
 
 {#if menuOpen}
+	<div class="mobile-backdrop" aria-hidden="true" onclick={() => (menuOpen = false)}></div>
 	<nav class="mobile-menu" aria-label="Mobile navigation">
-		{#each navItems as item}
-			<a
-				href={item.href}
-				class="mobile-menu__link"
-				class:active={$page.url.pathname === item.href}
-			>{item.label}</a>
-		{/each}
-		<div class="mobile-menu__controls">
+		<div class="mobile-menu__links">
+			{#each navItems as item}
+				<a
+					href={item.href}
+					class="mobile-menu__link"
+					class:active={$page.url.pathname === item.href}
+					aria-current={$page.url.pathname === item.href ? 'page' : undefined}
+				>
+					<span>{item.label}</span>
+					{#if $page.url.pathname === item.href}
+						<span class="mobile-menu__active-dot" aria-hidden="true"></span>
+					{/if}
+				</a>
+			{/each}
+		</div>
+		<div class="mobile-menu__footer">
 			<div class="lang-switcher" role="group" aria-label="Language">
 				{#each LOCALES as loc}
 					<button
-						class="lang-btn"
+						class="lang-btn lang-btn--lg"
 						class:lang-btn--active={$locale === loc.code}
 						onclick={() => { setLocale(loc.code as Locale); menuOpen = false; }}
 						aria-label={loc.label}
@@ -237,44 +246,92 @@
 		transform: translateY(-7px) rotate(-45deg);
 	}
 
+	/* ── Mobile backdrop ─────────────────────────────────────────────── */
+	.mobile-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 140;
+		background: rgba(0, 0, 0, 0.35);
+		animation: backdrop-in 0.2s ease;
+	}
+	@keyframes backdrop-in {
+		from { opacity: 0; }
+		to   { opacity: 1; }
+	}
+
 	/* ── Mobile menu ─────────────────────────────────────────────────── */
 	:global(.mobile-menu) {
-		display: flex;
-		flex-direction: column;
 		position: fixed;
-		top: 57px;
+		top: 56px;
 		left: 0;
 		right: 0;
 		bottom: 0;
 		z-index: 150;
 		background: var(--surface);
-		border-top: 1px solid var(--border);
+		border-top: 3px solid var(--accent);
+		display: flex;
+		flex-direction: column;
 		overflow-y: auto;
 		padding-bottom: env(safe-area-inset-bottom, 0);
-		animation: menu-in 0.18s ease;
+		animation: menu-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 	}
 	@keyframes menu-in {
-		from { opacity: 0; transform: translateY(-6px); }
+		from { opacity: 0; transform: translateY(-10px); }
 		to   { opacity: 1; transform: translateY(0); }
 	}
+
+	:global(.mobile-menu__links) {
+		flex: 1;
+		padding: var(--sp-3) 0 var(--sp-4);
+	}
+
 	:global(.mobile-menu__link) {
-		padding: var(--sp-4) var(--sp-6);
-		font-size: var(--fs-ui);
-		font-weight: 500;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 16px var(--sp-8);
+		font-size: 1.1rem;
+		font-weight: 600;
 		color: var(--muted);
 		text-decoration: none;
-		border-inline-start: 3px solid transparent;
-		transition: color 0.12s, background 0.12s;
+		letter-spacing: -0.01em;
+		border-left: 3px solid transparent;
+		transition: color 0.12s, border-left-color 0.12s, background 0.12s;
 	}
 	:global(.mobile-menu__link:hover) {
 		color: var(--ink);
 		background: color-mix(in srgb, var(--ink) 4%, transparent);
+		border-left-color: color-mix(in srgb, var(--accent) 35%, transparent);
 	}
 	:global(.mobile-menu__link.active) {
 		color: var(--ink);
 		font-weight: 700;
-		border-inline-start-color: var(--accent);
+		border-left-color: var(--accent);
 		background: color-mix(in srgb, var(--accent) 6%, transparent);
+	}
+	:global(.mobile-menu__active-dot) {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--accent);
+		flex-shrink: 0;
+	}
+
+	:global(.mobile-menu__footer) {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--sp-4);
+		padding: var(--sp-4) var(--sp-8);
+		padding-bottom: max(var(--sp-5), env(safe-area-inset-bottom, var(--sp-5)));
+		border-top: 1px solid var(--border);
+		background: color-mix(in srgb, var(--ink) 2%, var(--surface));
+	}
+
+	:global(.lang-btn--lg) {
+		padding: 6px 10px;
+		font-size: var(--fs-ui);
 	}
 
 	@media (max-width: 960px) {
@@ -283,15 +340,5 @@
 		/* Hide these from the topbar only — they reappear inside the mobile menu */
 		.topbar__right .lang-switcher,
 		.reports-pill { display: none; }
-	}
-
-	/* ── Mobile menu controls row ─────────────────────────────────────── */
-	:global(.mobile-menu__controls) {
-		display: flex;
-		align-items: center;
-		gap: var(--sp-4);
-		padding: var(--sp-3) var(--sp-6);
-		border-top: 1px solid var(--border);
-		margin-top: var(--sp-1);
 	}
 </style>

@@ -57,11 +57,16 @@
 	<section class="match-band">
 		<div class="match-band__header">
 			<span class="match-band__featured-label">{$t.match.featuredLabel}</span>
-			<span class="match-band__meta">
-				Group {d.featured.group_letter} · Match {d.featured.match_no} · {d.featured.venue} · {d.featured.match_date}
-			</span>
+			<span class="match-band__meta">{$t.match.group} {d.featured.group_letter} · {$t.match.matchNo} {d.featured.match_no}</span>
 			<span class="match-band__status">{$t.match.fullTime}</span>
 		</div>
+
+		{#if d.featured.venue || d.featured.match_date}
+			<div class="match-band__context">
+				{#if d.featured.venue}<span class="match-band__venue">{d.featured.venue}</span>{/if}
+				{#if d.featured.match_date}<span class="match-band__date">{d.featured.match_date}</span>{/if}
+			</div>
+		{/if}
 
 		<div class="match-band__score-link" role="link" tabindex="0"
 			onclick={() => goto(`/matches/${d.featured.id}`)}
@@ -238,6 +243,25 @@
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: var(--positive);
+	}
+
+	.match-band__context {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 3px;
+		margin-top: calc(-1 * var(--sp-3));
+	}
+	.match-band__venue {
+		font-size: var(--fs-ui);
+		font-weight: 600;
+		color: var(--ink);
+		text-align: center;
+	}
+	.match-band__date {
+		font-size: var(--fs-meta);
+		color: var(--muted);
+		text-align: center;
 	}
 
 	.match-band__score-link {

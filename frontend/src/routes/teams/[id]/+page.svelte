@@ -118,6 +118,7 @@
 				xg: e.stats?.xg_a ?? null,
 			}))
 	);
+	const maxXg = $derived(trendData.reduce((m: number, d: any) => (d.xg != null && d.xg > m ? d.xg : m), 1));
 
 	function sparkPoints(values: (number | null)[], height: number, maxVal?: number): string {
 		const n = values.length;
@@ -303,7 +304,6 @@
 
 					<div class="trend-card">
 						<span class="trend-label">xG per match</span>
-						{@const maxXg = Math.max(...trendData.map(d => d.xg ?? 0), 1)}
 						<svg viewBox="0 0 100 44" class="trend-svg" aria-hidden="true">
 							<line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
 							<polyline
@@ -392,8 +392,8 @@
 
 	<!-- ── AVG / TOTAL STATS ──────────────────────────────────────────────── -->
 	{#if avgStats && avgStats.match_count > 0}
-		{@const tot = avgStats.totals as Record<string, number>}
-		{@const avg = avgStats.averages as Record<string, number>}
+		{@const tot = avgStats.totals}
+		{@const avg = avgStats.averages}
 		<section class="matches-section">
 			<div class="section-divider"></div>
 			<div class="section-body">

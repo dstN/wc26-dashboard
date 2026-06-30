@@ -4,7 +4,7 @@
 	import TermTooltip from '$lib/components/layout/TermTooltip.svelte';
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
-	import { toggleComparison, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
+	import { toggleComparison, isSelected, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -309,14 +309,15 @@
 					</thead>
 					<tbody>
 						{#each sortedScorers.slice(0, 20) as p, i}
-							{@const isCmpP = cmpIds.includes(p.id)}
-							<tr class:cmp-selected={isCmpP}>
+							<tr class:cmp-selected={isSelected(p.id)}>
 								<td class="cmp-col">
-									<button class="cmp-check" class:cmp-check--on={isCmpP}
-										disabled={!isCmpP && cmpFull}
+									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
+										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
-									>{isCmpP ? '✓' : '+'}</button>
+										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+									>
+									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
+								</button>
 								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
@@ -359,14 +360,15 @@
 					</thead>
 					<tbody>
 						{#each sortedDefenders.slice(0, 20) as p, i}
-							{@const isCmpP = cmpIds.includes(p.id)}
-							<tr class:cmp-selected={isCmpP}>
+							<tr class:cmp-selected={isSelected(p.id)}>
 								<td class="cmp-col">
-									<button class="cmp-check" class:cmp-check--on={isCmpP}
-										disabled={!isCmpP && cmpFull}
+									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
+										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
-									>{isCmpP ? '✓' : '+'}</button>
+										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+									>
+									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
+								</button>
 								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
@@ -409,14 +411,15 @@
 					</thead>
 					<tbody>
 						{#each sortedMidfielders.slice(0, 20) as p, i}
-							{@const isCmpP = cmpIds.includes(p.id)}
-							<tr class:cmp-selected={isCmpP}>
+							<tr class:cmp-selected={isSelected(p.id)}>
 								<td class="cmp-col">
-									<button class="cmp-check" class:cmp-check--on={isCmpP}
-										disabled={!isCmpP && cmpFull}
+									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
+										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
-									>{isCmpP ? '✓' : '+'}</button>
+										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+									>
+									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
+								</button>
 								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
@@ -459,14 +462,15 @@
 					</thead>
 					<tbody>
 						{#each sortedForwards.slice(0, 20) as p, i}
-							{@const isCmpP = cmpIds.includes(p.id)}
-							<tr class:cmp-selected={isCmpP}>
+							<tr class:cmp-selected={isSelected(p.id)}>
 								<td class="cmp-col">
-									<button class="cmp-check" class:cmp-check--on={isCmpP}
-										disabled={!isCmpP && cmpFull}
+									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
+										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
-									>{isCmpP ? '✓' : '+'}</button>
+										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+									>
+									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
+								</button>
 								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
@@ -510,14 +514,15 @@
 					</thead>
 					<tbody>
 						{#each sortedPhysical.slice(0, 20) as p, i}
-							{@const isCmpP = cmpIds.includes(p.id)}
-							<tr class:cmp-selected={isCmpP}>
+							<tr class:cmp-selected={isSelected(p.id)}>
 								<td class="cmp-col">
-									<button class="cmp-check" class:cmp-check--on={isCmpP}
-										disabled={!isCmpP && cmpFull}
+									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
+										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isCmpP ? 'Remove' : 'Add'} {p.name} from comparison"
-									>{isCmpP ? '✓' : '+'}</button>
+										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+									>
+									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
+								</button>
 								</td>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
