@@ -2,6 +2,24 @@
 
 ## Feature Ideas (backlog)
 
+### PDF-Ingestion in Produktion ✅ COMPLETE
+
+Automatisches Parsen und DB-Import von neu hochgeladenen EFI-PDFs unter Phusion Passenger.
+
+**Geliefert:**
+- `POST /api/v1/ingest/upload` — Bearer-Token-gesicherter Endpoint, nimmt PDF entgegen, triggert `watch_pdfs.py` als Subprocess
+- `/admin/upload` — Admin-Formular im Frontend (nicht im Nav, Key-geschützt)
+- Cron-basierter Fallback über bestehende `watch_pdfs.py` — via Hosting-Panel alle 5 Min. einrichten
+
+**Deployment-Schritte (Produktion):**
+1. `INGEST_SECRET_KEY` in `.env` setzen (`openssl rand -hex 32`)
+2. `PDF_WATCH_DIR`, `INGESTION_PYTHON`, `INGESTION_MODULE_DIR` in `.env` setzen
+3. Cron-Job im netcup/Plesk-Panel einrichten:
+   `*/5 * * * * cd /pfad/projekt/ingestion && /pfad/.venv/bin/python -m ingestion.watch_pdfs >> /var/log/efi_watch.log 2>&1`
+
+---
+
+
 ### Comparison view — teams & players side-by-side ✅ COMPLETE
 
 All three sessions delivered. Full feature shipped in Sessions 25 A/B/C + Session 26 polish.

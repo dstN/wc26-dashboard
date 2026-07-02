@@ -839,6 +839,35 @@ wrong page.
 - **`frontend/src/routes/compare/+page.svelte`:** Match comparison grid: Score group (Total Goals, Goals Home/Away) + Possession group (xG Home/Away, Possession%, In Contest%, Total Shots); match entity header shows flag + score + flags + team short codes + match number/venue; remove button removes from URL.
 - **`frontend/src/routes/compare/+page.ts`:** Matches type loads `GET /api/v1/matches/{id}` + `GET /api/v1/matches/{id}/possession` in parallel; `loadSearchOptions` for matches fetches `/api/v1/matches/` and formats as `SHO 1-0 ARG · Match 23`.
 
+### Post-M9 — Session 27 (2026-07-02)
+
+#### Feature — Gesicherter PDF-Upload-Endpoint + Admin-UI
+
+- **`backend/app/routers/ingest.py`** — neuer Router `POST /api/v1/ingest/upload`:
+  - Bearer-Token-Auth via `INGEST_SECRET_KEY` (`.env`). Kein Key konfiguriert → 503. Falscher Key → 401.
+  - Nimmt eine PDF-Datei als `multipart/form-data` entgegen, max. 50 MB.
+  - Speichert die Datei in `PDF_WATCH_DIR`, triggert sofort `watch_pdfs.py` als Subprocess (`--force`).
+  - Gibt `{ status, file, saved_to, log }` zurück; bei Fehler `422` mit `{ message, log }`.
+  - Timeout: 180 s für den Ingestion-Subprocess.
+- **`backend/app/config.py`** — vier neue Settings: `ingest_secret_key`, `pdf_watch_dir`, `ingestion_python`, `ingestion_module_dir`.
+- **`backend/app/main.py`** — ingest-Router registriert.
+- **`.env.example`** — `INGEST_SECRET_KEY`, `INGESTION_PYTHON`, `INGESTION_MODULE_DIR` dokumentiert.
+- **`frontend/src/routes/admin/+page.svelte`** — Geschütztes Admin-Formular unter `/admin/upload`:
+  - API-Key-Eingabe (Passwortfeld) mit optionalem `localStorage`-Speicher.
+  - Drag-&-drop-fähiger Datei-Picker (`.pdf only`).
+  - Spinner während Upload; Erfolg/Fehler-Panel mit Log-Output aus dem Ingestion-Subprocess.
+  - Nicht im TopBar-Nav verlinkt — Security by obscurity + Key-Pflicht.
+  - Hinweis auf Cron-Fallback unterhalb des Formulars.
+- **Cron als Fallback:** `watch_pdfs.py` läuft weiterhin periodisch (Cron-Job via Hosting-Panel). Der Upload-Endpoint ist der sofortige Weg, Cron das Sicherheitsnetz.
+
+**Passenger-Produktionskonfiguration (`.env` auf dem Server):**
+```
+INGEST_SECRET_KEY=<openssl rand -hex 32>
+PDF_WATCH_DIR=/home/username/pdf_drop
+INGESTION_PYTHON=/home/username/.venv/bin/python3
+INGESTION_MODULE_DIR=/home/username/wc26-dashboard/ingestion
+```
+
 ### Post-M9 — Session 26 (2026-06-30)
 
 #### Compare page — fixes and expanded metrics
