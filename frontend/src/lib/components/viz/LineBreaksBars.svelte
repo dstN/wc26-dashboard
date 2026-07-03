@@ -30,7 +30,7 @@
 	<!-- Team header row -->
 	<div class="lb__teams">
 		<a href="/teams/{team_a.id}" class="lb__team-name" style="color: {teamTextColor(team_a.color)}; text-align: right;">{team_a.name}</a>
-		<span class="lb__center-label">LINE BREAKS</span>
+		<span class="lb__center-label">{$t.detail.lineBreaks}</span>
 		<a href="/teams/{team_b.id}" class="lb__team-name" style="color: {teamTextColor(team_b.color)};">{team_b.name}</a>
 	</div>
 

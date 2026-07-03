@@ -258,7 +258,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="{$t.detail.finalThird}" />
+				<SectionLabel label="{$t.detail.finalThirdEntries}" />
 				<FinalThirdZones
 					entries_a={finalThird.team_a ?? []}
 					entries_b={finalThird.team_b ?? []}

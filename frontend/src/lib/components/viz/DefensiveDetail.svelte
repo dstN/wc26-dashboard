@@ -61,7 +61,7 @@
 <div class="dd">
 	<div class="dd__header">
 		<a href="/teams/{team_a.id}" class="dd__tname" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="dd__center">Defensive Actions</span>
+		<span class="dd__center">{$t.detail.defensiveHeader}</span>
 		<a href="/teams/{team_b.id}" class="dd__tname dd__tname--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
@@ -75,7 +75,7 @@
 		</div>
 	{/each}
 
-	<div class="dd__subheader">Blocks Breakdown</div>
+	<div class="dd__subheader">{$t.detail.blocksBreakdown}</div>
 	{#each blockRows as row}
 		{@const va = get(defensive_a, row.key)}
 		{@const vb = get(defensive_b, row.key)}
@@ -86,7 +86,7 @@
 		</div>
 	{/each}
 
-	<div class="dd__subheader">Possession Contests</div>
+	<div class="dd__subheader">{$t.detail.possessionContests}</div>
 	{#each contestRows as row}
 		{@const va = get(defensive_a, row.key)}
 		{@const vb = get(defensive_b, row.key)}
@@ -103,14 +103,14 @@
 				<div class="dd__callout" style="border-color: {teamColorVar(team_a.color)}">
 					<span class="dd__callout-val" style="color: {teamTextColor(team_a.color)}">{defensive_a.most_regains_count}</span>
 					<span class="dd__callout-name">{defensive_a.most_regains_player}</span>
-					<span class="dd__callout-label">Most Possession Regains</span>
+					<span class="dd__callout-label">{$t.detail.mostPossessionRegains}</span>
 				</div>
 			{/if}
 			{#if defensive_b?.most_regains_player}
 				<div class="dd__callout" style="border-color: {teamColorVar(team_b.color)}">
 					<span class="dd__callout-val" style="color: {teamTextColor(team_b.color)}">{defensive_b.most_regains_count}</span>
 					<span class="dd__callout-name">{defensive_b.most_regains_player}</span>
-					<span class="dd__callout-label">Most Possession Regains</span>
+					<span class="dd__callout-label">{$t.detail.mostPossessionRegains}</span>
 				</div>
 			{/if}
 		</div>

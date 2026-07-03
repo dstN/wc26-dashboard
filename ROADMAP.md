@@ -2,7 +2,7 @@
 
 ## Feature Ideas (backlog)
 
-### Full i18n Translation Coverage ✅ COMPLETE (Sessions 19–20 — 2026-07-03)
+### Full i18n Translation Coverage ✅ COMPLETE (Sessions 19–21 — 2026-07-03)
 
 All hardcoded English strings across all route pages and viz components replaced with reactive `$t.*` keys. The dashboard is now fully translatable across EN/DE/ES/PT/FR/AR without any English fallback strings leaking through.
 
@@ -27,6 +27,11 @@ All hardcoded English strings across all route pages and viz components replaced
 - `teams/[id]` phase bars — phase names translated via `PHASE_KEYS`
 - New `phases.*` namespace (19 keys) + 19 `detail.*` keys (shot/spatial/KPI) × 6 locales = 234 entries
 - RTL fix: teams detail flag watermark now mirrors correctly in Arabic (`[dir='rtl']`)
+
+**Delivered (Session 21):**
+- `MovementDetail`, `OfferingsDetail`, `PressureDetail`, `DefensiveDetail`, `LineBreaksBars`, `FinalThirdZones` — all remaining hardcoded EN strings replaced with `$t.*` keys
+- Fixed pre-existing duplicate `detail.finalThird` key in `en.ts`; added `detail.finalThirdEntries` and updated `matches/[id]` section label
+- 20 new `detail.*` keys × 6 locales = 120 new entries
 
 ---
 

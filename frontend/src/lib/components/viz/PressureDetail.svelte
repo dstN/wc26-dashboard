@@ -44,7 +44,7 @@
 <div class="pr">
 	<div class="pr__header">
 		<a href="/teams/{team_a.id}" class="pr__tname" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="pr__center">Pressure</span>
+		<span class="pr__center">{$t.detail.pressureHeader}</span>
 		<a href="/teams/{team_b.id}" class="pr__tname pr__tname--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
@@ -64,14 +64,14 @@
 				<div class="pr__callout" style="border-color: {teamColorVar(team_a.color)}">
 					<span class="pr__callout-val" style="color: {teamTextColor(team_a.color)}">{pressure_a.most_direct_count}</span>
 					<span class="pr__callout-name">{pressure_a.most_direct_player}</span>
-					<span class="pr__callout-label">Most Direct Pressures</span>
+					<span class="pr__callout-label">{$t.detail.mostDirectPressures}</span>
 				</div>
 			{/if}
 			{#if pressure_b?.most_direct_player}
 				<div class="pr__callout" style="border-color: {teamColorVar(team_b.color)}">
 					<span class="pr__callout-val" style="color: {teamTextColor(team_b.color)}">{pressure_b.most_direct_count}</span>
 					<span class="pr__callout-name">{pressure_b.most_direct_player}</span>
-					<span class="pr__callout-label">Most Direct Pressures</span>
+					<span class="pr__callout-label">{$t.detail.mostDirectPressures}</span>
 				</div>
 			{/if}
 		</div>

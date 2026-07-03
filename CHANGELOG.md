@@ -5,6 +5,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### i18n Phase 3 — Remaining hardcoded strings in viz components (2026-07-03)
+
+#### Components fully translated
+- `MovementDetail.svelte` — "Total Movements", "By Game Phase", "By Movement Type", "By Pitch Third", "Final Third"/"Mid Third"/"Def Third" column headers, "In Behind" movement type label, `typeLabels` record converted to reactive `$derived`
+- `OfferingsDetail.svelte` — "Offers Made", "received", "Most:", "Offers by Pitch Third", "Inside vs Outside Shape", "In"/"Out" shape labels
+- `PressureDetail.svelte` — "Pressure" center header, "Most Direct Pressures" callout label
+- `DefensiveDetail.svelte` — "Defensive Actions" center header, "Blocks Breakdown" / "Possession Contests" subheaders, "Most Possession Regains" callout label
+- `LineBreaksBars.svelte` — "LINE BREAKS" center label now uses `$t.detail.lineBreaks`
+- `FinalThirdZones.svelte` — "Final Third Entries" caption now uses `$t.detail.finalThirdEntries`; fixed pre-existing duplicate `finalThird` key bug in `en.ts`
+- `matches/[id]/+page.svelte` — `finalThirdEntries` section label fixed to use correct key
+
+#### New locale keys (× 6 locales = 120 new translation entries)
+- `detail.typeInBehind`, `movTotalMovements`, `movByPhase`, `movByType`, `movByPitchThird`
+- `detail.offersMade`, `offersReceived`, `offersMost`, `offersByPitchThird`, `offersInsideOutside`, `offersIn`, `offersOut`
+- `detail.pressureHeader`, `mostDirectPressures`
+- `detail.defensiveHeader`, `blocksBreakdown`, `possessionContests`, `mostPossessionRegains`
+- `detail.finalThirdEntries`
+
 ### i18n Phase 2 — Viz components & phase name translation (2026-07-03)
 
 #### Components fully translated (were English-only)
