@@ -125,10 +125,11 @@
 	);
 	const maxXg = $derived(trendData.reduce((m: number, d: any) => (d.xg != null && d.xg > m ? d.xg : m), 1));
 
-	function sparkPoints(values: (number | null)[], height: number, maxVal?: number): string {
+	function sparkPoints(values: (number | null)[], height: number, maxVal: number | undefined = undefined): string {
 		const n = values.length;
 		if (n < 2) return '';
-		const max = maxVal ?? Math.max(...values.filter((v): v is number => v != null), 0.01);
+		const validValues = values.filter((v) => v != null) as number[];
+		const max = maxVal ?? Math.max(...validValues, 0.01);
 		return values
 			.map((v, i) => {
 				const x = n === 1 ? 50 : (i / (n - 1)) * 100;
