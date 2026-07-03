@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { TeamSpatialSplit, Team } from '$lib/types/efi';
 	import { teamColorVar } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	let {
 		spatial_a,
@@ -19,16 +20,16 @@
 	let posBlockA = $state<'build_up_low' | 'build_up_mid' | 'final_third_phase'>('build_up_mid');
 	let posBlockB = $state<'build_up_low' | 'build_up_mid' | 'final_third_phase'>('build_up_mid');
 
-	const defBlocks: Array<{ key: 'high' | 'mid' | 'low'; label: string }> = [
-		{ key: 'high', label: 'High' },
-		{ key: 'mid', label: 'Mid' },
-		{ key: 'low', label: 'Low' },
-	];
-	const posBlocks: Array<{ key: 'build_up_low' | 'build_up_mid' | 'final_third_phase'; label: string }> = [
-		{ key: 'build_up_low', label: 'Build-Up Low' },
-		{ key: 'build_up_mid', label: 'Build-Up Mid' },
-		{ key: 'final_third_phase', label: 'Final Third' },
-	];
+	const defBlocks = $derived([
+		{ key: 'high' as const, label: $t.detail.spatialHigh },
+		{ key: 'mid' as const, label: $t.detail.spatialMid },
+		{ key: 'low' as const, label: $t.detail.spatialLow },
+	]);
+	const posBlocks = $derived([
+		{ key: 'build_up_low' as const, label: $t.detail.spatialBuildUpLow },
+		{ key: 'build_up_mid' as const, label: $t.detail.spatialBuildUpMid },
+		{ key: 'final_third_phase' as const, label: $t.detail.spatialFinalThird },
+	]);
 
 	const blockA = $derived(
 		scenario === 'defensive'
@@ -58,8 +59,8 @@
 	{#if !lockedScenario}
 	<div class="spatial__header">
 		<div class="scenario-tabs" role="group" aria-label="Scenario">
-			<button class="scenario-tab" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>Out of Possession</button>
-			<button class="scenario-tab" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>In Possession</button>
+			<button class="scenario-tab" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>{$t.detail.outOfPossession}</button>
+			<button class="scenario-tab" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>{$t.detail.inPossession}</button>
 		</div>
 	</div>
 	{/if}
@@ -107,9 +108,9 @@
 			</div>
 			{#if blockA}
 				<div class="kpis">
-					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? 'Def. Line' : 'Distance'}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.defensive_line_height}m</span></div>
-					<div class="kpi"><span class="kpi__label">Length</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.team_length}m</span></div>
-					{#if blockA.width_m != null}<div class="kpi"><span class="kpi__label">Width</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.width_m}m</span></div>{/if}
+					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.defensive_line_height}m</span></div>
+					<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.team_length}m</span></div>
+					{#if blockA.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.width_m}m</span></div>{/if}
 				</div>
 			{/if}
 		</div>
@@ -157,9 +158,9 @@
 			</div>
 			{#if blockB}
 				<div class="kpis">
-					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? 'Def. Line' : 'Distance'}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.defensive_line_height}m</span></div>
-					<div class="kpi"><span class="kpi__label">Length</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.team_length}m</span></div>
-					{#if blockB.width_m != null}<div class="kpi"><span class="kpi__label">Width</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.width_m}m</span></div>{/if}
+					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.defensive_line_height}m</span></div>
+					<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.team_length}m</span></div>
+					{#if blockB.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.width_m}m</span></div>{/if}
 				</div>
 			{/if}
 		</div>

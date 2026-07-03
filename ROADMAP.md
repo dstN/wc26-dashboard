@@ -2,11 +2,11 @@
 
 ## Feature Ideas (backlog)
 
-### Full i18n Translation Coverage ✅ COMPLETE (Session 19 — 2026-07-03)
+### Full i18n Translation Coverage ✅ COMPLETE (Sessions 19–20 — 2026-07-03)
 
 All hardcoded English strings across all route pages and viz components replaced with reactive `$t.*` keys. The dashboard is now fully translatable across EN/DE/ES/PT/FR/AR without any English fallback strings leaking through.
 
-**Delivered:**
+**Delivered (Session 19):**
 - `teams/[id]` — Performance Trend, Top Performers, Match Stats grid (7 groups, 34 stat labels), Squad section, POS_LABEL, mode toggle, summary stats
 - `matches/[id]` — Spatial "In/Out of Possession" section labels, line break labels
 - `compare` — Full TEAM_METRICS (25 Avg… labels) and PLAYER_METRICS (33 player stat labels)
@@ -17,7 +17,16 @@ All hardcoded English strings across all route pages and viz components replaced
 - `OfferingsDetail` / `MovementDetail` — pitch zone and phase type labels
 - `LineBreaksBars` — Defensive/Midfield/Attacking line labels
 - `GkDetail` — 4 section headers + 20 goalkeeper stat row labels (Activity, Shot Stopping, Aerial Actions, Crosses Faced sections)
-- 120 new i18n keys added (32 `teams.*`, 53 `detail.*`, 35 `compare.*`) × 6 locales = 720 translation entries
+- 120 new i18n keys (32 `teams.*`, 53 `detail.*`, 35 `compare.*`) × 6 locales = 720 entries
+
+**Delivered (Session 20):**
+- `PhasesBar` — "IN POSSESSION" / "OUT OF POSSESSION" headers + all 17 tactical phase names via `PHASE_KEYS` lookup
+- `PitchSpatial` + `SpatialMobilePicker` — block-type toggles, scenario tabs, KPI labels
+- `ShotTimeline` — column headers (Min/Player/Body/Delivery/Outcome) + outcome chips
+- `PhaseFingerprint` — radar spoke labels for 6 in-possession phases
+- `teams/[id]` phase bars — phase names translated via `PHASE_KEYS`
+- New `phases.*` namespace (19 keys) + 19 `detail.*` keys (shot/spatial/KPI) × 6 locales = 234 entries
+- RTL fix: teams detail flag watermark now mirrors correctly in Arabic (`[dir='rtl']`)
 
 ---
 

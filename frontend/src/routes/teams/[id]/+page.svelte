@@ -31,6 +31,26 @@
 		}, {})
 	);
 
+	const PHASE_KEYS: Record<string, string> = {
+		'Build Up Unopposed': 'buildUpUnopposed',
+		'Build Up Opposed': 'buildUpOpposed',
+		'Progression': 'progression',
+		'Final Third': 'finalThird',
+		'Long Ball': 'longBall',
+		'Attacking Transition': 'attackingTransition',
+		'Counter Attack': 'counterAttack',
+		'Set Piece': 'setPiece',
+		'High Press': 'highPress',
+		'Mid Press': 'midPress',
+		'Low Press': 'lowPress',
+		'High Block': 'highBlock',
+		'Mid Block': 'midBlock',
+		'Low Block': 'lowBlock',
+		'Recovery': 'recovery',
+		'Defensive Transition': 'defensiveTransition',
+		'Counter-press': 'counterPress',
+	};
+
 	const POS_LABEL = $derived<Record<string, string>>({
 		GK: $t.players.goalkeepers,
 		DF: $t.players.defenders,
@@ -231,7 +251,7 @@
 							<span class="phase-group__title">{$t.detail.inPossession} (avg %)</span>
 							{#each inPhases as ph}
 								<div class="phase-row">
-									<span class="phase-row__label">{ph.phase_name}</span>
+									<span class="phase-row__label">{($t.phases as Record<string, string>)[PHASE_KEYS[ph.phase_name]] ?? ph.phase_name}</span>
 									<div class="phase-row__track">
 										<div
 											class="phase-row__fill"
@@ -248,7 +268,7 @@
 							<span class="phase-group__title">{$t.detail.outOfPossession} (avg %)</span>
 							{#each outPhases as ph}
 								<div class="phase-row">
-									<span class="phase-row__label">{ph.phase_name}</span>
+									<span class="phase-row__label">{($t.phases as Record<string, string>)[PHASE_KEYS[ph.phase_name]] ?? ph.phase_name}</span>
 									<div class="phase-row__track">
 										<div
 											class="phase-row__fill phase-row__fill--out"
@@ -683,6 +703,10 @@
 		border-radius: 6px;
 		opacity: 0.12;
 		pointer-events: none;
+	}
+	:global([dir='rtl']) .team-header__flag {
+		right: auto;
+		left: var(--sp-8);
 	}
 
 	/* ── Section wrapper ─────────────────────────────────────────────── */
@@ -1141,6 +1165,7 @@
 			padding: var(--sp-8) var(--sp-4);
 		}
 		.team-header__flag { width: 120px; height: 80px; right: var(--sp-4); }
+		:global([dir='rtl']) .team-header__flag { right: auto; left: var(--sp-4); }
 		.team-name { font-size: 2.25rem; }
 		.team-summary { gap: var(--sp-5); }
 		.match-row__stats { display: none; }

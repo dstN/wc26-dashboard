@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### i18n Phase 2 — Viz components & phase name translation (2026-07-03)
+
+#### Components fully translated (were English-only)
+- `PhasesBar.svelte` — "IN POSSESSION" / "OUT OF POSSESSION" section headers now use `$t.phases.*`; all 17 phase names from the DB (Build Up Unopposed, Counter-press, etc.) translated via `PHASE_KEYS` lookup map
+- `PitchSpatial.svelte` — scenario tabs (Out of Possession / In Possession), block-type toggles (High/Mid/Low, Build-Up Low/Mid/Final Third), KPI labels (Def. Line / Distance / Length / Width)
+- `SpatialMobilePicker.svelte` — same labels as PitchSpatial on mobile
+- `ShotTimeline.svelte` — column headers (Min / Player / Body / Delivery / Outcome) and outcome chips (Goal / Blocked / On Target / Off Target)
+- `PhaseFingerprint.svelte` — radar chart spoke labels (6 in-possession phase names)
+- `teams/[id]/+page.svelte` — phase overview bar labels translated via `PHASE_KEYS`
+
+#### New locale keys (× 6 locales = 234 new translation entries)
+- `phases.*` namespace — 19 keys: `inPossessionHeader`, `outOfPossessionHeader`, plus 17 tactical phase names
+- `detail.shot*` — 9 keys: `shotMin`, `shotPlayer`, `shotBody`, `shotDelivery`, `shotOutcome`, `shotGoal`, `shotBlocked`, `shotOnTarget`, `shotOffTarget`
+- `detail.spatial*` — 6 keys: `spatialHigh`, `spatialMid`, `spatialLow`, `spatialBuildUpLow`, `spatialBuildUpMid`, `spatialFinalThird`
+- `detail.kpi*` — 4 keys: `kpiDefLine`, `kpiDistance`, `kpiLength`, `kpiWidth`
+
+#### RTL (Arabic) fix
+- Teams detail flag watermark (`[dir='rtl'] .team-header__flag`) now mirrors to the correct side — `right: auto; left: var(--sp-8)` (desktop) and `left: var(--sp-4)` (mobile)
+
 ### Added
 - M0: Docker Compose infrastructure (db, backend, frontend, ingestion profile, test profile)
 - M0: Makefile with up/down/reset/seed/crawl/test/contract/fmt/logs targets

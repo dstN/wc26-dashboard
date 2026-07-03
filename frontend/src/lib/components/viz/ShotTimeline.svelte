@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Team } from '$lib/types/efi';
 	import { teamTextColor } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	interface Shot {
 		minute: number;
@@ -27,12 +28,19 @@
 		return 'blocked';
 	}
 
+	const tOutcomes = $derived({
+		goal: $t.detail.shotGoal,
+		blocked: $t.detail.shotBlocked,
+		onTarget: $t.detail.shotOnTarget,
+		offTarget: $t.detail.shotOffTarget,
+	});
+
 	function outcomeLabel(outcome: string | null): string {
 		if (!outcome) return '—';
-		if (outcome.includes('Goal')) return 'Goal';
-		if (outcome.includes('Blocked')) return 'Blocked';
-		if (outcome.includes('On Target')) return 'On Target';
-		if (outcome.includes('Off Target')) return 'Off Target';
+		if (outcome.includes('Goal')) return tOutcomes.goal;
+		if (outcome.includes('Blocked')) return tOutcomes.blocked;
+		if (outcome.includes('On Target')) return tOutcomes.onTarget;
+		if (outcome.includes('Off Target')) return tOutcomes.offTarget;
 		return outcome.split(' - ').pop() ?? outcome;
 	}
 
@@ -47,17 +55,17 @@
 <div class="stl">
 	<div class="stl__head">
 		<a href="/teams/{team_a.id}" class="stl__team" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="stl__center">Shot Log</span>
+		<span class="stl__center">{$t.detail.shotLog}</span>
 		<a href="/teams/{team_b.id}" class="stl__team stl__team--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
 	<div class="stl__table">
 		<div class="stl__row stl__row--header">
-			<span>Min</span>
-			<span>Player</span>
-			<span>Body</span>
-			<span>Delivery</span>
-			<span>Outcome</span>
+			<span>{$t.detail.shotMin}</span>
+			<span>{$t.detail.shotPlayer}</span>
+			<span>{$t.detail.shotBody}</span>
+			<span>{$t.detail.shotDelivery}</span>
+			<span>{$t.detail.shotOutcome}</span>
 		</div>
 		{#each allShots as shot}
 			{@const pColor = shot.side === 'a' ? teamTextColor(team_a.color) : teamTextColor(team_b.color)}
