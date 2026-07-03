@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Team } from '$lib/types/efi';
 	import { teamTextColor, teamColorVar } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	interface DefensiveStat {
 		forced_turnovers: number | null;
@@ -29,28 +30,28 @@
 		team_b
 	}: { defensive_a: DefensiveStat | null; defensive_b: DefensiveStat | null; team_a: Team; team_b: Team } = $props();
 
-	const summaryRows = [
-		{ label: 'Forced Turnovers', key: 'forced_turnovers', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Possession Regained', key: 'possession_regained', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Interceptions', key: 'interceptions', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Tackles', key: 'tackles', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Actions per Def. Action', key: 'possession_actions_per_da', fmt: (v: number | null) => v != null ? Number(v).toFixed(2) : '—' },
-	] as const;
+	const summaryRows = $derived([
+		{ label: $t.keyStats.forcedTurnovers, key: 'forced_turnovers', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.keyStats.regains, key: 'possession_regained', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.keyStats.interceptions, key: 'interceptions', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.tackles, key: 'tackles', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.actionsPerDefAction, key: 'possession_actions_per_da', fmt: (v: number | null) => v != null ? Number(v).toFixed(2) : '—' },
+	]);
 
-	const blockRows = [
-		{ label: 'Blocks — Passes', key: 'blocks_passes', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Blocks — Shots', key: 'blocks_shots', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Blocks — Crosses', key: 'blocks_crosses', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Blocks — Clearances', key: 'blocks_clearances', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Blocks — Total', key: 'blocks_total', fmt: (v: number | null) => v?.toString() ?? '—' },
-	] as const;
+	const blockRows = $derived([
+		{ label: $t.detail.blocksPass, key: 'blocks_passes', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.blocksShot, key: 'blocks_shots', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.blocksCross, key: 'blocks_crosses', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.blocksClearance, key: 'blocks_clearances', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.blocksTotal, key: 'blocks_total', fmt: (v: number | null) => v?.toString() ?? '—' },
+	]);
 
-	const contestRows = [
-		{ label: 'Physical Duels', key: 'contests_physical', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Aerial Duels', key: 'contests_aerial', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Duels', key: 'contests_duels', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Contests — Total', key: 'contests_total', fmt: (v: number | null) => v?.toString() ?? '—' },
-	] as const;
+	const contestRows = $derived([
+		{ label: $t.keyStats.physicalDuels, key: 'contests_physical', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.keyStats.aerialDuels, key: 'contests_aerial', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.duels, key: 'contests_duels', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.contestsTotal, key: 'contests_total', fmt: (v: number | null) => v?.toString() ?? '—' },
+	]);
 
 	function get(stat: DefensiveStat | null, key: string): number | null {
 		return stat ? (stat as unknown as Record<string, number | null>)[key] ?? null : null;

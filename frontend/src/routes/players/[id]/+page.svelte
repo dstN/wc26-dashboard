@@ -364,7 +364,7 @@
 					{#if m.passes_attempted != null || m.tackles_made != null || m.total_distance_m != null}
 						<div class="match-detail-block">
 							<div class="match-detail-header">
-								<span class="match-detail-no">Match #{m.match_no}</span>
+								<span class="match-detail-no">{$t.compare.matchNo} #{m.match_no}</span>
 								{#if m.opponent}
 									<a href="/teams/{m.opponent.id}" class="opp-link">vs {m.opponent.name}</a>
 								{/if}

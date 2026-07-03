@@ -31,7 +31,12 @@
 		}, {})
 	);
 
-	const POS_LABEL: Record<string, string> = { GK: 'Goalkeepers', DF: 'Defenders', MF: 'Midfielders', FW: 'Forwards' };
+	const POS_LABEL = $derived<Record<string, string>>({
+		GK: $t.players.goalkeepers,
+		DF: $t.players.defenders,
+		MF: $t.players.midfielders,
+		FW: $t.players.forwards,
+	});
 	const posOrder = ['GK', 'DF', 'MF', 'FW'];
 
 	const inPhases  = $derived(phases.filter((p: any) => p.phase_group === 'in'));
@@ -200,13 +205,13 @@
 				{#if avgStats && avgStats.averages?.xg != null}
 					<div class="summary-stat">
 						<span class="summary-value">{Number(avgStats.averages.xg).toFixed(2)}</span>
-						<span class="summary-label">Avg xG</span>
+						<span class="summary-label">{$t.teams.avgXg}</span>
 					</div>
 				{/if}
 				{#if avgStats && avgStats.averages?.ball_recovery_m != null}
 					<div class="summary-stat">
 						<span class="summary-value">{Number(avgStats.averages.ball_recovery_m).toFixed(0)}m</span>
-						<span class="summary-label">Avg Ball Recovery</span>
+						<span class="summary-label">{$t.teams.avgBallRecovery}</span>
 					</div>
 				{/if}
 			</div>
@@ -218,11 +223,11 @@
 		<section class="matches-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Phase Profile" />
+				<SectionLabel label={$t.detail.phases} />
 				<div class="phase-bars">
 					{#if inPhases.length > 0}
 						<div class="phase-group">
-							<span class="phase-group__title">In Possession (avg %)</span>
+							<span class="phase-group__title">{$t.detail.inPossession} (avg %)</span>
 							{#each inPhases as ph}
 								<div class="phase-row">
 									<span class="phase-row__label">{ph.phase_name}</span>
@@ -239,7 +244,7 @@
 					{/if}
 					{#if outPhases.length > 0}
 						<div class="phase-group">
-							<span class="phase-group__title">Out of Possession (avg %)</span>
+							<span class="phase-group__title">{$t.detail.outOfPossession} (avg %)</span>
 							{#each outPhases as ph}
 								<div class="phase-row">
 									<span class="phase-row__label">{ph.phase_name}</span>
@@ -264,10 +269,10 @@
 		<section class="matches-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Performance Trend" />
+				<SectionLabel label={$t.teams.performanceTrend} />
 				<div class="trend-grid">
 					<div class="trend-card">
-						<span class="trend-label">Possession % per match</span>
+						<span class="trend-label">{$t.teams.trendPossession}</span>
 						<svg viewBox="0 0 100 44" class="trend-svg" aria-hidden="true">
 							<line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
 							{#each [25, 50, 75] as pct}
@@ -303,7 +308,7 @@
 					</div>
 
 					<div class="trend-card">
-						<span class="trend-label">xG per match</span>
+						<span class="trend-label">{$t.teams.trendXg}</span>
 						<svg viewBox="0 0 100 44" class="trend-svg" aria-hidden="true">
 							<line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
 							<polyline
@@ -343,19 +348,19 @@
 		<section class="matches-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Top Performers" />
+				<SectionLabel label={$t.teams.topPerformers} />
 				<div class="performers-grid">
 					{#if topScorer}
 						<a href="/players/{topScorer.id}" class="performer-card">
-							<span class="performer-label">Top Scorer</span>
-							<span class="performer-val">{topScorer.stats.goals} goals</span>
+							<span class="performer-label">{$t.teams.labelTopScorer}</span>
+							<span class="performer-val">{topScorer.stats.goals} {$t.teams.unitGoals}</span>
 							<span class="performer-name">{topScorer.name}</span>
 							<span class="performer-pos" data-pos={topScorer.position}>{topScorer.position}</span>
 						</a>
 					{/if}
 					{#if topDefender}
 						<a href="/players/{topDefender.id}" class="performer-card">
-							<span class="performer-label">Top Defender</span>
+							<span class="performer-label">{$t.teams.labelTopDefender}</span>
 							<span class="performer-val">{(topDefender.stats.tackles_won ?? 0) + (topDefender.stats.interceptions ?? 0)} tkl+int</span>
 							<span class="performer-name">{topDefender.name}</span>
 							<span class="performer-pos" data-pos={topDefender.position}>{topDefender.position}</span>
@@ -363,15 +368,15 @@
 					{/if}
 					{#if topPasser}
 						<a href="/players/{topPasser.id}" class="performer-card">
-							<span class="performer-label">Most Passes</span>
-							<span class="performer-val">{topPasser.stats.passes_attempted} att.</span>
+							<span class="performer-label">{$t.teams.labelMostPasses}</span>
+							<span class="performer-val">{topPasser.stats.passes_attempted} {$t.teams.unitAtt}</span>
 							<span class="performer-name">{topPasser.name}</span>
 							<span class="performer-pos" data-pos={topPasser.position}>{topPasser.position}</span>
 						</a>
 					{/if}
 					{#if topRunner}
 						<a href="/players/{topRunner.id}" class="performer-card">
-							<span class="performer-label">Most Distance</span>
+							<span class="performer-label">{$t.teams.labelMostDistance}</span>
 							<span class="performer-val">{(topRunner.stats.total_distance_m / 1000).toFixed(1)} km</span>
 							<span class="performer-name">{topRunner.name}</span>
 							<span class="performer-pos" data-pos={topRunner.position}>{topRunner.position}</span>
@@ -379,8 +384,8 @@
 					{/if}
 					{#if fastestPlayer}
 						<a href="/players/{fastestPlayer.id}" class="performer-card">
-							<span class="performer-label">Fastest Player</span>
-							<span class="performer-val">{fastestPlayer.stats.top_speed_kmh} km/h</span>
+							<span class="performer-label">{$t.teams.labelFastestPlayer}</span>
+							<span class="performer-val">{fastestPlayer.stats.top_speed_kmh} {$t.teams.unitKmh}</span>
 							<span class="performer-name">{fastestPlayer.name}</span>
 							<span class="performer-pos" data-pos={fastestPlayer.position}>{fastestPlayer.position}</span>
 						</a>
@@ -398,66 +403,66 @@
 			<div class="section-divider"></div>
 			<div class="section-body">
 				<div class="stats-header-row">
-					<SectionLabel label="Match Stats ({avgStats.match_count} matches)" />
+					<SectionLabel label="{$t.teams.matchStats} ({avgStats.match_count} {$t.teams.matchesUnit})" />
 					<div class="mode-toggle">
-						<button class="mode-btn" class:mode-btn--active={statsMode === 'avg'} onclick={() => statsMode = 'avg'}>Avg</button>
-						<button class="mode-btn" class:mode-btn--active={statsMode === 'total'} onclick={() => statsMode = 'total'}>Total</button>
+						<button class="mode-btn" class:mode-btn--active={statsMode === 'avg'} onclick={() => statsMode = 'avg'}>{$t.teams.modeAvg}</button>
+						<button class="mode-btn" class:mode-btn--active={statsMode === 'total'} onclick={() => statsMode = 'total'}>{$t.teams.modeTotal}</button>
 					</div>
 				</div>
 				<div class="stats-grid">
 					{#each [
-						{ group: 'Possession', rows: [
-							{ label: 'xG', key: 'xg', decimals: 2 },
-							{ label: 'xG Conceded', key: 'xg_conceded', decimals: 2 },
-							{ label: 'Possession', key: 'possession_pct', suffix: '%' },
-							{ label: 'In Contest', key: 'in_contest_pct', suffix: '%' },
+						{ group: $t.compare.grpPossession, rows: [
+							{ label: $t.stats.xg, key: 'xg', decimals: 2 },
+							{ label: $t.teams.statXgConceded, key: 'xg_conceded', decimals: 2 },
+							{ label: $t.keyStats.possession, key: 'possession_pct', suffix: '%' },
+							{ label: $t.keyStats.inContest, key: 'in_contest_pct', suffix: '%' },
 						]},
-						{ group: 'Attacking', rows: [
-							{ label: 'Goals', key: 'goals', decimals: 0 },
-							{ label: 'Shots', key: 'shots_total', decimals: 0 },
-							{ label: 'Shots on Target', key: 'shots_on_target', decimals: 0 },
-							{ label: 'Line Breaks', key: 'completed_line_breaks', decimals: 0 },
-							{ label: 'Def. Line Breaks', key: 'defensive_line_breaks', decimals: 0 },
-							{ label: 'Crosses', key: 'crosses', decimals: 0 },
-							{ label: 'Ball Progressions', key: 'ball_progressions', decimals: 0 },
-							{ label: 'Take-Ons', key: 'take_ons', decimals: 0 },
+						{ group: $t.compare.grpAttacking, rows: [
+							{ label: $t.keyStats.goals, key: 'goals', decimals: 0 },
+							{ label: $t.players.colShots, key: 'shots_total', decimals: 0 },
+							{ label: $t.teams.statShotsOnTarget, key: 'shots_on_target', decimals: 0 },
+							{ label: $t.teams.statLineBreaks, key: 'completed_line_breaks', decimals: 0 },
+							{ label: $t.teams.statDefLineBreaks, key: 'defensive_line_breaks', decimals: 0 },
+							{ label: $t.keyStats.crosses, key: 'crosses', decimals: 0 },
+							{ label: $t.keyStats.ballProgressions, key: 'ball_progressions', decimals: 0 },
+							{ label: $t.keyStats.takeOns, key: 'take_ons', decimals: 0 },
 						]},
-						{ group: 'Passing', rows: [
-							{ label: 'Passes Attempted', key: 'passes_attempted', decimals: 0 },
-							{ label: 'Passes Completed', key: 'passes_completed', decimals: 0 },
+						{ group: $t.compare.grpPassing, rows: [
+							{ label: $t.teams.statPassesAttempted, key: 'passes_attempted', decimals: 0 },
+							{ label: $t.teams.statPassesCompleted, key: 'passes_completed', decimals: 0 },
 						]},
-						{ group: 'Defensive', rows: [
-							{ label: 'Goals Conceded', key: 'goals_conceded', decimals: 0 },
-							{ label: 'Tackles Won', key: 'tackles_won', decimals: 0 },
-							{ label: 'Interceptions', key: 'interceptions', decimals: 0 },
-							{ label: 'Blocks', key: 'blocks', decimals: 0 },
-							{ label: 'Clearances', key: 'clearances', decimals: 0 },
-							{ label: 'Possession Regains', key: 'possession_regains', decimals: 0 },
-							{ label: 'Forced Turnovers', key: 'forced_turnovers', decimals: 0 },
-							{ label: 'Pressing', key: 'pressing_direct', decimals: 0 },
+						{ group: $t.compare.grpDefensive, rows: [
+							{ label: $t.teams.goalsConceded, key: 'goals_conceded', decimals: 0 },
+							{ label: $t.teams.statTacklesWon, key: 'tackles_won', decimals: 0 },
+							{ label: $t.keyStats.interceptions, key: 'interceptions', decimals: 0 },
+							{ label: $t.keyStats.blocks, key: 'blocks', decimals: 0 },
+							{ label: $t.keyStats.clearances, key: 'clearances', decimals: 0 },
+							{ label: $t.keyStats.regains, key: 'possession_regains', decimals: 0 },
+							{ label: $t.keyStats.forcedTurnovers, key: 'forced_turnovers', decimals: 0 },
+							{ label: $t.teams.statPressing, key: 'pressing_direct', decimals: 0 },
 						]},
-						{ group: 'Physical', rows: [
-							{ label: 'Distance (km)', key: 'total_distance_km', decimals: 1 },
-							{ label: 'Aerial Duels Won', key: 'duels_won_aerial', decimals: 0 },
-							{ label: 'Physical Duels Won', key: 'duels_won_physical', decimals: 0 },
+						{ group: $t.compare.grpPhysical, rows: [
+							{ label: $t.teams.statDistanceKm, key: 'total_distance_km', decimals: 1 },
+							{ label: $t.keyStats.aerialDuels, key: 'duels_won_aerial', decimals: 0 },
+							{ label: $t.keyStats.physicalDuels, key: 'duels_won_physical', decimals: 0 },
 						]},
-						{ group: 'GK', rows: [
-							{ label: 'Attempts Faced', key: 'gk_attempts_faced', decimals: 0 },
-							{ label: 'Save %', key: 'gk_save_pct', suffix: '%' },
-							{ label: 'Crosses Faced', key: 'gk_crosses_faced', decimals: 0 },
-							{ label: 'Involvements', key: 'gk_involvements', decimals: 0 },
-							{ label: 'Distributions', key: 'gk_distributions', decimals: 0 },
+						{ group: $t.keyStats.grpGK, rows: [
+							{ label: $t.keyStats.attemptsFaced, key: 'gk_attempts_faced', decimals: 0 },
+							{ label: $t.keyStats.savePct, key: 'gk_save_pct', suffix: '%' },
+							{ label: $t.keyStats.crossesFaced, key: 'gk_crosses_faced', decimals: 0 },
+							{ label: $t.teams.statGkInvolvements, key: 'gk_involvements', decimals: 0 },
+							{ label: $t.teams.statGkDistributions, key: 'gk_distributions', decimals: 0 },
 						]},
-						{ group: 'Set Plays', rows: [
-							{ label: 'Set Plays', key: 'set_plays', decimals: 0 },
-							{ label: 'Corners', key: 'corners', decimals: 0 },
-							{ label: 'Free Kicks', key: 'free_kicks', decimals: 0 },
+						{ group: $t.keyStats.grpSetPlays, rows: [
+							{ label: $t.teams.statSetPlays, key: 'set_plays', decimals: 0 },
+							{ label: $t.keyStats.corners, key: 'corners', decimals: 0 },
+							{ label: $t.keyStats.freeKicks, key: 'free_kicks', decimals: 0 },
 						]},
 					] as group}
 						<div class="stats-group">
 							<h3 class="stats-group__title">{group.group}</h3>
 							{#each group.rows as row}
-								{@const val = fv(tot, avg, row.key, row.suffix ?? '', row.decimals ?? 1)}
+								{@const val = fv(tot, avg, row.key, (row as {key: string; suffix?: string}).suffix ?? '', row.decimals ?? 1)}
 								{#if val !== '—'}
 									<div class="stats-row">
 										<span class="stats-row__label">{row.label}</span>
@@ -477,10 +482,10 @@
 		<section class="matches-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Squad · {players.length} Players" />
+				<SectionLabel label="{$t.teams.squad} · {players.length} {$t.players.players}" />
 				<div class="squad">
 					{#each posOrder as pos}
-						{#if posGroups[pos]?.length}
+						{#if posGroups[pos] && posGroups[pos].length}
 							<div class="squad__group">
 								<h3 class="squad__pos-title">{POS_LABEL[pos]}</h3>
 								<div class="squad__grid">
@@ -521,7 +526,7 @@
 		<section class="matches-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="{$t.teams.matchHistory}" />
+				<SectionLabel label={$t.teams.matchHistory} />
 				<div class="match-list">
 					{#each matchList as entry (entry.match.id)}
 						{@const m = entry.match}
@@ -563,10 +568,10 @@
 								</div>
 								<div class="match-row__stats">
 									{#if ms?.possession_team_a != null}
-										<span class="stat-pill">Poss {ms.possession_team_a.toFixed(1)}%</span>
+										<span class="stat-pill">{$t.stats.possession} {ms.possession_team_a.toFixed(1)}%</span>
 									{/if}
 									{#if ms?.xg_a != null}
-										<span class="stat-pill">xG {ms.xg_a.toFixed(2)}</span>
+										<span class="stat-pill">{$t.stats.xg} {ms.xg_a.toFixed(2)}</span>
 									{/if}
 								</div>
 								<span class="result-badge" class:result-win={won} class:result-draw={drew} class:result-loss={!won && !drew}>

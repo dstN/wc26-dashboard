@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { teamColorVar, badgeTextColor } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	interface LineupPlayer {
 		id: number;
@@ -54,7 +55,7 @@
 
 			{#if lu.starters.length > 0}
 				<div class="lu-group">
-					<span class="lu-group-label">Starting XI</span>
+					<span class="lu-group-label">{$t.detail.startingXI}</span>
 					{#each lu.starters as p (p.id)}
 						<div class="lu-row">
 							<span class="lu-num">{p.jersey_number ?? '—'}</span>
@@ -71,7 +72,7 @@
 
 			{#if lu.subs.length > 0}
 				<div class="lu-group lu-group--subs">
-					<span class="lu-group-label">Substitutes</span>
+					<span class="lu-group-label">{$t.detail.substitutes}</span>
 					{#each lu.subs as p (p.id)}
 						<div class="lu-row lu-row--sub">
 							<span class="lu-num">{p.jersey_number ?? '—'}</span>

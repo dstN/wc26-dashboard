@@ -50,7 +50,7 @@
 		</div>
 		<ThemeSwitch />
 		{#if matchCount > 0}
-			<span class="reports-pill" aria-label="{matchCount} match reports available">{matchCount} Reports</span>
+			<span class="reports-pill" aria-label="{matchCount} match reports available">{$t.match.matchCount} {matchCount}</span>
 		{/if}
 		<button
 			class="topbar__burger"

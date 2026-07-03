@@ -2,6 +2,25 @@
 
 ## Feature Ideas (backlog)
 
+### Full i18n Translation Coverage ✅ COMPLETE (Session 19 — 2026-07-03)
+
+All hardcoded English strings across all route pages and viz components replaced with reactive `$t.*` keys. The dashboard is now fully translatable across EN/DE/ES/PT/FR/AR without any English fallback strings leaking through.
+
+**Delivered:**
+- `teams/[id]` — Performance Trend, Top Performers, Match Stats grid (7 groups, 34 stat labels), Squad section, POS_LABEL, mode toggle, summary stats
+- `matches/[id]` — Spatial "In/Out of Possession" section labels, line break labels
+- `compare` — Full TEAM_METRICS (25 Avg… labels) and PLAYER_METRICS (33 player stat labels)
+- `StatTable` — Head-to-head stat labels (Goals, xG, Possession, In Contest, Ball Recovery, xG/Shot, Efficiency, Out of Possession, HEAD-TO-HEAD)
+- `CrossesDetail` — Delivery type labels (Inswing, Outswing, Driven, Lofted, Cut-back, Push Cross) + zone labels (Left, C-Left, C-Right, Right) + section titles
+- `DefensiveDetail` — 14 stat row labels across Tackles, Blocks, Contests sections
+- `PressureDetail` — 9 pressure stat labels including direction labels
+- `OfferingsDetail` / `MovementDetail` — pitch zone and phase type labels
+- `LineBreaksBars` — Defensive/Midfield/Attacking line labels
+- `GkDetail` — 4 section headers + 20 goalkeeper stat row labels (Activity, Shot Stopping, Aerial Actions, Crosses Faced sections)
+- 120 new i18n keys added (32 `teams.*`, 53 `detail.*`, 35 `compare.*`) × 6 locales = 720 translation entries
+
+---
+
 ### PDF-Ingestion in Produktion ✅ COMPLETE
 
 Automatisches Parsen und DB-Import von neu hochgeladenen EFI-PDFs unter Phusion Passenger.

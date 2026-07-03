@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Team } from '$lib/types/efi';
 	import { teamTextColor, teamColorVar } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	interface PressureStat {
 		total_pressures: number | null;
@@ -23,17 +24,17 @@
 		team_b
 	}: { pressure_a: PressureStat | null; pressure_b: PressureStat | null; team_a: Team; team_b: Team } = $props();
 
-	const rows = [
-		{ label: 'Total Pressures', key: 'total_pressures', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Direct Pressures', key: 'direct_pressures', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Avg Duration', key: 'avg_duration_s', fmt: (v: number | null) => v != null ? `${Number(v).toFixed(2)}s` : '—' },
-		{ label: 'Forced Turnovers', key: 'forced_turnovers', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Ball Recovery Time', key: 'ball_recovery_time_s', fmt: (v: number | null) => v != null ? `${Number(v).toFixed(2)}s` : '—' },
-		{ label: 'Pushing on into Pressing', key: 'pushing_on_into_pressing', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Pushing on', key: 'pushing_on', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Direction — Inside', key: 'direction_inside', fmt: (v: number | null) => v?.toString() ?? '—' },
-		{ label: 'Direction — Outside', key: 'direction_outside', fmt: (v: number | null) => v?.toString() ?? '—' },
-	] as const;
+	const rows = $derived([
+		{ label: $t.detail.totalPressures, key: 'total_pressures', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.keyStats.pressures, key: 'direct_pressures', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.avgDuration, key: 'avg_duration_s', fmt: (v: number | null) => v != null ? `${Number(v).toFixed(2)}s` : '—' },
+		{ label: $t.keyStats.forcedTurnovers, key: 'forced_turnovers', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.keyStats.ballRecovery, key: 'ball_recovery_time_s', fmt: (v: number | null) => v != null ? `${Number(v).toFixed(2)}s` : '—' },
+		{ label: $t.playerDetail.pushToPressing, key: 'pushing_on_into_pressing', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.playerDetail.pushingOn, key: 'pushing_on', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.dirInside, key: 'direction_inside', fmt: (v: number | null) => v?.toString() ?? '—' },
+		{ label: $t.detail.dirOutside, key: 'direction_outside', fmt: (v: number | null) => v?.toString() ?? '—' },
+	]);
 
 	function get(stat: PressureStat | null, key: string): number | null {
 		return stat ? (stat as unknown as Record<string, number | null>)[key] ?? null : null;

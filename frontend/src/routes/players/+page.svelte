@@ -263,9 +263,9 @@
 
 <div class="page">
 	<header class="page-header">
-		<SectionLabel label="PLAYERS" />
-		<h1 class="page-title">Player Rankings &amp; Stats</h1>
-		<p class="page-sub">{players.length} players across all teams · Click a name to see full stats</p>
+		<SectionLabel label={$t.players.label} />
+		<h1 class="page-title">{$t.players.rankingTitle}</h1>
+		<p class="page-sub">{players.length} {$t.players.rankingSubtitle}</p>
 	</header>
 
 	<!-- ── RANKINGS ──────────────────────────────────────────────────────── -->
@@ -277,8 +277,8 @@
 				{ key: 'midfielders', label: $t.players.tabTopMidfielders },
 				{ key: 'forwards',    label: $t.players.tabTopForwards },
 				{ key: 'physical',    label: $t.players.tabPhysical },
-				{ key: 'goalkeepers', label: 'Goalkeepers' },
-				{ key: 'discipline',  label: 'Discipline' },
+				{ key: 'goalkeepers', label: $t.players.goalkeepers },
+				{ key: 'discipline',  label: $t.players.tabDiscipline },
 			] as const) as tab}
 				<button
 					class="tab-btn"
@@ -297,8 +297,8 @@
 						<tr>
 							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
-							<th>Player</th>
-							<th>Team</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
 							<th class="num sortable" onclick={() => sortScorers('goals')}>{sh(scorersSort,'goals',scorersDir,$t.players.colGoals)}</th>
 							<th class="num sortable" onclick={() => sortScorers('goals_per_game')}>{sh(scorersSort,'goals_per_game',scorersDir,$t.players.colGoalsPerGame)}</th>
 							<th class="num sortable" onclick={() => sortScorers('attempts_at_goal')}>{sh(scorersSort,'attempts_at_goal',scorersDir,$t.players.colShots)}</th>
@@ -348,8 +348,8 @@
 						<tr>
 							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
-							<th>Player</th>
-							<th>Team</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
 							<th class="num sortable" onclick={() => sortDefenders('possession_regains')}>{sh(defendersSort,'possession_regains',defendersDir,$t.players.colBallRecoveries)}</th>
 							<th class="num sortable" onclick={() => sortDefenders('tackles_won')}><TermTooltip term="Tackles Won" definition="Successfully dispossessing an opponent by winning the ball cleanly.">{sh(defendersSort,'tackles_won',defendersDir,$t.players.colTklWon)}</TermTooltip></th>
 							<th class="num sortable" onclick={() => sortDefenders('interceptions')}><TermTooltip term="Interceptions" definition="Intercepting a pass intended for an opponent, cutting off the attacking play.">{sh(defendersSort,'interceptions',defendersDir,$t.players.colInterceptions)}</TermTooltip></th>
@@ -399,8 +399,8 @@
 						<tr>
 							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
-							<th>Player</th>
-							<th>Team</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
 							<th class="num sortable" onclick={() => sortMids('pass_completion_pct')}>{sh(midfieldersSort,'pass_completion_pct',midfieldersDir,$t.players.colPassQuote)}</th>
 							<th class="num sortable" onclick={() => sortMids('passes_attempted')}><TermTooltip term="Passes Attempted" definition="Total passes attempted, including incomplete passes.">{sh(midfieldersSort,'passes_attempted',midfieldersDir,$t.players.colPassesAtt)}</TermTooltip></th>
 							<th class="num sortable" onclick={() => sortMids('ball_progressions')}><TermTooltip term="Ball Progressions" definition="Carrying or driving the ball forward into attacking areas.">{sh(midfieldersSort,'ball_progressions',midfieldersDir,$t.players.colBallProgs)}</TermTooltip></th>
@@ -450,8 +450,8 @@
 						<tr>
 							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
-							<th>Player</th>
-							<th>Team</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
 							<th class="num sortable" onclick={() => sortForwards('goals_per_shot')}>{sh(forwardsSort,'goals_per_shot',forwardsDir,$t.players.colGoalsPerShot)}</th>
 							<th class="num sortable" onclick={() => sortForwards('goals')}>{sh(forwardsSort,'goals',forwardsDir,$t.players.colGoals)}</th>
 							<th class="num sortable" onclick={() => sortForwards('attempts_at_goal')}>{sh(forwardsSort,'attempts_at_goal',forwardsDir,$t.players.colShots)}</th>
@@ -501,8 +501,8 @@
 						<tr>
 							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rank-col">#</th>
-							<th>Player</th>
-							<th>Team</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
 							<th class="num sortable" onclick={() => sortPhysical('km_per_game')}>{sh(physicalSort,'km_per_game',physicalDir,$t.players.colKmPerGame)}</th>
 							<th class="num sortable" onclick={() => sortPhysical('sprints_per_game')}>{sh(physicalSort,'sprints_per_game',physicalDir,$t.players.colSprintsPerGame)}</th>
 							<th class="num sortable" onclick={() => sortPhysical('total_distance_m')}>{sh(physicalSort,'total_distance_m',physicalDir,$t.players.colDistance)}</th>
@@ -553,14 +553,14 @@
 					<thead>
 						<tr>
 							<th class="rank-col">#</th>
-							<th>Goalkeeper</th>
-							<th>Team</th>
-							<th class="num sortable" onclick={() => sortGk('matches')}>{sh(gkSort,'matches',gkDir,'Apps')}</th>
-							<th class="num sortable" onclick={() => sortGk('total_attempts_faced')}>{sh(gkSort,'total_attempts_faced',gkDir,'Attempts Faced')}</th>
-							<th class="num sortable" onclick={() => sortGk('avg_save_pct')}>{sh(gkSort,'avg_save_pct',gkDir,'Save %')}</th>
-							<th class="num sortable" onclick={() => sortGk('total_goal_interventions')}><TermTooltip term="Goal Interventions" definition="Goalkeeper actions preventing a goal: saves, punch clearances, and claims.">{sh(gkSort,'total_goal_interventions',gkDir,'Goal Int.')}</TermTooltip></th>
-							<th class="num sortable" onclick={() => sortGk('total_aerial_interventions')}><TermTooltip term="Aerial Interventions" definition="Winning aerial duels to claim crosses or clear dangerous balls.">{sh(gkSort,'total_aerial_interventions',gkDir,'Aerial Int.')}</TermTooltip></th>
-							<th class="num sortable" onclick={() => sortGk('total_crosses_faced')}>{sh(gkSort,'total_crosses_faced',gkDir,'Crosses Faced')}</th>
+							<th>{$t.players.posGK}</th>
+							<th>{$t.stats.team}</th>
+							<th class="num sortable" onclick={() => sortGk('matches')}>{sh(gkSort,'matches',gkDir,$t.players.colApps)}</th>
+							<th class="num sortable" onclick={() => sortGk('total_attempts_faced')}>{sh(gkSort,'total_attempts_faced',gkDir,$t.players.colGkAttempts)}</th>
+							<th class="num sortable" onclick={() => sortGk('avg_save_pct')}>{sh(gkSort,'avg_save_pct',gkDir,$t.players.colGkSavePct)}</th>
+							<th class="num sortable" onclick={() => sortGk('total_goal_interventions')}><TermTooltip term="Goal Interventions" definition="Goalkeeper actions preventing a goal: saves, punch clearances, and claims.">{sh(gkSort,'total_goal_interventions',gkDir,$t.players.colGoalInt)}</TermTooltip></th>
+							<th class="num sortable" onclick={() => sortGk('total_aerial_interventions')}><TermTooltip term="Aerial Interventions" definition="Winning aerial duels to claim crosses or clear dangerous balls.">{sh(gkSort,'total_aerial_interventions',gkDir,$t.players.colGkAerialInt)}</TermTooltip></th>
+							<th class="num sortable" onclick={() => sortGk('total_crosses_faced')}>{sh(gkSort,'total_crosses_faced',gkDir,$t.players.colGkCrossesFaced)}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -594,11 +594,11 @@
 					<thead>
 						<tr>
 							<th class="rank-col">#</th>
-							<th>Player</th>
-							<th>Team</th>
-							<th class="num sortable" onclick={() => sortDiscipline('discipline_total')}>{sh(disciplineSort,'discipline_total',disciplineDir,'Cards')}</th>
-							<th class="num sortable" onclick={() => sortDiscipline('yellow_cards')}>{sh(disciplineSort,'yellow_cards',disciplineDir,'Yellow')}</th>
-							<th class="num sortable" onclick={() => sortDiscipline('red_cards')}>{sh(disciplineSort,'red_cards',disciplineDir,'Red')}</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
+							<th class="num sortable" onclick={() => sortDiscipline('discipline_total')}>{sh(disciplineSort,'discipline_total',disciplineDir,$t.players.colCards)}</th>
+							<th class="num sortable" onclick={() => sortDiscipline('yellow_cards')}>{sh(disciplineSort,'yellow_cards',disciplineDir,$t.players.colYellow)}</th>
+							<th class="num sortable" onclick={() => sortDiscipline('red_cards')}>{sh(disciplineSort,'red_cards',disciplineDir,$t.players.colRed)}</th>
 							<th class="num sortable" onclick={() => sortDiscipline('appearances')}>{sh(disciplineSort,'appearances',disciplineDir,$t.players.colApps)}</th>
 						</tr>
 					</thead>
@@ -634,47 +634,47 @@
 	<section class="browse-section">
 		<div class="section-divider"></div>
 		<div class="browse-body">
-			<SectionLabel label="BROWSE ALL PLAYERS" />
+			<SectionLabel label={$t.players.sectionBrowse} />
 
 			<div class="filters">
 				<input
 					class="filter-input"
 					type="search"
-					placeholder="Search by name…"
+					placeholder={$t.players.searchPlaceholder}
 					bind:value={searchQuery}
 					aria-label="Search players"
 				/>
 				<select class="filter-select" bind:value={filterTeam} aria-label="Filter by team">
-					<option value="">All Teams</option>
+					<option value="">{$t.players.allTeams}</option>
 					{#each teams as team (team.id)}
 						<option value={team.id}>{team.name}</option>
 					{/each}
 				</select>
 				<select class="filter-select" bind:value={filterPos} aria-label="Filter by position">
-					<option value="">All Positions</option>
-					<option value="GK">Goalkeepers</option>
-					<option value="DF">Defenders</option>
-					<option value="MF">Midfielders</option>
-					<option value="FW">Forwards</option>
+					<option value="">{$t.players.allPositions}</option>
+					<option value="GK">{$t.players.goalkeepers}</option>
+					<option value="DF">{$t.players.defenders}</option>
+					<option value="MF">{$t.players.midfielders}</option>
+					<option value="FW">{$t.players.forwards}</option>
 				</select>
 				{#if filterTeam || filterPos || searchQuery}
 					<button
 						class="filter-clear"
 						onclick={() => { filterTeam = ''; filterPos = ''; searchQuery = ''; }}
-					>Clear filters</button>
+					>{$t.players.clearFilters}</button>
 				{/if}
 				{#if filterTeam || filterPos || searchQuery}
-					<span class="filter-count">{filtered.length} players</span>
+					<span class="filter-count">{filtered.length} {$t.players.players}</span>
 				{/if}
 			</div>
 
 			{#if !filterTeam && !filterPos && !searchQuery}
 				<div class="browse-prompt">
-					<p class="browse-prompt__text">Select a team, position, or search by name to browse players.</p>
+					<p class="browse-prompt__text">{$t.players.browsePlaceholder}</p>
 				</div>
 			{:else if filtered.length === 0}
 				<div class="empty">
-					<p class="empty__text">No players match your filters.</p>
+					<p class="empty__text">{$t.players.browseNoResults}</p>
 				</div>
 			{:else}
 				{#each groupKeys as teamName}

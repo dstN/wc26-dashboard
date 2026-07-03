@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { MatchStats, Team } from '$lib/types/efi';
 	import { teamColorVar, teamTextColor } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	let { stats, team_a, team_b }: { stats: MatchStats; team_a: Team; team_b: Team } = $props();
 
@@ -8,21 +9,21 @@
 	const fmt = (v: number | null, d = 2) => v != null ? v.toFixed(d) : '—';
 
 	const rows: Array<{ label: string; a: string | number; b: string | number }> = $derived([
-		{ label: 'Goals', a: n(stats.goals_a), b: n(stats.goals_b) },
-		{ label: 'xG', a: fmt(stats.xg_a), b: fmt(stats.xg_b) },
-		{ label: 'Possession', a: `${n(stats.possession_team_a)}%`, b: `${n(stats.possession_team_b)}%` },
-		{ label: 'In Contest', a: `${n(stats.possession_in_contest)}%`, b: `${n(stats.possession_in_contest)}%` },
-		{ label: 'Ball Recovery', a: stats.ball_recovery_time_avg != null ? `${stats.ball_recovery_time_avg}s` : '—', b: '-' },
-		{ label: 'xG/Shot', a: fmt(stats.xg_a != null ? stats.xg_a / Math.max(n(stats.goals_a), 1) : null), b: fmt(stats.xg_b != null ? stats.xg_b / Math.max(n(stats.goals_b), 1) : null) },
-		{ label: 'Efficiency', a: stats.xg_a != null ? `${((n(stats.goals_a) / Math.max(stats.xg_a, 0.01)) * 100).toFixed(0)}%` : '—', b: stats.xg_b != null ? `${((n(stats.goals_b) / Math.max(stats.xg_b, 0.01)) * 100).toFixed(0)}%` : '—' },
-		{ label: 'Out Possession', a: stats.possession_team_a != null && stats.possession_in_contest != null ? `${(100 - stats.possession_team_a - stats.possession_in_contest).toFixed(1)}%` : '—', b: stats.possession_team_b != null && stats.possession_in_contest != null ? `${(100 - stats.possession_team_b - stats.possession_in_contest).toFixed(1)}%` : '—' }
+		{ label: $t.keyStats.goals, a: n(stats.goals_a), b: n(stats.goals_b) },
+		{ label: $t.stats.xg, a: fmt(stats.xg_a), b: fmt(stats.xg_b) },
+		{ label: $t.keyStats.possession, a: `${n(stats.possession_team_a)}%`, b: `${n(stats.possession_team_b)}%` },
+		{ label: $t.keyStats.inContest, a: `${n(stats.possession_in_contest)}%`, b: `${n(stats.possession_in_contest)}%` },
+		{ label: $t.detail.ballRecovery, a: stats.ball_recovery_time_avg != null ? `${stats.ball_recovery_time_avg}s` : '—', b: '-' },
+		{ label: $t.detail.xgShot, a: fmt(stats.xg_a != null ? stats.xg_a / Math.max(n(stats.goals_a), 1) : null), b: fmt(stats.xg_b != null ? stats.xg_b / Math.max(n(stats.goals_b), 1) : null) },
+		{ label: $t.detail.efficiency, a: stats.xg_a != null ? `${((n(stats.goals_a) / Math.max(stats.xg_a, 0.01)) * 100).toFixed(0)}%` : '—', b: stats.xg_b != null ? `${((n(stats.goals_b) / Math.max(stats.xg_b, 0.01)) * 100).toFixed(0)}%` : '—' },
+		{ label: $t.detail.outOfPossession, a: stats.possession_team_a != null && stats.possession_in_contest != null ? `${(100 - stats.possession_team_a - stats.possession_in_contest).toFixed(1)}%` : '—', b: stats.possession_team_b != null && stats.possession_in_contest != null ? `${(100 - stats.possession_team_b - stats.possession_in_contest).toFixed(1)}%` : '—' }
 	]);
 </script>
 
 <div class="stat-table-wrap">
 	<div class="stat-table__header">
 		<span class="stat-table__team-name" style="color: {teamTextColor(team_a.color)}">{team_a.name}</span>
-		<span class="stat-table__header-center">HEAD-TO-HEAD</span>
+		<span class="stat-table__header-center">{$t.detail.headToHead.toUpperCase()}</span>
 		<span class="stat-table__team-name stat-table__team-name--right" style="color: {teamTextColor(team_b.color)}">{team_b.name}</span>
 	</div>
 	<table class="stat-table" aria-label="Head-to-head match statistics">

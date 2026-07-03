@@ -103,7 +103,7 @@
 			<PossessionBar stats={d.head_to_head} team_a={d.featured.team_a} team_b={d.featured.team_b} />
 		</div>
 
-		<a href="/matches/{d.featured.id}" class="featured-cta">Check out full game stats →</a>
+		<a href="/matches/{d.featured.id}" class="featured-cta">{$t.match.featuredCta}</a>
 	</section>
 
 {/if}

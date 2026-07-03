@@ -67,8 +67,8 @@
 <div class="page">
 	<header class="page-header">
 		<SectionLabel label="{$t.teams.label}" />
-		<h1 class="page-title">Team Rankings &amp; Comparison</h1>
-		<p class="page-sub">{teamRankings.length} nations · Click a nation name to explore their full stats</p>
+		<h1 class="page-title">{$t.teams.rankingTitle}</h1>
+		<p class="page-sub">{teamRankings.length} {$t.teams.rankingSubtitle}</p>
 		{#if data.error}
 			<p class="error-note">{$t.error.loadFailed}</p>
 		{/if}
@@ -78,15 +78,15 @@
 	{#if sortedRankings.length > 0}
 		<section class="ranking-section">
 			<div class="rank-header-row">
-				<SectionLabel label="TEAM COMPARISON" />
+				<SectionLabel label={$t.teams.sectionComparison} />
 				<div class="sort-pills">
-					<span class="sort-label">Sort by:</span>
+					<span class="sort-label">{$t.teams.sortBy}</span>
 					<div class="sort-pill-group">
 						{#each ([
-							{ key: 'goals', label: 'Goals' },
-							{ key: 'possession', label: 'Possession' },
-							{ key: 'xg', label: 'xG' },
-							{ key: 'conceded', label: 'Conceded' },
+							{ key: 'goals', label: $t.teams.sortGoals },
+							{ key: 'possession', label: $t.teams.sortPossession },
+							{ key: 'xg', label: $t.teams.sortXg },
+							{ key: 'conceded', label: $t.teams.sortConceded },
 						] as const) as s}
 							<button
 								class="sort-pill"
@@ -103,14 +103,14 @@
 						<tr>
 							<th class="cmp-col" title="Select for comparison"></th>
 							<th class="rk">#</th>
-							<th>Nation</th>
-							<th class="num">Played</th>
-							<th class="num">Goals</th>
-							<th class="num">Conceded</th>
-							<th class="num">GD</th>
-							<th class="num">Avg Poss.</th>
-							<th class="num">Avg xG</th>
-							<th class="num"><TermTooltip term="In Contest" definition="Moments when neither team controls the ball — aerial duels, blocked passes, and other loose-ball situations.">In Contest</TermTooltip></th>
+							<th>{$t.teams.colNation}</th>
+							<th class="num">{$t.teams.colPlayed}</th>
+							<th class="num">{$t.teams.sortGoals}</th>
+							<th class="num">{$t.teams.sortConceded}</th>
+							<th class="num">{$t.teams.colGoalDiff}</th>
+							<th class="num">{$t.teams.colAvgPoss}</th>
+							<th class="num">{$t.teams.colAvgXg}</th>
+							<th class="num"><TermTooltip term="In Contest" definition="Moments when neither team controls the ball — aerial duels, blocked passes, and other loose-ball situations.">{$t.teams.colInContest}</TermTooltip></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -160,17 +160,17 @@
 	<!-- ── TOP SCORERS ──────────────────────────────────────────────────── -->
 	{#if topScorers.length > 0}
 		<section class="lb-section">
-			<SectionLabel label="TOP SCORERS" />
+			<SectionLabel label={$t.teams.sectionTopScorers} />
 			<div class="rank-table-wrap">
 				<table class="rank-table">
 					<thead>
 						<tr>
 							<th class="rk">#</th>
-							<th>Player</th>
-							<th>Team</th>
-							<th class="num">Goals</th>
-							<th class="num">Apps</th>
-							<th class="num">Min</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
+							<th class="num">{$t.teams.sortGoals}</th>
+							<th class="num">{$t.players.colApps}</th>
+							<th class="num">{$t.teams.colMin}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -203,17 +203,17 @@
 	<!-- ── MOST CARDED ───────────────────────────────────────────────────── -->
 	{#if mostCarded.length > 0}
 		<section class="lb-section">
-			<SectionLabel label="DISCIPLINE" />
+			<SectionLabel label={$t.teams.sectionDiscipline} />
 			<div class="rank-table-wrap">
 				<table class="rank-table">
 					<thead>
 						<tr>
 							<th class="rk">#</th>
-							<th>Player</th>
-							<th>Team</th>
-							<th class="num">Yellow</th>
-							<th class="num">Red</th>
-							<th class="num">Apps</th>
+							<th>{$t.stats.player}</th>
+							<th>{$t.stats.team}</th>
+							<th class="num">{$t.players.colYellow}</th>
+							<th class="num">{$t.players.colRed}</th>
+							<th class="num">{$t.players.colApps}</th>
 						</tr>
 					</thead>
 					<tbody>

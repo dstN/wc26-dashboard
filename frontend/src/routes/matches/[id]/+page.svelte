@@ -54,8 +54,8 @@
 		}
 	}
 
-	function lineLabel(t: string): string {
-		return t === 'defensive' ? 'Defensive' : t === 'midfield' ? 'Midfield' : 'Attacking';
+	function lineLabel(type: string): string {
+		return type === 'defensive' ? $t.detail.lineDefensive : type === 'midfield' ? $t.detail.lineMidfield : $t.detail.lineAttacking;
 	}
 </script>
 
@@ -150,7 +150,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Lineup" />
+				<SectionLabel label={$t.detail.lineup} />
 				<LineupPanel
 					lineup_a={lineup.team_a}
 					lineup_b={lineup.team_b}
@@ -197,7 +197,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Phase Fingerprint" />
+				<SectionLabel label={$t.detail.phaseFingerprint} />
 				<div class="fingerprint-wrap">
 					<PhaseFingerprint
 						{phases}
@@ -217,7 +217,7 @@
 			<!-- Desktop: two columns, each locked to a scenario (hidden on mobile) -->
 			<div class="spatial-desktop">
 				<div class="section-body">
-					<SectionLabel label="Out of Possession" />
+					<SectionLabel label={$t.detail.outOfPossession} />
 					<PitchSpatial
 						spatial_a={spatial.team_a}
 						spatial_b={spatial.team_b}
@@ -228,7 +228,7 @@
 					/>
 				</div>
 				<div class="section-body">
-					<SectionLabel label="In Possession" />
+					<SectionLabel label={$t.detail.inPossession} />
 					<PitchSpatial
 						spatial_a={spatial.team_a}
 						spatial_b={spatial.team_b}
@@ -274,7 +274,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Shot Log" />
+				<SectionLabel label={$t.detail.shotLog} />
 				<ShotTimeline
 					shots_a={shots.team_a ?? []}
 					shots_b={shots.team_b ?? []}
@@ -293,7 +293,7 @@
 			<div class="two-col">
 				{#if passingNetwork && (passingNetwork.team_a?.length || passingNetwork.team_b?.length)}
 					<div class="two-col__cell">
-						<SectionLabel label="Top Passing Connections" />
+						<SectionLabel label={$t.detail.passingNetwork} />
 						<PassingNetwork
 							conns_a={passingNetwork.team_a ?? []}
 							conns_b={passingNetwork.team_b ?? []}
@@ -305,7 +305,7 @@
 				{/if}
 				{#if pressure && (pressure.team_a || pressure.team_b)}
 					<div class="two-col__cell">
-						<SectionLabel label="Defensive Pressure" />
+						<SectionLabel label={$t.detail.defensivePressure} />
 						<PressureDetail
 							pressure_a={pressure.team_a}
 							pressure_b={pressure.team_b}
@@ -325,7 +325,7 @@
 			<div class="two-col">
 				{#if crosses && (crosses.team_a || crosses.team_b)}
 					<div class="two-col__cell">
-						<SectionLabel label="Crosses" />
+						<SectionLabel label={$t.detail.crossesSection} />
 						<CrossesDetail
 							crosses_a={crosses.team_a}
 							crosses_b={crosses.team_b}
@@ -336,7 +336,7 @@
 				{/if}
 				{#if offerings && (offerings.team_a || offerings.team_b)}
 					<div class="two-col__cell">
-						<SectionLabel label="Offering to Receive" />
+						<SectionLabel label={$t.detail.offering} />
 						<OfferingsDetail
 							offerings_a={offerings.team_a}
 							offerings_b={offerings.team_b}
@@ -354,7 +354,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Defensive Actions Detail" />
+				<SectionLabel label={$t.detail.defensiveActionsDetail} />
 				<DefensiveDetail
 					defensive_a={defensive.team_a}
 					defensive_b={defensive.team_b}
@@ -370,7 +370,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Movement to Receive" />
+				<SectionLabel label={$t.detail.movementToReceive} />
 				<MovementDetail
 					movement_a={movement.team_a}
 					movement_b={movement.team_b}
@@ -386,7 +386,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="Goalkeeper Stats" />
+				<SectionLabel label={$t.detail.gkStats} />
 				<GkDetail
 					gk_a={gkStats.team_a}
 					gk_b={gkStats.team_b}
@@ -572,7 +572,8 @@
 
 	/* ── Phase fingerprint ──────────────────────────────────────────── */
 	.fingerprint-wrap {
-		max-width: 360px;
+		max-width: 480px;
+		margin: 0 auto;
 	}
 
 	/* ── Spatial ────────────────────────────────────────────────────── */

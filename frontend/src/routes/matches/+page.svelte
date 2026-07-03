@@ -68,15 +68,15 @@
 		{/if}
 		<div class="filter-bar">
 			<select class="filter-select" bind:value={filterGroup} aria-label="Filter by group">
-				<option value="">All Groups & Rounds</option>
+				<option value="">{$t.match.allGroups}</option>
 				{#each allGroupKeys as g}
-					<option value={g}>Group {g}</option>
+					<option value={g}>{$t.match.group} {g}</option>
 				{/each}
 			</select>
 			{#if filterGroup}
-				<button class="filter-clear" onclick={() => filterGroup = ''}>Clear filter</button>
+				<button class="filter-clear" onclick={() => filterGroup = ''}>{$t.match.clearFilter}</button>
 			{/if}
-			<span class="filter-count">{filteredMatches.length} matches</span>
+			<span class="filter-count">{filteredMatches.length} {$t.match.matches}</span>
 		</div>
 	</header>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LineBreak, Team } from '$lib/types/efi';
 	import { teamColorVar, teamTextColor } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	let {
 		breaks_a,
@@ -10,11 +11,11 @@
 	}: { breaks_a: LineBreak[]; breaks_b: LineBreak[]; team_a: Team; team_b: Team } = $props();
 
 	const lineOrder: LineBreak['line_type'][] = ['defensive', 'midfield', 'attacking'];
-	const lineLabels: Record<string, string> = {
-		defensive: 'Defensive Line',
-		midfield: 'Midfield Line',
-		attacking: 'Attacking Line'
-	};
+	const lineLabels = $derived({
+		defensive: $t.detail.lineDefensive,
+		midfield: $t.detail.lineMidfield,
+		attacking: $t.detail.lineAttacking,
+	});
 
 	function getBreak(breaks: LineBreak[], line: string): LineBreak | undefined {
 		return breaks.find((b) => b.line_type === line);

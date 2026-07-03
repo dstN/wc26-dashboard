@@ -1179,6 +1179,43 @@ Team name labels in every visualisation component were plain `<span>` elements. 
 - 3 footer commits that contained the company name in content/message squashed via
   `git reset --soft <base-commit>` and recommitted clean as a single commit.
 
+### Post-M9 — Session 19 (2026-07-03)
+
+#### Comprehensive i18n sweep — full translation coverage across all pages and components
+
+- **teams/[id]/+page.svelte** — all remaining hardcoded English strings translated:
+  - Performance Trend section → `$t.teams.performanceTrend`
+  - Top Performers section → `$t.teams.topPerformers`
+  - Trend chart labels (Possession % / xG per match) → `$t.teams.trendPossession` / `$t.teams.trendXg`
+  - Performer card labels (Top Scorer, Top Defender, Most Passes, Most Distance, Fastest Player)
+  - Unit suffixes (goals, att., km/h) → locale-aware `$t.teams.unit*` keys
+  - Match Stats section label + match count → `$t.teams.matchStats`
+  - Avg / Total mode toggle buttons → `$t.teams.modeAvg` / `$t.teams.modeTotal`
+  - Stats grid group headers (7 groups) → reuse `$t.compare.grp*` and `$t.keyStats.grp*` keys
+  - All 34 stat row labels (xG, Possession, Goals, Tackles Won, etc.) → existing or new keys
+  - Squad section label → `$t.teams.squad`
+  - POS_LABEL (Goalkeepers/Defenders/Midfielders/Forwards) → `$derived` using `$t.players.*`
+  - Summary stat pills (Poss / xG) → `$t.stats.possession` / `$t.stats.xg`
+  - Avg xG / Avg Ball Recovery summary stats → `$t.teams.avgXg` / `$t.teams.avgBallRecovery`
+  - Match History section label → fixed double-quote Svelte warning
+- **matches/[id]/+page.svelte** — fixed remaining hardcoded labels:
+  - "Out of Possession" / "In Possession" spatial section labels → `$t.detail.*`
+  - `lineLabel()` function → uses `$t.detail.lineDefensive/lineMidfield/lineAttacking`
+- **compare/+page.svelte** — full i18n of TEAM_METRICS and PLAYER_METRICS:
+  - All 25 "Avg …" team metric labels → `$t.compare.avg*` keys (25 new keys)
+  - All 33 player metric labels → reuse existing `$t.playerDetail.*`, `$t.keyStats.*`, `$t.players.*` keys
+- **StatTable.svelte** — head-to-head stat row labels all translated (Goals, xG, Possession, In Contest, Ball Recovery, xG/Shot, Efficiency, Out of Possession, HEAD-TO-HEAD)
+- **CrossesDetail.svelte** — delivery type and zone labels → `$t.playerDetail.*` + new `$t.detail.cross*` keys
+- **DefensiveDetail.svelte** — all 14 stat row labels translated → `$t.keyStats.*` + new `$t.detail.*` keys
+- **PressureDetail.svelte** — all 9 pressure stat labels translated
+- **OfferingsDetail.svelte** — pitch zone labels (Final Third / Middle Third / Def Third)
+- **MovementDetail.svelte** — phase and type labels (Final Third Phase, Progression Phase, Build-Up Phase, In Front / In Between / Out→In / In→Out)
+- **LineBreaksBars.svelte** — line labels (Defensive Line / Midfield Line / Attacking Line)
+- **GkDetail.svelte** — all 4 section headers and 20+ stat row labels translated
+- **players/[id]/+page.svelte** — "Match #" prefix → `$t.compare.matchNo`
+- **New i18n keys added** — 32 new `teams.*` keys, 53 new `detail.*` keys, 35 new `compare.*` keys — all translated to DE/ES/PT/FR/AR (6 locales × 120 keys = 720 new translation entries)
+- **Bug fix — Svelte 5.56.3 SSR crash** (from previous session) — `posGroups[pos]?.length` optional chaining on subscript → `posGroups[pos] && posGroups[pos].length`
+
 ### Post-M9 — Session 18 follow-up (2026-06-28)
 
 #### Bug fixes
