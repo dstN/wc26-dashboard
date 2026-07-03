@@ -462,7 +462,7 @@
 						<div class="stats-group">
 							<h3 class="stats-group__title">{group.group}</h3>
 							{#each group.rows as row}
-								{@const val = fv(tot, avg, row.key, (row as {key: string; suffix?: string}).suffix ?? '', row.decimals ?? 1)}
+								{@const val = fv(tot, avg, row.key, (row as any).suffix ?? '', row.decimals ?? 1)}
 								{#if val !== '—'}
 									<div class="stats-row">
 										<span class="stats-row__label">{row.label}</span>
