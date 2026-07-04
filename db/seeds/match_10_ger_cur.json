@@ -1,0 +1,114 @@
+{
+  "match": {
+    "id": 10,
+    "match_no": 10,
+    "group_letter": "E",
+    "venue": "NRG Stadium, Houston",
+    "match_date": "2026-06-14",
+    "score_a": 7,
+    "score_b": 1,
+    "is_featured": true
+  },
+  "teams": {
+    "team_a": { "id": 1, "name": "Germany", "short_code": "GER", "slug": "germany", "color": "--c-yellow" },
+    "team_b": { "id": 2, "name": "Curaçao", "short_code": "CUR", "slug": "curacao", "color": "--c-blue" }
+  },
+  "stats": {
+    "possession_team_a": 57.8,
+    "possession_team_b": 35.3,
+    "possession_in_contest": 6.9,
+    "ball_recovery_time_avg_a": 3.2,
+    "ball_recovery_time_avg_b": 5.8,
+    "xg_a": 4.17,
+    "xg_b": 0.40,
+    "goals_a": 7,
+    "goals_b": 1
+  },
+  "phases": {
+    "team_a": {
+      "in_possession": [
+        { "name": "Build up", "pct": 22.0 },
+        { "name": "Progression", "pct": 28.0 },
+        { "name": "Long ball", "pct": 8.0 },
+        { "name": "Final third", "pct": 22.0 },
+        { "name": "Counter-attack", "pct": 12.0 },
+        { "name": "Attacking transition", "pct": 8.0 }
+      ],
+      "out_of_possession": [
+        { "name": "High press/block", "pct": 18.0 },
+        { "name": "Mid press/block", "pct": 32.0 },
+        { "name": "Low press/block", "pct": 20.0 },
+        { "name": "Counter-press", "pct": 12.0 },
+        { "name": "Recovery", "pct": 12.0 },
+        { "name": "Defensive transition", "pct": 6.0 }
+      ]
+    },
+    "team_b": {
+      "in_possession": [
+        { "name": "Build up", "pct": 28.0 },
+        { "name": "Progression", "pct": 22.0 },
+        { "name": "Long ball", "pct": 15.0 },
+        { "name": "Final third", "pct": 15.0 },
+        { "name": "Counter-attack", "pct": 12.0 },
+        { "name": "Attacking transition", "pct": 8.0 }
+      ],
+      "out_of_possession": [
+        { "name": "High press/block", "pct": 8.0 },
+        { "name": "Mid press/block", "pct": 25.0 },
+        { "name": "Low press/block", "pct": 38.0 },
+        { "name": "Counter-press", "pct": 8.0 },
+        { "name": "Recovery", "pct": 15.0 },
+        { "name": "Defensive transition", "pct": 6.0 }
+      ]
+    }
+  },
+  "spatial": {
+    "team_a": [
+      { "block": "high", "defensive_line_height": 42.0, "team_length": 28.0 },
+      { "block": "mid",  "defensive_line_height": 37.0, "team_length": 35.0 },
+      { "block": "low",  "defensive_line_height": 28.0, "team_length": 40.0 }
+    ],
+    "team_b": [
+      { "block": "high", "defensive_line_height": 38.0, "team_length": 30.0 },
+      { "block": "mid",  "defensive_line_height": 32.0, "team_length": 38.0 },
+      { "block": "low",  "defensive_line_height": 22.0, "team_length": 45.0 }
+    ]
+  },
+  "line_breaks": {
+    "team_a": [
+      { "line": "defensive", "attempted": 46, "completed": 41 },
+      { "line": "midfield",  "attempted": 27, "completed": 16 },
+      { "line": "attacking", "attempted": 17, "completed": 10 }
+    ],
+    "team_b": [
+      { "line": "defensive", "attempted": 52, "completed": 28 },
+      { "line": "midfield",  "attempted": 33, "completed": 9  },
+      { "line": "attacking", "attempted": 21, "completed": 5  }
+    ]
+  },
+  "final_third": {
+    "team_a": [
+      { "zone": "left",         "count": 8  },
+      { "zone": "left_inside",  "count": 12 },
+      { "zone": "central",      "count": 18 },
+      { "zone": "right_inside", "count": 14 },
+      { "zone": "right",        "count": 10 }
+    ],
+    "team_b": [
+      { "zone": "left",         "count": 4 },
+      { "zone": "left_inside",  "count": 5 },
+      { "zone": "central",      "count": 7 },
+      { "zone": "right_inside", "count": 6 },
+      { "zone": "right",        "count": 4 }
+    ]
+  },
+  "defensive": {
+    "team_a": { "forced_turnovers": 18, "pressure_on_ball": "heavy" },
+    "team_b": { "forced_turnovers": 8,  "pressure_on_ball": "moderate" }
+  },
+  "tournament": {
+    "matches_played": 48,
+    "goals_total": 137,
+    "avg_in_contest_pct": 7.40
+  }
+}

@@ -1,0 +1,88 @@
+services:
+  db:
+    image: mysql:8.0
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/conf.d/charset.cnf:/etc/mysql/conf.d/charset.cnf:ro
+      - ./db/init/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/seeds/02_match_10_ger_cur.sql:/docker-entrypoint-initdb.d/02_match_10_ger_cur.sql:ro
+      - ./db/seeds/03_team_aggregates.sql:/docker-entrypoint-initdb.d/03_team_aggregates.sql:ro
+      - ./db/seeds/04_all_matches.sql:/docker-entrypoint-initdb.d/04_all_matches.sql:ro
+      - ./db/seeds/05_featured_match.sql:/docker-entrypoint-initdb.d/05_featured_match.sql:ro
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    env_file: .env
+    environment:
+      PUBLIC_API_URL: ${PUBLIC_API_URL}
+      BODY_SIZE_LIMIT: 0
+    ports:
+      - "5175:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  ingestion:
+    build: ./ingestion
+    env_file: .env
+    volumes:
+      - ./ingestion:/app
+      - ./backend/app:/app/efi_models:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - ingest
+
+  test:
+    image: node:20-slim
+    working_dir: /app
+    command: npm run test:e2e
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      frontend:
+        condition: service_healthy
+    profiles:
+      - test
+
+volumes:
+  db_data:

@@ -1,0 +1,41 @@
+from sqlalchemy import Column, Integer, Numeric, String, ForeignKey, Enum, Computed
+from app.models.base import Base
+
+
+class MatchGkStat(Base):
+    __tablename__ = "match_gk_stats"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
+    match_id = Column(Integer, ForeignKey("matches.id"), nullable=True)
+    scope = Column(Enum("match", "team_aggregate"), nullable=False, default="match")
+    match_key = Column(Integer, Computed("IFNULL(match_id,0)"), nullable=False)
+    total_involvements = Column(Integer, nullable=True)
+    total_distributions = Column(Integer, nullable=True)
+    kick_from_feet = Column(Integer, nullable=True)
+    kick_from_hands = Column(Integer, nullable=True)
+    throw_distribution = Column(Integer, nullable=True)
+    gk_line_breaks = Column(Integer, nullable=True)
+    total_attempts_faced = Column(Integer, nullable=True)
+    save_pct = Column(Numeric(5, 2), nullable=True)
+    total_goal_interventions = Column(Integer, nullable=True)
+    save_and_retain = Column(Integer, nullable=True)
+    deflect_and_retain = Column(Integer, nullable=True)
+    save_and_deflect = Column(Integer, nullable=True)
+    save_attempt = Column(Integer, nullable=True)
+    no_save_attempt = Column(Integer, nullable=True)
+    total_aerial_interventions = Column(Integer, nullable=True)
+    crosses_faced = Column(Integer, nullable=True)
+    crosses_faced_inswing = Column(Integer, nullable=True)
+    crosses_faced_outswing = Column(Integer, nullable=True)
+    crosses_faced_driven = Column(Integer, nullable=True)
+    crosses_faced_lofted = Column(Integer, nullable=True)
+    crosses_faced_cutback = Column(Integer, nullable=True)
+    crosses_faced_push = Column(Integer, nullable=True)
+    gk_name = Column(String(100), nullable=True)
+    punches_complete = Column(Integer, nullable=True)
+    punches_incomplete = Column(Integer, nullable=True)
+    claims_complete = Column(Integer, nullable=True)
+    claims_incomplete = Column(Integer, nullable=True)
+    tipped_palmed_complete = Column(Integer, nullable=True)
+    tipped_palmed_incomplete = Column(Integer, nullable=True)
