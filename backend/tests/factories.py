@@ -28,7 +28,6 @@ class MatchFactory(SQLAlchemyModelFactory):
     score_b = 0
     venue = "Test Stadium"
     group_letter = "A"
-    is_featured = 0
 
 
 class MatchStatsFactory(SQLAlchemyModelFactory):

@@ -4,6 +4,7 @@
 	import PhasesBar from '$lib/components/viz/PhasesBar.svelte';
 	import { teamColorVar, teamTextColor, flagCode } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { isKnockoutGroup } from '$lib/stage';
 
 	let { data }: { data: PageData } = $props();
 
@@ -51,6 +52,13 @@
 		'Counter-press': 'counterPress',
 	};
 
+	// TS cast stays in the script block — `as`-casts in template markup have
+	// repeatedly broken the rollup SSR build in this project.
+	function phaseLabel(name: string): string {
+		const dict: Record<string, string> = $t.phases;
+		return dict[PHASE_KEYS[name]] ?? name;
+	}
+
 	const POS_LABEL = $derived<Record<string, string>>({
 		GK: $t.players.goalkeepers,
 		DF: $t.players.defenders,
@@ -72,6 +80,32 @@
 		try {
 			return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(raw));
 		} catch { return raw; }
+	}
+
+	// Knockout rounds carry short labels in group_letter (R32/R16/QF/SF/3RD/FIN)
+	const ROUND_LABELS = $derived<Record<string, string>>({
+		R32: $t.tournament.roundOf32,
+		R16: $t.tournament.roundOf16,
+		QF: $t.tournament.quarterFinals,
+		SF: $t.tournament.semiFinals,
+		'3RD': $t.tournament.thirdPlace,
+		FIN: $t.tournament.final,
+	});
+
+	function groupHeading(g: string): string {
+		// single letters are ALWAYS groups — guards group F against the FIN label
+		if (!isKnockoutGroup(g)) return `${$t.match.group} ${g}`;
+		return ROUND_LABELS[g] ?? `${$t.match.group} ${g}`;
+	}
+
+	// Compact "AET" / "AET · 3-4 pens" note under a match-history score.
+	function scoreNote(m: { went_to_extra_time: boolean; penalty_score_a?: number | null; penalty_score_b?: number | null }): string {
+		const parts: string[] = [];
+		if (m.went_to_extra_time) parts.push($t.match.aet);
+		if (m.penalty_score_a != null && m.penalty_score_b != null) {
+			parts.push(`${m.penalty_score_a}-${m.penalty_score_b} ${$t.match.pensShort}`);
+		}
+		return parts.join(' · ');
 	}
 
 	const goalsScored = $derived(
@@ -160,10 +194,22 @@
 			.join(' ');
 	}
 
+	const possSparkPoints = $derived(sparkPoints(trendData.map((d: { poss: number | null }) => d.poss), 40, 100));
+	const xgSparkPoints   = $derived(sparkPoints(trendData.map((d: { xg: number | null }) => d.xg), 40, maxXg));
+
 	function fv(totals: Record<string, number>, avgs: Record<string, number>, key: string, suffix = '', decimals = 1): string {
 		const v = statsMode === 'avg' ? avgs[key] : totals[key];
 		if (v == null) return '—';
 		return `${Number(v).toFixed(decimals)}${suffix}`;
+	}
+
+	// row-object variant so the template needs no `as any` cast on optional fields
+	function fvRow(
+		totals: Record<string, number>,
+		avgs: Record<string, number>,
+		row: { key: string; suffix?: string; decimals?: number }
+	): string {
+		return fv(totals, avgs, row.key, row.suffix ?? '', row.decimals ?? 1);
 	}
 </script>
 
@@ -251,7 +297,7 @@
 							<span class="phase-group__title">{$t.detail.inPossession} (avg %)</span>
 							{#each inPhases as ph}
 								<div class="phase-row">
-									<span class="phase-row__label">{($t.phases as Record<string, string>)[PHASE_KEYS[ph.phase_name]] ?? ph.phase_name}</span>
+									<span class="phase-row__label">{phaseLabel(ph.phase_name)}</span>
 									<div class="phase-row__track">
 										<div
 											class="phase-row__fill"
@@ -268,7 +314,7 @@
 							<span class="phase-group__title">{$t.detail.outOfPossession} (avg %)</span>
 							{#each outPhases as ph}
 								<div class="phase-row">
-									<span class="phase-row__label">{($t.phases as Record<string, string>)[PHASE_KEYS[ph.phase_name]] ?? ph.phase_name}</span>
+									<span class="phase-row__label">{phaseLabel(ph.phase_name)}</span>
 									<div class="phase-row__track">
 										<div
 											class="phase-row__fill phase-row__fill--out"
@@ -301,7 +347,7 @@
 									stroke="var(--border-soft)" stroke-width="0.5" stroke-dasharray="2 2" />
 							{/each}
 							<polyline
-								points={sparkPoints(trendData.map(d => d.poss), 40, 100)}
+								points={possSparkPoints}
 								fill="none"
 								stroke={teamColorVar(team.color)}
 								stroke-width="2"
@@ -333,7 +379,7 @@
 						<svg viewBox="0 0 100 44" class="trend-svg" aria-hidden="true">
 							<line x1="0" y1="40" x2="100" y2="40" stroke="var(--border)" stroke-width="0.5" />
 							<polyline
-								points={sparkPoints(trendData.map(d => d.xg), 40, maxXg)}
+								points={xgSparkPoints}
 								fill="none"
 								stroke="var(--accent)"
 								stroke-width="2"
@@ -483,7 +529,7 @@
 						<div class="stats-group">
 							<h3 class="stats-group__title">{group.group}</h3>
 							{#each group.rows as row}
-								{@const val = fv(tot, avg, row.key, (row as any).suffix ?? '', row.decimals ?? 1)}
+								{@const val = fvRow(tot, avg, row)}
 								{#if val !== '—'}
 									<div class="stats-row">
 										<span class="stats-row__label">{row.label}</span>
@@ -556,11 +602,14 @@
 						{@const opponent = isTeamA ? m.team_b : m.team_a}
 						{@const teamScore = isTeamA ? m.score_a : m.score_b}
 						{@const oppScore = isTeamA ? m.score_b : m.score_a}
-						{@const won = teamScore > oppScore}
-						{@const drew = teamScore === oppScore}
+						{@const wentToPens = m.penalty_score_a != null && m.penalty_score_b != null}
+						{@const teamPens = isTeamA ? m.penalty_score_a : m.penalty_score_b}
+						{@const oppPens = isTeamA ? m.penalty_score_b : m.penalty_score_a}
+						{@const won = wentToPens ? teamPens > oppPens : teamScore > oppScore}
+						{@const drew = wentToPens ? false : teamScore === oppScore}
 						<a href="/matches/{m.id}" class="match-row">
 							<div class="match-row__meta">
-								<span class="match-group">{$t.match.group} {m.group_letter} · {$t.match.matchNo} {m.match_no}</span>
+								<span class="match-group">{groupHeading(m.group_letter)} · {$t.match.matchNo} {m.match_no}</span>
 								{#if m.match_date}
 									<span class="match-date">{formatDate(m.match_date)}</span>
 								{/if}
@@ -575,17 +624,22 @@
 									<span class="opp-name">{opponent.name}</span>
 								</div>
 								<div class="match-row__score">
-									<span
-										class="sc-badge"
-										style="background: {teamColorVar(team.color)}; color: {badgeTextColor(team.color)};"
-									>{team.short_code}</span>
-									<span class="score-val" class:score-win={won} class:score-draw={drew} class:score-loss={!won && !drew}>{teamScore}</span>
-									<span class="score-sep">:</span>
-									<span class="score-val score-opp">{oppScore}</span>
-									<span
-										class="sc-badge"
-										style="background: {teamColorVar(opponent.color)}; color: {badgeTextColor(opponent.color)};"
-									>{opponent.short_code}</span>
+									<div class="match-row__score-line">
+										<span
+											class="sc-badge"
+											style="background: {teamColorVar(team.color)}; color: {badgeTextColor(team.color)};"
+										>{team.short_code}</span>
+										<span class="score-val" class:score-win={won} class:score-draw={drew} class:score-loss={!won && !drew}>{teamScore}</span>
+										<span class="score-sep">:</span>
+										<span class="score-val score-opp">{oppScore}</span>
+										<span
+											class="sc-badge"
+											style="background: {teamColorVar(opponent.color)}; color: {badgeTextColor(opponent.color)};"
+										>{opponent.short_code}</span>
+									</div>
+									{#if m.went_to_extra_time || wentToPens}
+										<span class="score-note">{scoreNote(m)}</span>
+									{/if}
 								</div>
 								<div class="match-row__stats">
 									{#if ms?.possession_team_a != null}
@@ -1038,9 +1092,23 @@
 
 	.match-row__score {
 		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		flex-shrink: 0;
+	}
+	.match-row__score-line {
+		display: flex;
 		align-items: center;
 		gap: var(--sp-1);
-		flex-shrink: 0;
+	}
+	.score-note {
+		font-size: var(--fs-meta);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--accent);
+		white-space: nowrap;
 	}
 	.score-val {
 		font-size: var(--fs-h2);

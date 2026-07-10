@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import ThemeSwitch from './ThemeSwitch.svelte';
-	import { t, locale, setLocale, LOCALES, type Locale } from '$lib/i18n';
+	import { t, locale, setLocale, LOCALES } from '$lib/i18n';
 
 	let { matchCount = 0 }: { matchCount?: number } = $props();
 	let menuOpen = $state(false);
@@ -42,7 +42,7 @@
 				<button
 					class="lang-btn"
 					class:lang-btn--active={$locale === loc.code}
-					onclick={() => setLocale(loc.code as Locale)}
+					onclick={() => setLocale(loc.code)}
 					aria-label={loc.label}
 					aria-pressed={$locale === loc.code}
 				>{loc.label}</button>
@@ -90,7 +90,7 @@
 					<button
 						class="lang-btn lang-btn--lg"
 						class:lang-btn--active={$locale === loc.code}
-						onclick={() => { setLocale(loc.code as Locale); menuOpen = false; }}
+						onclick={() => { setLocale(loc.code); menuOpen = false; }}
 						aria-label={loc.label}
 						aria-pressed={$locale === loc.code}
 					>{loc.label}</button>
@@ -296,18 +296,18 @@
 		color: var(--muted);
 		text-decoration: none;
 		letter-spacing: -0.01em;
-		border-left: 3px solid transparent;
-		transition: color 0.12s, border-left-color 0.12s, background 0.12s;
+		border-inline-start: 3px solid transparent;
+		transition: color 0.12s, border-color 0.12s, background 0.12s;
 	}
 	:global(.mobile-menu__link:hover) {
 		color: var(--ink);
 		background: color-mix(in srgb, var(--ink) 4%, transparent);
-		border-left-color: color-mix(in srgb, var(--accent) 35%, transparent);
+		border-inline-start-color: color-mix(in srgb, var(--accent) 35%, transparent);
 	}
 	:global(.mobile-menu__link.active) {
 		color: var(--ink);
 		font-weight: 700;
-		border-left-color: var(--accent);
+		border-inline-start-color: var(--accent);
 		background: color-mix(in srgb, var(--accent) 6%, transparent);
 	}
 	:global(.mobile-menu__active-dot) {

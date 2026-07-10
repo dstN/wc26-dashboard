@@ -4,11 +4,27 @@
 	import PossessionBar from '$lib/components/viz/PossessionBar.svelte';
 	import { teamColorVar, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { isKnockoutGroup } from '$lib/stage';
 	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 	const d = $derived(data.dashboard);
 
+	// Knockout rounds carry short labels in group_letter (R32/R16/QF/SF/3RD/FIN)
+	const ROUND_LABELS = $derived<Record<string, string>>({
+		R32: $t.tournament.roundOf32,
+		R16: $t.tournament.roundOf16,
+		QF: $t.tournament.quarterFinals,
+		SF: $t.tournament.semiFinals,
+		'3RD': $t.tournament.thirdPlace,
+		FIN: $t.tournament.final,
+	});
+
+	function groupHeading(g: string): string {
+		// single letters are ALWAYS groups — guards group F against the FIN label
+		if (!isKnockoutGroup(g)) return `${$t.match.group} ${g}`;
+		return ROUND_LABELS[g] ?? `${$t.match.group} ${g}`;
+	}
 </script>
 
 <svelte:head>
@@ -17,8 +33,7 @@
 
 {#if !d}
 	<div class="error-state">
-		<p>Unable to load dashboard data. Is the backend running?</p>
-		{#if data.error}<p class="error-detail">{$t.error.loadFailed}</p>{/if}
+		<p>{$t.error.loadFailed}</p>
 	</div>
 {:else}
 	<!-- ── SECTION 1: HERO ──────────────────────────────────────────────────── -->
@@ -57,8 +72,8 @@
 	<section class="match-band">
 		<div class="match-band__header">
 			<span class="match-band__featured-label">{$t.match.featuredLabel}</span>
-			<span class="match-band__meta">{$t.match.group} {d.featured.group_letter} · {$t.match.matchNo} {d.featured.match_no}</span>
-			<span class="match-band__status">{$t.match.fullTime}</span>
+			<span class="match-band__meta">{groupHeading(d.featured.group_letter)} · {$t.match.matchNo} {d.featured.match_no}</span>
+			<span class="match-band__status">{d.featured.went_to_extra_time ? $t.match.aet : $t.match.fullTime}</span>
 		</div>
 
 		{#if d.featured.venue || d.featured.match_date}
@@ -92,6 +107,9 @@
 					<a href="/teams/{d.featured.team_b.id}" class="match-band__team-name" onclick={(e) => e.stopPropagation()}>{d.featured.team_b.name}</a>
 				</div>
 			</div>
+			{#if d.featured.penalty_score_a != null}
+				<span class="match-band__pens">{$t.match.penalties}: {d.featured.penalty_score_a}-{d.featured.penalty_score_b}</span>
+			{/if}
 		</div>
 
 		<div class="match-band__xg-row">
@@ -115,17 +133,6 @@
 		text-align: center;
 		color: var(--muted);
 		font-size: var(--fs-body);
-	}
-	.error-detail {
-		font-size: var(--fs-meta);
-		margin-top: var(--sp-2);
-		color: var(--c-red);
-	}
-
-	/* ── Section divider ─────────────────────────────────────────────── */
-	.section-divider {
-		height: 1px;
-		background: var(--border);
 	}
 
 	/* ── SECTION 1: Hero ─────────────────────────────────────────────── */
@@ -274,6 +281,14 @@
 	}
 	.match-band__score-link:hover {
 		background: color-mix(in srgb, var(--border) 60%, transparent);
+	}
+	.match-band__pens {
+		display: block;
+		text-align: center;
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		color: var(--muted);
+		margin-top: var(--sp-1);
 	}
 
 	.match-band__score-row {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { TeamSpatialSplit, Team } from '$lib/types/efi';
-	import { teamColorVar, badgeTextColor } from '$lib/tokens';
+	import { teamColorVar, teamTextColor, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	let {
@@ -48,7 +48,7 @@
 
 <div class="smp">
 	<!-- Row 1: scenario -->
-	<div class="pill-group" role="group" aria-label="Scenario">
+	<div class="pill-group" role="group" aria-label={$t.detail.ariaScenario}>
 		<button class="pill pill--scenario" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>{$t.detail.outOfPossession}</button>
 		<button class="pill pill--scenario" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>{$t.detail.inPossession}</button>
 	</div>
@@ -56,12 +56,12 @@
 	<!-- Row 2: team + block type -->
 	<div class="controls-row">
 		{#if hasSpatialB}
-			<div class="pill-group" role="group" aria-label="Nation">
+			<div class="pill-group" role="group" aria-label={$t.detail.ariaNation}>
 				<button class="pill pill--team" class:active={selectedTeam === 'a'} style="--tc:{teamColorVar(team_a.color)};--tc-text:{badgeTextColor(team_a.color)}" onclick={() => selectedTeam = 'a'}>{team_a.short_code}</button>
 				<button class="pill pill--team" class:active={selectedTeam === 'b'} style="--tc:{teamColorVar(team_b.color)};--tc-text:{badgeTextColor(team_b.color)}" onclick={() => selectedTeam = 'b'}>{team_b.short_code}</button>
 			</div>
 		{/if}
-		<div class="pill-group" role="group" aria-label="Block">
+		<div class="pill-group" role="group" aria-label={$t.detail.ariaBlock}>
 			{#if scenario === 'defensive'}
 				{#each defBlocks as b}
 					<button class="pill pill--sm pill--block" class:active={defBlock === b.key} onclick={() => defBlock = b.key}>{b.label}</button>
@@ -76,7 +76,7 @@
 
 	<!-- Pitch -->
 	<div class="pitch-wrap">
-		<div class="pitch" role="img" aria-label="Pitch for {currentTeam.short_code}">
+		<div class="pitch" role="img" aria-label="{$t.detail.pitchFor} {currentTeam.short_code}">
 			<div class="pitch__center-line"></div>
 			<div class="pitch__center-circle"></div>
 			<div class="pitch__box pitch__box--top"></div>
@@ -102,9 +102,9 @@
 
 	{#if block}
 		<div class="kpis">
-			<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamColorVar(currentTeam.color)}">{block.defensive_line_height}m</span></div>
-			<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamColorVar(currentTeam.color)}">{block.team_length}m</span></div>
-			{#if block.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamColorVar(currentTeam.color)}">{block.width_m}m</span></div>{/if}
+			<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamTextColor(currentTeam.color)}">{block.defensive_line_height}m</span></div>
+			<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamTextColor(currentTeam.color)}">{block.team_length}m</span></div>
+			{#if block.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamTextColor(currentTeam.color)}">{block.width_m}m</span></div>{/if}
 		</div>
 	{/if}
 </div>

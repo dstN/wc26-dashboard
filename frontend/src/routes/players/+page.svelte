@@ -73,6 +73,7 @@
 
 	interface GkRankEntry {
 		gk_name: string;
+		player_id: number | null;
 		team: { id: number; name: string; short_code: string; color: string; slug: string };
 		matches: number;
 		total_attempts_faced: number | null;
@@ -149,6 +150,17 @@
 	// ── Active ranking tab ────────────────────────────────────────────────────
 	type Tab = 'scorers' | 'defenders' | 'midfielders' | 'forwards' | 'physical' | 'goalkeepers' | 'discipline';
 	let activeTab: Tab = $state('scorers');
+
+	// defined in the script block so no `as const` assertion sits in template markup
+	const RANKING_TABS = $derived([
+		{ key: 'scorers',     label: $t.players.tabTopGoals },
+		{ key: 'defenders',   label: $t.players.tabTopDefenders },
+		{ key: 'midfielders', label: $t.players.tabTopMidfielders },
+		{ key: 'forwards',    label: $t.players.tabTopForwards },
+		{ key: 'physical',    label: $t.players.tabPhysical },
+		{ key: 'goalkeepers', label: $t.players.goalkeepers },
+		{ key: 'discipline',  label: $t.players.tabDiscipline },
+	] as const);
 
 	// ── Per-tab sort state ────────────────────────────────────────────────────
 	let scorersSort = $state('goals');              let scorersDir = $state<1|-1>(-1);
@@ -266,20 +278,17 @@
 		<SectionLabel label={$t.players.label} />
 		<h1 class="page-title">{$t.players.rankingTitle}</h1>
 		<p class="page-sub">{players.length} {$t.players.rankingSubtitle}</p>
+		<div class="stage-pill-group" role="group" aria-label={$t.stage.ariaLabel}>
+			<a href="?" class="stage-pill" class:stage-pill--active={!data.stage}>{$t.stage.all}</a>
+			<a href="?stage=group" class="stage-pill" class:stage-pill--active={data.stage === 'group'}>{$t.stage.group}</a>
+			<a href="?stage=knockout" class="stage-pill" class:stage-pill--active={data.stage === 'knockout'}>{$t.stage.knockout}</a>
+		</div>
 	</header>
 
 	<!-- ── RANKINGS ──────────────────────────────────────────────────────── -->
 	<section class="rankings-section">
 		<div class="tab-nav" role="tablist">
-			{#each ([
-				{ key: 'scorers',     label: $t.players.tabTopGoals },
-				{ key: 'defenders',   label: $t.players.tabTopDefenders },
-				{ key: 'midfielders', label: $t.players.tabTopMidfielders },
-				{ key: 'forwards',    label: $t.players.tabTopForwards },
-				{ key: 'physical',    label: $t.players.tabPhysical },
-				{ key: 'goalkeepers', label: $t.players.goalkeepers },
-				{ key: 'discipline',  label: $t.players.tabDiscipline },
-			] as const) as tab}
+			{#each RANKING_TABS as tab}
 				<button
 					class="tab-btn"
 					class:tab-btn--active={activeTab === tab.key}
@@ -568,10 +577,17 @@
 							<tr>
 								<td class="rank-col rank-num">{i + 1}</td>
 								<td>
-									<span class="player-link">
-										<span class="player-link__pos" style="color: var(--c-lime);">GK</span>
-										{gk.gk_name}
-									</span>
+									{#if gk.player_id}
+										<a href="/players/{gk.player_id}" class="player-link">
+											<span class="player-link__pos" style="color: var(--c-lime);">GK</span>
+											{gk.gk_name}
+										</a>
+									{:else}
+										<span class="player-link">
+											<span class="player-link__pos" style="color: var(--c-lime);">GK</span>
+											{gk.gk_name}
+										</span>
+									{/if}
 								</td>
 								<td>
 									<a href="/teams/{gk.team.id}" class="team-link">
@@ -746,6 +762,36 @@
 		font-size: var(--fs-ui);
 		font-weight: 500;
 		color: var(--muted);
+	}
+
+	/* ── Stage filter ────────────────────────────────────────────────── */
+	.stage-pill-group {
+		display: flex;
+		gap: 2px;
+		background: var(--border);
+		border-radius: var(--r-pill);
+		padding: 2px;
+		width: fit-content;
+		flex-wrap: wrap;
+	}
+	.stage-pill {
+		padding: 4px var(--sp-4);
+		border: none;
+		border-radius: var(--r-pill);
+		background: transparent;
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		font-family: inherit;
+		color: var(--muted);
+		text-decoration: none;
+		cursor: pointer;
+		transition: background 0.15s, color 0.15s;
+		white-space: nowrap;
+	}
+	.stage-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+	.stage-pill--active {
+		background: var(--accent);
+		color: var(--accent-fg);
 	}
 
 	/* ── Rankings section ────────────────────────────────────────────── */

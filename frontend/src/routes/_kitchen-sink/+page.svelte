@@ -8,8 +8,10 @@
 	import PossessionBar from '$lib/components/viz/PossessionBar.svelte';
 	import StatTable from '$lib/components/viz/StatTable.svelte';
 
-	const teamA = { id: 1, name: 'Germany', color: 'red', group: 'E' };
-	const teamB = { id: 2, name: 'Curaçao', color: 'blue', group: 'E' };
+	import type { Team } from '$lib/types/efi';
+
+	const teamA: Team = { id: 1, name: 'Germany', short_code: 'GER', slug: 'germany', color: '--c-yellow' };
+	const teamB: Team = { id: 2, name: 'Curaçao', short_code: 'CUR', slug: 'curacao', color: '--c-blue' };
 
 	const stats = {
 		possession_team_a: 57.8,
@@ -34,25 +36,25 @@
 
 	<section class="ks__section">
 		<h2>SectionLabel</h2>
-		<SectionLabel>Possession</SectionLabel>
-		<SectionLabel>Head to Head</SectionLabel>
+		<SectionLabel label="Possession" />
+		<SectionLabel label="Head to Head" />
 	</section>
 
 	<section class="ks__section">
 		<h2>Badge</h2>
 		<div style="display:flex; gap: 8px; flex-wrap:wrap;">
-			<Badge>LIVE</Badge>
-			<Badge variant="muted">GROUP E</Badge>
-			<Badge variant="accent">MATCH 10</Badge>
+			<Badge team={teamA} />
+			<Badge team={teamB} />
+			<Badge team={teamA} size="sm" />
 		</div>
 	</section>
 
 	<section class="ks__section">
 		<h2>KpiStat</h2>
 		<div style="display:flex; gap: 16px; flex-wrap:wrap;">
-			<KpiStat label="xG" value="3.1" team={teamA} />
-			<KpiStat label="Goals" value="7" team={teamA} />
-			<KpiStat label="Recovery" value="4.2s" team={teamA} />
+			<KpiStat label="xG" value="3.1" />
+			<KpiStat label="Goals" value="7" />
+			<KpiStat label="Recovery" value="4.2" unit="s" />
 		</div>
 	</section>
 

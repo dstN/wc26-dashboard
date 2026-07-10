@@ -2,11 +2,11 @@
 
 Portfolio-grade full-stack data engine: Python pipeline ingests FIFA Enhanced Football Intelligence (EFI) Post Match Summary PDFs into MySQL 8.0, FastAPI serves the data, and a Svelte 5 editorial dashboard renders it — all behind one `docker compose up`.
 
-**Featured match:** Germany 7–1 Curaçao · Group E · Match 10 · Houston · 14.06.2026
+The home hero always shows the **latest ingested match** (by match date) — currently deep into the Round of 32.
 
 ## Features
 
-- **36 matches ingested** from real FIFA PMSR PDFs — possession, phases, spatial, line breaks, final-third zones, defensive actions
+- **88 matches ingested** from real FIFA PMSR PDFs — possession, phases, spatial, line breaks, final-third zones, defensive actions
 - **Full match detail pages** — 7 EFI data sections per match (Possession, Head-to-Head, Phase Analysis, Line Breaks, Spatial Control, Defensive Actions, Final Third Zones)
 - **Team detail pages** — aggregate stats and per-match history
 - **1 248 players** — searchable and filterable roster across all 48 teams
@@ -32,7 +32,7 @@ make up
 | `make up` | Start all services |
 | `make down` | Stop all services |
 | `make reset` | Wipe DB volume and restart (re-seeds automatically) |
-| `make crawl` | Run full 48-team EFI crawl |
+| `make ingest` | Run the PDF drop-folder watcher in the ingestion container |
 | `make test` | Run all test suites |
 | `make contract` | Regenerate OpenAPI TypeScript types |
 | `make fmt` | Format all code |
@@ -42,12 +42,16 @@ make up
 
 ### Ingest PDFs manually
 
-```bash
-# Parse a single PDF to SQL, print to stdout
-python -m ingestion.parse_efi_pdf path/to/Match_10_GER_CUR.pdf
+Run from the `ingestion/` directory (the pipeline is `parse_pmsr.py` + `pmsr_to_sql.py`; the legacy `parse_efi_pdf` module has been removed):
 
-# Parse multiple PDFs and write seed file
-python -m ingestion.parse_efi_pdf path/to/pdfs/*.pdf --out db/seeds/04_matches.sql
+```bash
+cd ingestion
+
+# Parse a single PDF to SQL, print to stdout
+python -m ingestion.pmsr_to_sql path/to/Match_10_GER_CUR.pdf
+
+# Parse all PDFs in a drop dir and regenerate the combined seed file
+python -m ingestion.pmsr_to_sql --batch --data-dir path/to/pdfs --out ../db/seeds/04_all_matches.sql
 ```
 
 ### Automatic drop-folder watcher (cron / Phusion Passenger)
@@ -62,8 +66,8 @@ PDF_WATCH_DIR=/home/myuser/efi_pdf_drop
 Then add a cron job:
 
 ```cron
-# Ingest new PDFs every 5 minutes
-*/5 * * * * cd /path/to/project && python -m ingestion.watch_pdfs >> /var/log/efi_watch.log 2>&1
+# Ingest new PDFs every 5 minutes (run from the ingestion/ package root)
+*/5 * * * * cd /path/to/project/ingestion && python -m ingestion.watch_pdfs >> /var/log/efi_watch.log 2>&1
 ```
 
 Flags: `--dry-run` (parse only), `--force` (re-process all), `--dir <path>` (override env).
@@ -76,8 +80,7 @@ After `make up` and waiting for services to be healthy:
 # DB seeded correctly
 docker compose exec db mysql -uwc26user -pwc26pass wc26 \
   -e "SELECT COUNT(*) FROM teams; \
-      SELECT match_no, is_featured FROM matches WHERE is_featured=1; \
-      SELECT matches_played, goals_total, avg_in_contest_pct FROM tournament_overview;"
+      SELECT match_no, match_date FROM matches ORDER BY match_date DESC LIMIT 1;"
 
 # API working
 curl http://localhost:8000/health/db
@@ -102,13 +105,18 @@ cd ingestion && python3 -m pytest tests/ -v
 cd ingestion && python3 -m pytest tests/test_watch_pdfs.py -v
 ```
 
+## Documentation
+
+Architecture, data model, API surface and conventions: see [DOCS.md](DOCS.md).
+Deployment walkthrough: [DEPLOY.md](DEPLOY.md).
+
 ## Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Database | MySQL 8.0 — 11 EFI tables, scope discriminator for match vs aggregate |
+| Database | MySQL 8.0 — 19 EFI tables, scope discriminator for match vs aggregate |
 | Backend | Python 3.11, FastAPI, SQLAlchemy 2.0 async, Pydantic v2 |
-| Ingestion | PyMuPDF (fitz), pandas, SQLAlchemy sync |
+| Ingestion | PyMuPDF (fitz), SQLAlchemy sync |
 | Frontend | Node 20, SvelteKit, Svelte 5 runes, Bits UI |
 | Design | Sports editorial design system — light/dark, CSS custom properties |
 | i18n | 6-locale writable store (EN/DE/ES/PT/FR/AR), RTL Arabic |
@@ -119,10 +127,10 @@ cd ingestion && python3 -m pytest tests/test_watch_pdfs.py -v
 
 | URL | Description |
 |-----|-------------|
-| `/` | Overview — featured match, KPIs, recent results |
-| `/matches` | All 36 group-stage matches, grouped by group |
+| `/` | Overview — latest match, KPIs |
+| `/matches` | All ingested matches, grouped by group/round |
 | `/matches/[id]` | Full match detail — 7 EFI data sections |
 | `/teams` | All 48 teams with stats |
 | `/teams/[id]` | Team detail — aggregate stats + match history |
 | `/players` | 1 248-player roster — searchable and filterable |
-| `/tournament` | Tournament progress — phases, KPIs |
+| `/phases` | Tournament progress — phases, KPIs |

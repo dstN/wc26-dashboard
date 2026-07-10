@@ -61,16 +61,22 @@
 	{#if pressure_a?.most_direct_player || pressure_b?.most_direct_player}
 		<div class="pr__callout-row">
 			{#if pressure_a?.most_direct_player}
-				<div class="pr__callout" style="border-color: {teamColorVar(team_a.color)}">
+				<div class="pr__callout">
 					<span class="pr__callout-val" style="color: {teamTextColor(team_a.color)}">{pressure_a.most_direct_count}</span>
-					<span class="pr__callout-name">{pressure_a.most_direct_player}</span>
+					<span class="pr__callout-name">
+						<span class="pr__callout-dot" style="background: {teamColorVar(team_a.color)}"></span>
+						{pressure_a.most_direct_player}
+					</span>
 					<span class="pr__callout-label">{$t.detail.mostDirectPressures}</span>
 				</div>
 			{/if}
 			{#if pressure_b?.most_direct_player}
-				<div class="pr__callout" style="border-color: {teamColorVar(team_b.color)}">
+				<div class="pr__callout">
 					<span class="pr__callout-val" style="color: {teamTextColor(team_b.color)}">{pressure_b.most_direct_count}</span>
-					<span class="pr__callout-name">{pressure_b.most_direct_player}</span>
+					<span class="pr__callout-name">
+						<span class="pr__callout-dot" style="background: {teamColorVar(team_b.color)}"></span>
+						{pressure_b.most_direct_player}
+					</span>
 					<span class="pr__callout-label">{$t.detail.mostDirectPressures}</span>
 				</div>
 			{/if}
@@ -139,9 +145,10 @@
 		flex-direction: column;
 		gap: 2px;
 		padding: var(--sp-3);
-		border-left: 3px solid;
 		background: var(--surface);
-		border-radius: var(--r-sm);
+		border: 1px solid var(--border);
+		border-radius: var(--r-md);
+		box-shadow: var(--shadow-card);
 	}
 	.pr__callout-val {
 		font-size: var(--fs-stat);
@@ -150,9 +157,18 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.pr__callout-name {
+		display: flex;
+		align-items: center;
+		gap: 6px;
 		font-size: var(--fs-ui);
 		font-weight: 700;
 		color: var(--ink);
+	}
+	.pr__callout-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 	.pr__callout-label {
 		font-size: var(--fs-meta);

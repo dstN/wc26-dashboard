@@ -12,6 +12,31 @@
 	function fmt(n: number, decimals = 0): string {
 		return n?.toLocaleString('de-DE', { maximumFractionDigits: decimals }) ?? '—';
 	}
+
+	// Real per-stage played counts (group_letter-based) — NOT a global match
+	// count against a threshold. A global count broke as soon as knockout
+	// matches were ingested alongside group matches: e.g. 88 total matches
+	// (72 group + 16 Round of 32) used to render as "88 / 72 group stage
+	// matches played", i.e. the R32 games were counted as group-stage games.
+	const GROUP_STAGE_TOTAL = 72;
+	const KNOCKOUT_TOTALS: Record<string, number> = { R32: 16, R16: 8, QF: 4, SF: 2, '3RD': 1, FIN: 1 };
+
+	const groupPlayed = $derived(overview?.stage_counts?.group ?? 0);
+
+	const knockoutPhases = $derived(
+		[
+			{ key: 'R32', name: $t.tournament.roundOf32 },
+			{ key: 'R16', name: $t.tournament.roundOf16 },
+			{ key: 'QF', name: $t.tournament.quarterFinals },
+			{ key: 'SF', name: $t.tournament.semiFinals },
+			{ key: '3RD', name: $t.tournament.thirdPlace },
+			{ key: 'FIN', name: $t.tournament.final },
+		].map((p) => ({
+			...p,
+			total: KNOCKOUT_TOTALS[p.key],
+			played: overview?.stage_counts?.[p.key] ?? 0,
+		}))
+	);
 </script>
 
 <svelte:head>
@@ -20,7 +45,7 @@
 
 <div class="page">
 	<header class="page-header">
-		<SectionLabel label="{$t.tournament.label}" />
+		<SectionLabel label={$t.tournament.label} />
 		<h1 class="page-title">{$t.tournament.title}</h1>
 		<p class="page-sub">{$t.tournament.subtitle}</p>
 		{#if data.error}
@@ -31,23 +56,23 @@
 	{#if overview}
 		<!-- KPI strip -->
 		<section class="kpi-section">
-			<SectionLabel label="{$t.tournament.kpiLabel}" />
+			<SectionLabel label={$t.tournament.kpiLabel} />
 			<div class="kpi-grid">
 				<div class="kpi-card">
 					<KpiStat
-						label="{$t.tournament.matchesPlayed}"
+						label={$t.tournament.matchesPlayed}
 						value={fmt(overview.matches_played)}
 					/>
 				</div>
 				<div class="kpi-card">
 					<KpiStat
-						label="{$t.tournament.totalGoals}"
+						label={$t.tournament.totalGoals}
 						value={fmt(overview.goals_total)}
 					/>
 				</div>
 				<div class="kpi-card">
 					<KpiStat
-						label="{$t.tournament.avgContested}"
+						label={$t.tournament.avgContested}
 						value={fmt(overview.avg_in_contest_pct, 1)}
 						unit="%"
 					/>
@@ -55,7 +80,7 @@
 				{#if overview.matches_played > 0}
 					<div class="kpi-card">
 						<KpiStat
-							label="{$t.tournament.goalsPerMatch}"
+							label={$t.tournament.goalsPerMatch}
 							value={fmt(overview.goals_total / overview.matches_played, 2)}
 						/>
 					</div>
@@ -65,10 +90,10 @@
 
 		<!-- Phase progress -->
 		<section class="phases-section">
-			<SectionLabel label="{$t.tournament.formatLabel}" />
+			<SectionLabel label={$t.tournament.formatLabel} />
 			<div class="phases-cards">
-				<article class="phase-card phase-card--active">
-					<div class="phase-card__indicator phase-card__indicator--active"></div>
+				<article class="phase-card" class:phase-card--active={groupPlayed > 0}>
+					<div class="phase-card__indicator" class:phase-card__indicator--active={groupPlayed > 0}></div>
 					<div class="phase-card__body">
 						<span class="phase-name">{$t.tournament.groupStage}</span>
 						<span class="phase-meta">{$t.tournament.groupStageDetails}</span>
@@ -76,30 +101,33 @@
 							<div class="progress-bar">
 								<div
 									class="progress-bar__fill"
-									style="width: {Math.min(100, (overview.matches_played / 72) * 100).toFixed(1)}%;"
+									style="width: {Math.min(100, (groupPlayed / GROUP_STAGE_TOTAL) * 100).toFixed(1)}%;"
 								></div>
 							</div>
-							<span class="progress-label">{overview.matches_played} / 72</span>
+							<span class="progress-label">{groupPlayed} / {GROUP_STAGE_TOTAL}</span>
 						</div>
 					</div>
 				</article>
 
-				{#each [
-					{ name: $t.tournament.roundOf32, games: 16, unlocks: 72 },
-					{ name: $t.tournament.roundOf16, games: 8, unlocks: 88 },
-					{ name: $t.tournament.quarterFinals, games: 4, unlocks: 96 },
-					{ name: $t.tournament.semiFinals, games: 2, unlocks: 100 },
-					{ name: $t.tournament.thirdPlace, games: 1, unlocks: 102 },
-					{ name: $t.tournament.final, games: 1, unlocks: 103 }
-				] as phase}
-					{@const unlocked = overview.matches_played >= phase.unlocks}
-					<article class="phase-card" class:phase-card--locked={!unlocked}>
-						<div class="phase-card__indicator" class:phase-card__indicator--locked={!unlocked}></div>
+				{#each knockoutPhases as phase}
+					{@const started = phase.played > 0}
+					<article class="phase-card" class:phase-card--active={started} class:phase-card--locked={!started}>
+						<div class="phase-card__indicator" class:phase-card__indicator--active={started} class:phase-card__indicator--locked={!started}></div>
 						<div class="phase-card__body">
 							<span class="phase-name">{phase.name}</span>
-							<span class="phase-meta">{phase.games} {$t.match.matches}</span>
-							{#if !unlocked}
-								<span class="phase-locked-note">{$t.tournament.availableFrom} {phase.unlocks}</span>
+							<span class="phase-meta">{phase.total} {$t.match.matches}</span>
+							{#if started}
+								<div class="phase-progress">
+									<div class="progress-bar">
+										<div
+											class="progress-bar__fill"
+											style="width: {Math.min(100, (phase.played / phase.total) * 100).toFixed(1)}%;"
+										></div>
+									</div>
+									<span class="progress-label">{phase.played} / {phase.total}</span>
+								</div>
+							{:else}
+								<span class="phase-locked-note">{$t.tournament.notStarted}</span>
 							{/if}
 						</div>
 					</article>
@@ -110,7 +138,7 @@
 		<!-- Info block -->
 		<section class="info-section">
 			<div class="info-card">
-				<SectionLabel label="{$t.tournament.analysisLabel}" />
+				<SectionLabel label={$t.tournament.analysisLabel} />
 				<p class="info-text">
 					{$t.tournament.analysisText} <strong>{overview.matches_played}</strong> {$t.tournament.analysisOf}
 				</p>

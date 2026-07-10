@@ -100,16 +100,22 @@
 	{#if defensive_a?.most_regains_player || defensive_b?.most_regains_player}
 		<div class="dd__callout-row">
 			{#if defensive_a?.most_regains_player}
-				<div class="dd__callout" style="border-color: {teamColorVar(team_a.color)}">
+				<div class="dd__callout">
 					<span class="dd__callout-val" style="color: {teamTextColor(team_a.color)}">{defensive_a.most_regains_count}</span>
-					<span class="dd__callout-name">{defensive_a.most_regains_player}</span>
+					<span class="dd__callout-name">
+						<span class="dd__callout-dot" style="background: {teamColorVar(team_a.color)}"></span>
+						{defensive_a.most_regains_player}
+					</span>
 					<span class="dd__callout-label">{$t.detail.mostPossessionRegains}</span>
 				</div>
 			{/if}
 			{#if defensive_b?.most_regains_player}
-				<div class="dd__callout" style="border-color: {teamColorVar(team_b.color)}">
+				<div class="dd__callout">
 					<span class="dd__callout-val" style="color: {teamTextColor(team_b.color)}">{defensive_b.most_regains_count}</span>
-					<span class="dd__callout-name">{defensive_b.most_regains_player}</span>
+					<span class="dd__callout-name">
+						<span class="dd__callout-dot" style="background: {teamColorVar(team_b.color)}"></span>
+						{defensive_b.most_regains_player}
+					</span>
 					<span class="dd__callout-label">{$t.detail.mostPossessionRegains}</span>
 				</div>
 			{/if}
@@ -190,9 +196,10 @@
 		flex-direction: column;
 		gap: 2px;
 		padding: var(--sp-3);
-		border-left: 3px solid;
 		background: var(--surface);
-		border-radius: var(--r-sm);
+		border: 1px solid var(--border);
+		border-radius: var(--r-md);
+		box-shadow: var(--shadow-card);
 	}
 	.dd__callout-val {
 		font-size: var(--fs-stat);
@@ -201,9 +208,18 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.dd__callout-name {
+		display: flex;
+		align-items: center;
+		gap: 6px;
 		font-size: var(--fs-ui);
 		font-weight: 700;
 		color: var(--ink);
+	}
+	.dd__callout-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 	.dd__callout-label {
 		font-size: var(--fs-meta);

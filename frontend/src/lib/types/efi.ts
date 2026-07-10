@@ -9,13 +9,22 @@ export interface Team {
 export interface MatchMeta {
 	id: number;
 	match_no: number;
-	score_a: number;
-	score_b: number;
+	// null for unplayed/fixture matches (backend serialises nullable DB columns)
+	score_a: number | null;
+	score_b: number | null;
 	venue: string;
 	match_date: string;
 	group_letter: string;
 	team_a: Team;
 	team_b: Team;
+	formation_a?: string | null;
+	formation_b?: string | null;
+	// score_a/score_b already reflect extra time when played; this only flags
+	// that ET happened (for an "AET" badge). Penalty score is separate since
+	// a shootout doesn't change the match score.
+	went_to_extra_time: boolean;
+	penalty_score_a?: number | null;
+	penalty_score_b?: number | null;
 }
 
 export interface MatchStats {
@@ -73,6 +82,9 @@ export interface TournamentOverview {
 	matches_played: number;
 	goals_total: number;
 	avg_in_contest_pct: number;
+	// per-stage played counts (only on GET /overview, not GET /dashboard):
+	// { group: number, R32: number, R16: number, QF: number, SF: number, '3RD': number, FIN: number }
+	stage_counts?: Record<string, number>;
 }
 
 export interface DashboardData {

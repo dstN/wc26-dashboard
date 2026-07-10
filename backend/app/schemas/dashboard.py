@@ -25,8 +25,9 @@ class TournamentOverviewSchema(BaseModel):
 class MatchMeta(BaseModel):
     id: int
     match_no: int
-    score_a: int
-    score_b: int
+    # nullable in the DB — an unplayed/fixture match must not 500 the list endpoints
+    score_a: Optional[int] = None
+    score_b: Optional[int] = None
     venue: str
     match_date: str
     group_letter: str
@@ -34,6 +35,9 @@ class MatchMeta(BaseModel):
     team_b: TeamSchema
     formation_a: Optional[str] = None
     formation_b: Optional[str] = None
+    went_to_extra_time: bool = False
+    penalty_score_a: Optional[int] = None
+    penalty_score_b: Optional[int] = None
 
 
 class DashboardResponse(BaseModel):

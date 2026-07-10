@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { t } from '$lib/i18n';
 
 	const KEY_STORAGE = 'efi_ingest_key';
 
@@ -54,7 +55,7 @@
 				status = 'error';
 				const detail = data?.detail;
 				if (typeof detail === 'object' && detail !== null) {
-					errorMsg = detail.message ?? 'Unknown error';
+					errorMsg = detail.message ?? $t.admin.unknownError;
 					log = detail.log ?? '';
 				} else {
 					errorMsg = detail ?? `HTTP ${res.status}`;
@@ -62,13 +63,13 @@
 			}
 		} catch (err) {
 			status = 'error';
-			errorMsg = `Network error: ${err}`;
+			errorMsg = `${$t.admin.networkError}: ${err}`;
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>PDF Upload — EFI Admin</title>
+	<title>{$t.admin.pageTitle}</title>
 </svelte:head>
 
 <div class="admin-page">
@@ -76,32 +77,32 @@
 		<div class="admin-header">
 			<span class="admin-lock" aria-hidden="true">🔒</span>
 			<div>
-				<h1 class="admin-title">PDF Ingest</h1>
-				<p class="admin-sub">EFI Post Match Summary Report hochladen &amp; direkt verarbeiten</p>
+				<h1 class="admin-title">{$t.admin.title}</h1>
+				<p class="admin-sub">{$t.admin.subtitle}</p>
 			</div>
 		</div>
 
 		<form class="upload-form" onsubmit={(e) => { e.preventDefault(); upload(); }}>
 			<!-- API Key -->
 			<div class="field">
-				<label class="field__label" for="apikey">API Key</label>
+				<label class="field__label" for="apikey">{$t.admin.apiKey}</label>
 				<input
 					id="apikey"
 					type="password"
 					class="field__input"
-					placeholder="Bearer-Token aus .env"
+					placeholder={$t.admin.apiKeyPlaceholder}
 					bind:value={apiKey}
 					autocomplete="current-password"
 				/>
 				<label class="field__check">
 					<input type="checkbox" bind:checked={rememberKey} />
-					Key im Browser speichern
+					{$t.admin.rememberKey}
 				</label>
 			</div>
 
 			<!-- File picker -->
 			<div class="field">
-				<label class="field__label" for="pdffile">PDF-Datei</label>
+				<label class="field__label" for="pdffile">{$t.admin.pdfFile}</label>
 				<div class="file-drop" class:file-drop--selected={!!file}>
 					<input
 						id="pdffile"
@@ -114,7 +115,7 @@
 						<span class="file-drop__name">{file.name}</span>
 						<span class="file-drop__size">{(file.size / 1024).toFixed(0)} KB</span>
 					{:else}
-						<span class="file-drop__hint">PDF auswählen oder hierher ziehen</span>
+						<span class="file-drop__hint">{$t.admin.dropHint}</span>
 					{/if}
 				</div>
 			</div>
@@ -127,9 +128,9 @@
 			>
 				{#if status === 'uploading'}
 					<span class="spinner" aria-hidden="true"></span>
-					Wird verarbeitet…
+					{$t.admin.uploading}
 				{:else}
-					Hochladen &amp; Ingestion starten
+					{$t.admin.submit}
 				{/if}
 			</button>
 		</form>
@@ -137,19 +138,18 @@
 		<!-- Result -->
 		{#if status === 'ok'}
 			<div class="result result--ok">
-				<p class="result__title">✓ Erfolgreich ingested</p>
+				<p class="result__title">✓ {$t.admin.successTitle}</p>
 				{#if log}<pre class="result__log">{log}</pre>{/if}
 			</div>
 		{:else if status === 'error'}
 			<div class="result result--error">
-				<p class="result__title">✗ Fehler: {errorMsg}</p>
+				<p class="result__title">✗ {$t.admin.errorTitle}: {errorMsg}</p>
 				{#if log}<pre class="result__log">{log}</pre>{/if}
 			</div>
 		{/if}
 
 		<p class="admin-cron-hint">
-			Tipp: Alternativ legt der Cron-Job alle 5&nbsp;Min. neue PDFs aus
-			<code>PDF_WATCH_DIR</code> automatisch in die DB.
+			{$t.admin.cronHint} <code>PDF_WATCH_DIR</code>
 		</p>
 	</div>
 </div>

@@ -251,7 +251,7 @@
 	.modal__close {
 		position: absolute;
 		top: var(--sp-5);
-		right: var(--sp-5);
+		inset-inline-end: var(--sp-5);
 		width: 32px;
 		height: 32px;
 		display: flex;
@@ -275,7 +275,7 @@
 		font-weight: 800;
 		color: var(--ink);
 		margin: 0;
-		padding-right: var(--sp-8);
+		padding-inline-end: var(--sp-8);
 		line-height: 1.1;
 	}
 
@@ -296,12 +296,12 @@
 	.modal__grid .modal__section {
 		border-top: none;
 		padding: var(--sp-5);
-		border-right: 1px solid var(--border-soft);
+		border-inline-end: 1px solid var(--border-soft);
 		border-bottom: 1px solid var(--border-soft);
 	}
 
 	.modal__grid .modal__section:nth-child(even) {
-		border-right: none;
+		border-inline-end: none;
 	}
 
 	.modal__grid .modal__section:nth-last-child(-n+2) {
@@ -400,7 +400,7 @@
 		padding: var(--sp-2) var(--sp-3);
 		background: color-mix(in srgb, var(--c-red, #e53e3e) 10%, transparent);
 		border-radius: var(--r-sm);
-		border-left: 3px solid var(--c-red, #e53e3e);
+		border-inline-start: 3px solid var(--c-red, #e53e3e);
 	}
 
 	.form-footer {
@@ -445,7 +445,7 @@
 
 	@media (max-width: 640px) {
 		.modal__grid { grid-template-columns: 1fr; }
-		.modal__grid .modal__section { border-right: none; border-bottom: 1px solid var(--border-soft); }
+		.modal__grid .modal__section { border-inline-end: none; border-bottom: 1px solid var(--border-soft); }
 		.modal__grid .modal__section:last-child { border-bottom: none; }
 		.modal { padding: var(--sp-6); }
 	}

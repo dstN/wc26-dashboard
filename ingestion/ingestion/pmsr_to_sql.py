@@ -142,9 +142,7 @@ def _aggregate_line_breaks(by_units: dict) -> dict[str, tuple[int, int]]:
 
 def pdf_to_sql(pdf_path: str) -> str:
     """Parse a FIFA PMSR PDF and return the corresponding SQL INSERT statements."""
-    tmp = f"/tmp/pmsr_{Path(pdf_path).stem}.json"
-    extract(pdf_path, tmp)
-    data = json.loads(Path(tmp).read_text())
+    data = extract(pdf_path)
 
     match  = data["match"]
     pages  = data["pages"]
@@ -170,8 +168,25 @@ def pdf_to_sql(pdf_path: str) -> str:
     venue      = match["venue"]
     date       = match["date"]
 
-    group_m = re.search(r"Group\s+([A-Z])", match.get("stage", ""))
-    group_letter = group_m.group(1) if group_m else None
+    stage = match.get("stage", "")
+    group_m = re.search(r"Group\s+([A-Z])", stage)
+    if group_m:
+        group_letter = group_m.group(1)
+    else:
+        # knockout rounds → short labels (matches.group_letter is VARCHAR(3))
+        KNOCKOUT_LABELS = {
+            "round of 32": "R32",
+            "round of 16": "R16",
+            "quarter": "QF",
+            "semi": "SF",
+            "third place": "3RD",
+            "play-off for third place": "3RD",
+            "final": "FIN",  # 3 chars — a bare 'F' would collide with group F
+        }
+        group_letter = next(
+            (label for key, label in KNOCKOUT_LABELS.items() if key in stage.lower()),
+            None,
+        )
 
     out: list[str] = []
     L = out.append
@@ -185,14 +200,20 @@ def pdf_to_sql(pdf_path: str) -> str:
     formations = pages.get("2", {}).get("data", {}).get("formations", {})
     form_a = _q(formations.get("home_team") or "")
     form_b = _q(formations.get("away_team") or "")
-    L("INSERT INTO matches (match_no, team_a_id, team_b_id, score_a, score_b, venue, match_date, group_letter, is_featured, formation_a, formation_b)")
+    went_to_et = 1 if match.get("went_to_extra_time") else 0
+    pens = match.get("penalty_shootout")
+    pens_a = _n(pens["home_pens"]) if pens else "NULL"
+    pens_b = _n(pens["away_pens"]) if pens else "NULL"
+    L("INSERT INTO matches (match_no, team_a_id, team_b_id, score_a, score_b, venue, match_date, group_letter, formation_a, formation_b, went_to_extra_time, penalty_score_a, penalty_score_b)")
     L(f"VALUES ({match_no}, {_team(home_code)}, {_team(away_code)}, "
       f"{score_home}, {score_away}, {_q(venue)}, {_q(date)}, "
-      f"{_q(group_letter)}, 0, {form_a}, {form_b})")
+      f"{_q(group_letter)}, {form_a}, {form_b}, {went_to_et}, {pens_a}, {pens_b})")
     L("ON DUPLICATE KEY UPDATE")
     L("  score_a=VALUES(score_a), score_b=VALUES(score_b),")
     L("  venue=VALUES(venue), match_date=VALUES(match_date),")
-    L("  formation_a=VALUES(formation_a), formation_b=VALUES(formation_b);")
+    L("  formation_a=VALUES(formation_a), formation_b=VALUES(formation_b),")
+    L("  went_to_extra_time=VALUES(went_to_extra_time),")
+    L("  penalty_score_a=VALUES(penalty_score_a), penalty_score_b=VALUES(penalty_score_b);")
     L("")
 
     # ── Match Stats ───────────────────────────────────────────────────────────
@@ -412,10 +433,14 @@ def pdf_to_sql(pdf_path: str) -> str:
                 red    = sum(1 for c in cards if c.get("type") in ("red", "second_yellow"))
                 sub_on   = pl.get("subbed_on")
                 sub_off  = pl.get("subbed_off")
+                # Final whistle is 90' unless the match went to extra time —
+                # a starter/sub who plays to the end of an AET match without
+                # being subbed off would otherwise be undercounted at 90'.
+                final_whistle = 120 if went_to_et else 90
                 if is_starter:
-                    mins = int(sub_off) if sub_off is not None else 90
+                    mins = int(sub_off) if sub_off is not None else final_whistle
                 else:
-                    mins = (90 - int(sub_on)) if sub_on is not None else 0
+                    mins = (final_whistle - int(sub_on)) if sub_on is not None else 0
                 mins = max(0, min(120, mins))
                 player_ref = (
                     f"(SELECT id FROM players WHERE team_id={_team(code)} "
@@ -995,7 +1020,7 @@ def process_all(
 
     all_sql: list[str] = [
         "-- ── All Match Data (auto-generated from PDF parser) ──────────────────────",
-        "-- Run after 01_schema.sql, 02_teams_ger_cur.sql, 03_team_aggregates.sql",
+        "-- Run after 01_schema.sql, 02_match_10_ger_cur.sql, 03_team_aggregates.sql",
         "USE wc26;",
         "",
     ]
@@ -1014,8 +1039,11 @@ def process_all(
             print(f"✗ {exc}", file=sys.stderr)
             errors.append(f"{pdf.name}: {exc}")
 
-    Path(out_file).write_text("\n".join(all_sql))
-    print(f"\nWrote {out_file} ({processed}/{len(pdfs)} matches)")
+    if processed == 0:
+        print(f"\nAll {len(pdfs)} PDF(s) failed — leaving {out_file} untouched", file=sys.stderr)
+    else:
+        Path(out_file).write_text("\n".join(all_sql), encoding="utf-8")
+        print(f"\nWrote {out_file} ({processed}/{len(pdfs)} matches)")
 
     if errors:
         print("\nFailed PDFs:")

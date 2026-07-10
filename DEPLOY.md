@@ -41,7 +41,6 @@ mysql -u wc26user -p wc26 < db/init/01_schema.sql
 mysql -u wc26user -p wc26 < db/seeds/02_match_10_ger_cur.sql
 mysql -u wc26user -p wc26 < db/seeds/03_team_aggregates.sql
 mysql -u wc26user -p wc26 < db/seeds/04_all_matches.sql
-mysql -u wc26user -p wc26 < db/seeds/05_featured_match.sql
 mysql -u wc26user -p wc26 < db/seeds/05_final_third_entries.sql
 ```
 
@@ -49,7 +48,7 @@ mysql -u wc26user -p wc26 < db/seeds/05_final_third_entries.sql
 
 ```bash
 mysql -u wc26user -p wc26 -e "SELECT COUNT(*) AS teams FROM teams; SELECT COUNT(*) AS matches FROM matches;"
-# Erwartet: 48 Teams · ≥ 40 Matches
+# Erwartet: 48 Teams · ≥ 88 Matches (wächst mit jedem neuen PDF-Ingest)
 ```
 
 > **Hinweis:** Auf Plesk Shared Hosting ist `MYSQL_HOST=localhost` zu setzen, nicht `db` (Docker-Servicename).
@@ -307,8 +306,8 @@ Die `.env` auf dem Server hat keinen Git-Backup.
 ### Datenbank
 - [ ] MySQL-Datenbank `wc26` und User `wc26user` in Plesk angelegt
 - [ ] `db/init/01_schema.sql` importiert
-- [ ] Alle Seeds in Reihenfolge importiert (02 → 03 → 04 → 05 → 05b)
-- [ ] 48 Teams, ≥ 40 Matches per `SELECT COUNT(*)` bestätigt
+- [ ] Alle Seeds in Reihenfolge importiert (02 → 03 → 04 → 05)
+- [ ] 48 Teams, ≥ 88 Matches per `SELECT COUNT(*)` bestätigt
 
 ### Backend
 - [ ] Virtualenv angelegt, `requirements.txt` + `a2wsgi` installiert

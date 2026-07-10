@@ -1,7 +1,6 @@
 import asyncio
 import smtplib
 import time
-from collections import defaultdict
 from email.message import EmailMessage
 
 from fastapi import APIRouter, HTTPException, Request
@@ -12,14 +11,22 @@ from app.config import settings
 router = APIRouter(prefix="/api/v1", tags=["contact"])
 
 # Simple in-memory rate limiter: max 3 requests per IP per hour
-_rate: dict[str, list[float]] = defaultdict(list)
+_rate: dict[str, list[float]] = {}
 _RATE_LIMIT = 3
 _RATE_WINDOW = 3600
 
 
 def _check_rate(ip: str) -> None:
     now = time.time()
-    timestamps = [t for t in _rate[ip] if now - t < _RATE_WINDOW]
+    # Sweep expired timestamps for ALL known IPs — otherwise the dict grows
+    # unboundedly with every distinct client IP that ever hits the endpoint.
+    for known_ip in list(_rate):
+        fresh = [t for t in _rate[known_ip] if now - t < _RATE_WINDOW]
+        if fresh:
+            _rate[known_ip] = fresh
+        else:
+            del _rate[known_ip]
+    timestamps = _rate.get(ip, [])
     if len(timestamps) >= _RATE_LIMIT:
         raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
     timestamps.append(now)
@@ -63,7 +70,7 @@ async def contact(payload: ContactPayload, request: Request) -> dict:
         raise HTTPException(status_code=422, detail="Name and message are required.")
 
     try:
-        await asyncio.get_event_loop().run_in_executor(None, _send_email, payload)
+        await asyncio.to_thread(_send_email, payload)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except smtplib.SMTPException as e:

@@ -85,8 +85,10 @@ async def get_player(player_id: int, db: AsyncSession = Depends(get_db)):
         if match:
             opp_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
         per_match.append({
+            "match_id": match.id if match else None,
             "match_no": match.match_no if match else None,
             "match_date": match.match_date.isoformat() if match and match.match_date else None,
+            "group_letter": match.group_letter if match else None,
             "opponent": opp_map.get(opp_id),
             "started": stat.started,
             "minutes_played": stat.minutes_played,
@@ -304,7 +306,10 @@ async def get_player_stats(player_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Player {player_id} not found")
 
     stats_result = await db.execute(
-        select(PlayerStat).where(PlayerStat.player_id == player_id)
+        select(PlayerStat).where(
+            PlayerStat.player_id == player_id,
+            PlayerStat.scope == "match",
+        )
     )
     stats = stats_result.scalars().all()
 
@@ -341,8 +346,10 @@ async def get_player_line_breaks(player_id: int, db: AsyncSession = Depends(get_
 
     def _row(lb, match):
         return {
+            "match_id": match.id if match else None,
             "match_no": match.match_no if match else None,
             "match_date": match.match_date.isoformat() if match and match.match_date else None,
+            "group_letter": match.group_letter if match else None,
             "attempted": lb.attempted,
             "completed": lb.completed,
             "dir_through": lb.dir_through,

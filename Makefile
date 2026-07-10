@@ -1,4 +1,4 @@
-.PHONY: up down reset seed crawl test contract fmt logs
+.PHONY: up down reset seed ingest test contract fmt logs
 
 # Load .env so MYSQL_* vars are available in make targets
 -include .env
@@ -18,14 +18,14 @@ seed:
 	@for f in db/seeds/02_match_10_ger_cur.sql \
 	           db/seeds/03_team_aggregates.sql \
 	           db/seeds/04_all_matches.sql \
-	           db/seeds/05_featured_match.sql; do \
+	           db/seeds/05_final_third_entries.sql; do \
 		echo "  → $$f"; \
 		cat $$f | docker compose exec -T db mysql -u$(MYSQL_USER) -p$(MYSQL_PASSWORD) $(MYSQL_DATABASE); \
 	done
 	@echo "Done."
 
-crawl:
-	docker compose --profile ingest run --rm ingestion python -m ingestion.run --all
+ingest:
+	docker compose --profile ingest run --rm ingestion python -m ingestion.watch_pdfs
 
 test:
 	cd frontend && npm run check && npm run lint

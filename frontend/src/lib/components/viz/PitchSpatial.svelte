@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { TeamSpatialSplit, Team } from '$lib/types/efi';
-	import { teamColorVar } from '$lib/tokens';
+	import { teamColorVar, teamTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	let {
@@ -13,7 +13,10 @@
 		lockedScenario = undefined
 	}: { spatial_a: TeamSpatialSplit | null; spatial_b: TeamSpatialSplit | null; team_a: Team; team_b: Team; compact?: boolean; initialScenario?: 'defensive' | 'possession'; lockedScenario?: 'defensive' | 'possession' } = $props();
 
-	let scenario = $state<'defensive' | 'possession'>(lockedScenario ?? initialScenario);
+	// user toggle only applies while the caller has not locked the scenario;
+	// deriving from the props keeps late prop changes effective (no stale $state init)
+	let userScenario = $state<'defensive' | 'possession' | null>(null);
+	const scenario = $derived(lockedScenario ?? userScenario ?? initialScenario);
 
 	let defBlockA = $state<'high' | 'mid' | 'low'>('mid');
 	let defBlockB = $state<'high' | 'mid' | 'low'>('mid');
@@ -58,9 +61,9 @@
 <div class="spatial" class:compact>
 	{#if !lockedScenario}
 	<div class="spatial__header">
-		<div class="scenario-tabs" role="group" aria-label="Scenario">
-			<button class="scenario-tab" class:active={scenario === 'defensive'} onclick={() => scenario = 'defensive'}>{$t.detail.outOfPossession}</button>
-			<button class="scenario-tab" class:active={scenario === 'possession'} onclick={() => scenario = 'possession'}>{$t.detail.inPossession}</button>
+		<div class="scenario-tabs" role="group" aria-label={$t.detail.ariaScenario}>
+			<button class="scenario-tab" class:active={scenario === 'defensive'} onclick={() => userScenario = 'defensive'}>{$t.detail.outOfPossession}</button>
+			<button class="scenario-tab" class:active={scenario === 'possession'} onclick={() => userScenario = 'possession'}>{$t.detail.inPossession}</button>
 		</div>
 	</div>
 	{/if}
@@ -69,7 +72,7 @@
 		<!-- ── Team A ── -->
 		<div class="pitch-col">
 			<div class="pitch-header">
-				<span class="team-label" style="color: {teamColorVar(team_a.color)};">{team_a.short_code}</span>
+				<span class="team-label" style="color: {teamTextColor(team_a.color)};">{team_a.short_code}</span>
 				<div class="toggle-group" role="group">
 					{#if scenario === 'defensive'}
 						{#each defBlocks as b}
@@ -83,7 +86,7 @@
 				</div>
 			</div>
 			<div class="pitch-wrap">
-				<div class="pitch" role="img" aria-label="Pitch for {team_a.short_code}">
+				<div class="pitch" role="img" aria-label="{$t.detail.pitchFor} {team_a.short_code}">
 					<div class="pitch__center-line"></div>
 					<div class="pitch__center-circle"></div>
 					<div class="pitch__box pitch__box--top"></div>
@@ -108,9 +111,9 @@
 			</div>
 			{#if blockA}
 				<div class="kpis">
-					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.defensive_line_height}m</span></div>
-					<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.team_length}m</span></div>
-					{#if blockA.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamColorVar(team_a.color)}">{blockA.width_m}m</span></div>{/if}
+					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamTextColor(team_a.color)}">{blockA.defensive_line_height}m</span></div>
+					<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamTextColor(team_a.color)}">{blockA.team_length}m</span></div>
+					{#if blockA.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamTextColor(team_a.color)}">{blockA.width_m}m</span></div>{/if}
 				</div>
 			{/if}
 		</div>
@@ -119,7 +122,7 @@
 		{#if hasSpatialB}
 		<div class="pitch-col">
 			<div class="pitch-header">
-				<span class="team-label" style="color: {teamColorVar(team_b.color)};">{team_b.short_code}</span>
+				<span class="team-label" style="color: {teamTextColor(team_b.color)};">{team_b.short_code}</span>
 				<div class="toggle-group" role="group">
 					{#if scenario === 'defensive'}
 						{#each defBlocks as b}
@@ -133,7 +136,7 @@
 				</div>
 			</div>
 			<div class="pitch-wrap">
-				<div class="pitch" role="img" aria-label="Pitch for {team_b.short_code}">
+				<div class="pitch" role="img" aria-label="{$t.detail.pitchFor} {team_b.short_code}">
 					<div class="pitch__center-line"></div>
 					<div class="pitch__center-circle"></div>
 					<div class="pitch__box pitch__box--top"></div>
@@ -158,9 +161,9 @@
 			</div>
 			{#if blockB}
 				<div class="kpis">
-					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.defensive_line_height}m</span></div>
-					<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.team_length}m</span></div>
-					{#if blockB.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamColorVar(team_b.color)}">{blockB.width_m}m</span></div>{/if}
+					<div class="kpi"><span class="kpi__label">{scenario === 'defensive' ? $t.detail.kpiDefLine : $t.detail.kpiDistance}</span><span class="kpi__val" style="color:{teamTextColor(team_b.color)}">{blockB.defensive_line_height}m</span></div>
+					<div class="kpi"><span class="kpi__label">{$t.detail.kpiLength}</span><span class="kpi__val" style="color:{teamTextColor(team_b.color)}">{blockB.team_length}m</span></div>
+					{#if blockB.width_m != null}<div class="kpi"><span class="kpi__label">{$t.detail.kpiWidth}</span><span class="kpi__val" style="color:{teamTextColor(team_b.color)}">{blockB.width_m}m</span></div>{/if}
 				</div>
 			{/if}
 		</div>

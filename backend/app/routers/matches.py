@@ -39,10 +39,18 @@ async def list_matches(db: AsyncSession = Depends(get_db)):
         select(Match).order_by(Match.match_no)
     )
     matches = result.scalars().all()
+
+    # Batch-load all referenced teams in one query (was 2 queries per match)
+    team_ids = {m.team_a_id for m in matches} | {m.team_b_id for m in matches}
+    teams_by_id: dict[int, Team] = {}
+    if team_ids:
+        teams_result = await db.execute(select(Team).where(Team.id.in_(team_ids)))
+        teams_by_id = {t.id: t for t in teams_result.scalars().all()}
+
     out = []
     for match in matches:
-        team_a = (await db.execute(select(Team).where(Team.id == match.team_a_id))).scalar_one()
-        team_b = (await db.execute(select(Team).where(Team.id == match.team_b_id))).scalar_one()
+        team_a = teams_by_id[match.team_a_id]
+        team_b = teams_by_id[match.team_b_id]
         match_date_str = match.match_date.isoformat() if match.match_date else ""
         out.append(MatchMeta(
             id=match.id, match_no=match.match_no,
@@ -53,6 +61,9 @@ async def list_matches(db: AsyncSession = Depends(get_db)):
             team_b=TeamSchema.model_validate(team_b),
             formation_a=match.formation_a,
             formation_b=match.formation_b,
+            went_to_extra_time=match.went_to_extra_time,
+            penalty_score_a=match.penalty_score_a,
+            penalty_score_b=match.penalty_score_b,
         ))
     return out
 
@@ -72,6 +83,9 @@ async def get_match(match_id: int, db: AsyncSession = Depends(get_db)):
         team_b=TeamSchema.model_validate(team_b),
         formation_a=match.formation_a,
         formation_b=match.formation_b,
+        went_to_extra_time=match.went_to_extra_time,
+        penalty_score_a=match.penalty_score_a,
+        penalty_score_b=match.penalty_score_b,
     )
 
 
@@ -217,11 +231,6 @@ async def get_key_stats(match_id: int, db: AsyncSession = Depends(get_db)):
             )
         )).first()
 
-        # GK stats
-        gk = (await db.execute(
-            select(MatchGkStat).where(MatchGkStat.match_id == match_id, MatchGkStat.team_id == team_id, MatchGkStat.scope == "match")
-        )).scalar_one_or_none()
-
         # Set play stats
         sp = (await db.execute(
             select(MatchSetPlayStat).where(MatchSetPlayStat.match_id == match_id, MatchSetPlayStat.team_id == team_id, MatchSetPlayStat.scope == "match")
@@ -258,36 +267,7 @@ async def get_key_stats(match_id: int, db: AsyncSession = Depends(get_db)):
             "duels_won_aerial": _i(pl_agg.duels_aerial) if pl_agg else None,
             "duels_won_physical": _i(pl_agg.duels_physical) if pl_agg else None,
             "total_distance_km": round(float(pl_agg.distance_m or 0) / 1000, 1) if pl_agg else None,
-            # GK
-            "gk_name": gk.gk_name if gk else None,
-            "gk_involvements": _i(gk.total_involvements) if gk else None,
-            "gk_distributions": _i(gk.total_distributions) if gk else None,
-            "gk_line_breaks": _i(gk.gk_line_breaks) if gk else None,
-            "gk_attempts_faced": _i(gk.total_attempts_faced) if gk else None,
-            "gk_save_pct": _f(gk.save_pct, 1) if gk else None,
-            "gk_goal_interventions": _i(gk.total_goal_interventions) if gk else None,
-            "gk_save_retain": _i(gk.save_and_retain) if gk else None,
-            "gk_deflect_retain": _i(gk.deflect_and_retain) if gk else None,
-            "gk_save_deflect": _i(gk.save_and_deflect) if gk else None,
-            "gk_save_attempt": _i(gk.save_attempt) if gk else None,
-            "gk_no_save_attempt": _i(gk.no_save_attempt) if gk else None,
-            "gk_crosses_faced": _i(gk.crosses_faced) if gk else None,
-            "gk_crosses_inswing": _i(gk.crosses_faced_inswing) if gk else None,
-            "gk_crosses_outswing": _i(gk.crosses_faced_outswing) if gk else None,
-            "gk_crosses_driven": _i(gk.crosses_faced_driven) if gk else None,
-            "gk_crosses_lofted": _i(gk.crosses_faced_lofted) if gk else None,
-            "gk_crosses_cutback": _i(gk.crosses_faced_cutback) if gk else None,
-            "gk_crosses_push": _i(gk.crosses_faced_push) if gk else None,
-            "gk_kick_from_feet": _i(gk.kick_from_feet) if gk else None,
-            "gk_kick_from_hands": _i(gk.kick_from_hands) if gk else None,
-            "gk_throw_distribution": _i(gk.throw_distribution) if gk else None,
-            "gk_aerial_interventions": _i(gk.total_aerial_interventions) if gk else None,
-            "gk_punches_complete": _i(gk.punches_complete) if gk else None,
-            "gk_punches_incomplete": _i(gk.punches_incomplete) if gk else None,
-            "gk_claims_complete": _i(gk.claims_complete) if gk else None,
-            "gk_claims_incomplete": _i(gk.claims_incomplete) if gk else None,
-            "gk_tipped_complete": _i(gk.tipped_palmed_complete) if gk else None,
-            "gk_tipped_incomplete": _i(gk.tipped_palmed_incomplete) if gk else None,
+            # GK stats intentionally absent — served by GET /matches/{id}/gk-stats
             # Set plays
             "set_plays": _i(sp.set_plays) if sp else None,
             "free_kicks": _i(sp.free_kicks) if sp else None,

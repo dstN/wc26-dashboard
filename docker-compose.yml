@@ -15,7 +15,7 @@ services:
       - ./db/seeds/02_match_10_ger_cur.sql:/docker-entrypoint-initdb.d/02_match_10_ger_cur.sql:ro
       - ./db/seeds/03_team_aggregates.sql:/docker-entrypoint-initdb.d/03_team_aggregates.sql:ro
       - ./db/seeds/04_all_matches.sql:/docker-entrypoint-initdb.d/04_all_matches.sql:ro
-      - ./db/seeds/05_featured_match.sql:/docker-entrypoint-initdb.d/05_featured_match.sql:ro
+      - ./db/seeds/05_final_third_entries.sql:/docker-entrypoint-initdb.d/05_final_third_entries.sql:ro
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
@@ -64,7 +64,6 @@ services:
     env_file: .env
     volumes:
       - ./ingestion:/app
-      - ./backend/app:/app/efi_models:ro
     depends_on:
       db:
         condition: service_healthy

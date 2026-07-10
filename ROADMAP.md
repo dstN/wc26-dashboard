@@ -1,5 +1,111 @@
 # Roadmap — EFI WC26 Data Engine
 
+## Round of 16 ingest (2026-07-08)
+
+- [x] 8 R16 PDFs ingested (matches 89–96): Paraguay–France, Canada–Morocco, Brazil–Norway,
+  Mexico–England, Portugal–Spain, USA–Belgium, Argentina–Egypt, Switzerland–Colombia —
+  8/8 OK, all correctly labeled `R16` (first live use of that adapter mapping since it
+  was added for R32)
+- [x] First live end-to-end verification of the AET/penalty feature (added 2026-07-05 but
+  untested against a real shootout until now): Switzerland–Colombia finished 0–0, AET,
+  4–3 on pens — home hero and `/matches/555` both render the "AET" badge and "4-3 pens"
+  correctly, `GET /overview` `stage_counts.R16` = 8
+- [x] `db/seeds/04_all_matches.sql` regenerated (96 matches); 8 PDFs moved to
+  `.claude/data/done/` (now 96)
+- [ ] Not yet done: bump the `≥ 88 Matches` deploy-doc floors (DEPLOY.md, artifact) to
+  `≥ 96` — low priority since they're already documented as floors that grow with ingests
+
+## Deployment docs synced with is_featured/tournament_overview teardown (2026-07-06)
+
+- [x] `DEPLOY.md`: removed the deleted `db/seeds/05_featured_match.sql` from the seed
+  import list and the `02→03→04→05→05b` checklist order; expected-count floors bumped
+  from the pre-R32-ingest `≥ 40 Matches` to `≥ 88 Matches` (48 teams is still exact)
+- [x] Shared Claude artifact deployment guide (`claude.ai/code/artifact/5abcff1b-…`)
+  synced the same seed/count fixes, plus two issues only present there: the
+  "Datenbank direkt" verification query still selected `WHERE is_featured = 1` and
+  `FROM tournament_overview` (both dropped in the earlier teardown) — replaced with
+  a query for the actual latest match (`ORDER BY match_date DESC, match_no DESC`)
+  including the new `went_to_extra_time`/`penalty_score_*` columns, with a note that
+  tournament-wide KPIs are now computed live via `GET /api/v1/overview`. Also fixed
+  a pre-existing (unrelated to this session's changes) doc bug: the `/health/db`
+  example response showed `{"db":"ok","teams":48}`, but `backend/app/routers/health.py`
+  has only ever returned `{"status":"ok"}`.
+
+## Match detail polish + team-color bug fix (2026-07-05)
+
+- [x] Match detail: Phase Fingerprint + Shot Log combined into one two-col row (was two full-width sections, Fingerprint only needs ~480px)
+- [x] Shot log jersey-number/name whitespace bug fixed (Svelte trims whitespace at `{/if}` block boundaries — built the label as a plain string in the script block instead)
+- [x] Team-color text bug: `PhasesBar`, `PitchSpatial`, `SpatialMobilePicker` used `teamColorVar()` (raw brand color, background-only) as `color:` for text — washed-out/pale for light team colors (yellow/lime/lavender/pink), fine for dark ones, hence "sometimes matches the badge, sometimes doesn't". Switched to `teamTextColor()` (the ink-adjusted variant already used correctly elsewhere); `PhasesBar` had imported `teamTextColor` and never called it
+- [x] Goalkeepers now clickable in the `/players` Goalkeepers tab — `GET /stats/goalkeeper-rankings` resolves `player_id` via a `(gk_name, team_id)` → `players` join (0 unmatched across 176 rows)
+- [x] Player detail match history now links to `/matches/{id}` and shows "Group J · Match 19" instead of bare "Match #74" — `GET /players/{id}` and `GET /players/{id}/line-breaks` now return `match_id` + `group_letter`
+- [x] `.pr__callout` / `.dd__callout` colored-left-border stat cards replaced with the app's established plain-card style (`var(--surface)` + `var(--border)` + `var(--shadow-card)`) plus a colored dot next to the name, reusing the existing legend-swatch idiom instead of a new pattern
+- [x] Checked SVG `<text fill=…>` usages for the same `teamColorVar`-as-text mistake — none found; PhaseFingerprint's polygon `fill`/`stroke` uses are legitimate shape-fill usage, not text
+
+## Group Stage / Knockout stats filter (2026-07-05)
+
+- [x] `stage=group|knockout` query param added to `GET /stats/leaderboards`, `GET /stats/player-stats-summary`, `GET /stats/goalkeeper-rankings` (shared `backend/app/stage_filter.py`, condition on `Match.group_letter` char length — no hardcoded letter lists)
+- [x] `/matches` — client-side "All / Group Stage / Knockout" pill filter (reuses already-loaded `group_letter`); resets the per-round dropdown on stage change
+- [x] `/teams`, `/players` — same pill filter as URL param (`?stage=…`, bookmarkable, reuses the `/compare`-style URL-driven load pattern); covers every ranking tab/table on both pages
+- [x] Dropped `teams/+page.ts`'s unused `GET /teams/` fetch while touching that loader (confirmed zero consumers on the page)
+- [ ] Not extended to `/teams/[id]` or `/players/[id]` detail pages (out of scope for this request — those show one entity's full history, not a filterable ranking) — revisit if requested
+
+## Extra time (AET) + penalty shootout display (2026-07-05)
+
+- [x] `matches.went_to_extra_time` / `penalty_score_a/b` added (schema + `Match` model + `MatchMeta` schema at all 4 construction sites). Detected in `parse_pmsr.py` from lineup-page minute markers (total minute ≥ 105 = genuine extra time — empirically separates all 16 R32 PDFs correctly); penalty score parsed from the page-1 `(Team win X-Y on Penalties)` note (home-away order, verified against all 3 known shootouts)
+- [x] Fixed a real bug found along the way: `player_stats.minutes_played` was hardcoded to a 90-minute baseline regardless of extra time — undercounted every unsubbed player in the 5 ET/penalty matches by up to 30 minutes. Now uses 120 when `went_to_extra_time`. All 88 matches re-ingested, dump regenerated
+- [x] `/matches`, home page, match detail, team-detail match history, and `/compare` match entity header all show "AET" / "3-4 pens" — verified live via SSR HTML on every surface
+- [x] Correctness fix: team-detail match history win/draw/loss badge used raw score comparison, showing "D" (Draw) for penalty-shootout matches instead of the actual W/L outcome. Now uses `penalty_score_a/b` when present
+- [x] Drive-by: match detail page + team-detail match history still showed raw "Group R32" (never got the `groupHeading()` round-name treatment applied to `/matches` and home page during the earlier F/FIN fix) — fixed with the same local-helper pattern
+- [ ] Not extended to the `<title>` tag on the match detail page (still shows bare "GER 1:1 PAR", no AET/pens suffix) — cosmetic, low priority
+
+## Tournament page stage-counting fix (2026-07-05)
+
+- [x] `/phases` page was rendering R32 matches as group-stage matches: `GET /overview` returned one global `matches_played` count, divided by hardcoded thresholds that assumed strictly-sequential bracket ingestion. `overview_service.get_overview()` now returns `stage_counts` (GROUP BY `group_letter`, bucketed group vs. R32/R16/QF/SF/3RD/FIN); `/phases` shows real per-stage `played/total` progress bars instead of "available from match N" guesses. Verified live: group 72/72, R32 16/16, rest 0.
+- [ ] `GET /dashboard`'s `TournamentOverviewSchema` (home hero KPIs) does not carry `stage_counts` — fine today since the home page doesn't render phase progress, but keep in mind if that ever changes.
+
+## Hotfixes after the R32 ingest (2026-07-05)
+
+- [x] Hero/"Latest Match" fixed: `get_latest_match_id()` orders by `match_date DESC, match_no DESC` (audit change had pinned the seeded GER–CUR showcase match under a label that says "Latest") — hero now shows Match 88
+- [x] Knockout round labels: `matches.group_letter` → `VARCHAR(3)`, adapter maps stages to `R32/R16/QF/SF/3RD/F`, matches 73–88 backfilled, matches page + home band render round names via `$t.tournament.*` (groups A–L first, rounds in bracket order); dump regenerated
+- [x] `Match.is_featured` + `tournament_overview` REMOVED (2026-07-05, user-approved via explicit confirmation after the auto-mode classifier initially blocked the DDL): live `ALTER TABLE matches DROP COLUMN is_featured` + `DROP TABLE tournament_overview` applied; removed from `01_schema.sql`, `models/match.py`, `models/tournament.py` (deleted), `models/__init__.py`, `pmsr_to_sql.py` INSERT, `backend/tests/factories.py`; `05_featured_match.sql` deleted; `04_all_matches.sql` re-dumped (10 values/row, was 11) and idempotency-verified against the live DB
+
+## Docs + Matches 73–88 (2026-07-05)
+
+- [x] `DOCS.md` (repo root) — architecture doc rewritten to the actual state; superseded `.claude/ARCHITECTURE.md` (still described the removed web crawler) deleted; README links `DOCS.md`/`DEPLOY.md` and stale facts fixed (36→88 matches, `/tournament`→`/phases`)
+- [x] 16 new PDFs ingested via the rewired `watch_pdfs.py` (16/16 OK incl. one 54-page PDF) — DB at **88 matches**; all new-match endpoints verified live
+- [x] `04_all_matches.sql` regenerated as `REPLACE INTO` dump without `final_third_entries` — re-runnable AND no longer collides with the 02/03 team seeds on fresh initdb (defuses part of the open fresh-volume item); idempotency verified by re-applying to the live DB
+
+## Deep Codebase Audit ✅ REMEDIATED (2026-07-04)
+
+Full-stack audit (Svelte 5 compliance, i18n/RTL, security, async hygiene, N+1,
+deprecated-pipeline references) with autonomous remediation — details in CHANGELOG.
+Verification: svelte-check 39 errors/18 warnings → 0/0 · vitest 10/10 · pytest 38/38 ·
+production build green · live API smoke tests green.
+
+**Fixed in this sweep:**
+
+- [x] `watch_pdfs.py` rewired from deprecated `parse_efi_pdf` to sanctioned `parse_pmsr + pmsr_to_sql` (cron AND upload endpoint ran the legacy parser)
+- [x] README manual-ingestion + cron instructions corrected (deprecated module, wrong cwd)
+- [x] Upload endpoint hardened: path traversal, timing-safe token compare, `%PDF-` magic bytes, non-blocking subprocess/file-IO, failed-PDF cleanup, per-file `--file` processing
+- [x] Contact rate-limiter unbounded-growth leak fixed (full sweep, key deletion)
+- [x] Last Decimal→JSON-string leak (`GET /teams/` `goals_a`) + missing `scope='match'` filter (`/players/{id}/stats`) + dashboard 500s on empty DB → clean 404
+- [x] N+1: `GET /matches/` (2N+1→2), `GET /teams/` (2N+1→3)
+- [x] All TS `as`-casts out of template markup (SSR-breaker pattern); bits-ui v2 `asChild` leftovers removed; `MatchMeta` type synced (nullable scores + formations)
+- [x] i18n: duplicate `finalThird` key (all 6 locales), 11 missing keys in 5 locales, `/admin` page (was hardcoded German), `/compare` match metrics + FloatingCompareBar (were hardcoded English), a11y labels — 29 new keys × 6 locales
+- [x] RTL: TopBar active indicator + Footer dialogs converted to logical properties
+
+**New technical debt identified (deferred):**
+
+- [ ] N+1 remainders: `GET /teams/{id}/avg-stats` (~6 queries/match), `GET /stats/leaderboards` team rankings (4 queries/team), `GET /teams/{id}/matches` (3 queries/match) — all aggregable into grouped queries
+- [x] Legacy crawler modules REMOVED (2026-07-04): 9 crawler modules + `parse_efi_pdf.py` + 3 test files + fixtures + `scripts/crawl_efi.py` deleted; `make crawl` → `make ingest`; Dockerfile slimmed (no chromium/playwright); `requirements.txt` 15 → 6 deps (+ previously undeclared `python-dotenv`)
+- [ ] Contact rate limiter is per-process and sees the proxy IP behind Passenger/reverse proxy (no `X-Forwarded-For` handling) — whole site shares one 3/h budget
+- [ ] `watch_pdfs.py`: no lockfile against overlapping cron runs; permanently failing PDFs are retried every 5 min (no quarantine/dead-letter)
+- [ ] `_q()`/`_qs()` in `pmsr_to_sql.py` do not escape backslashes (MySQL backslash-escape-mode edge case)
+- [ ] Upload endpoint buffers the whole body before the 50 MB check (no streaming limit; mitigated by auth)
+- [x] `is_featured` RESOLVED (2026-07-04): column wired into `get_featured_match_id()` (featured GER–CUR match actually featured again); dead query param removed from backend + frontend
+- [x] Stale seeds RESOLVED (2026-07-04): `02_teams_ger_cur.sql` (empty stub) deleted. `05_final_third_entries.sql` turned out NOT to be a duplicate — it is the sole data source and was missing from the seed pipeline entirely (live DB had 0 rows, FinalThirdZones empty). Now mounted in initdb + `make seed`, idempotent via DELETE guard, applied live (400 rows)
+- [x] Dead frontend code REMOVED (2026-07-04): `lib/api/{client,endpoints}.ts` (zero consumers), 5 unreferenced M8 modules (`EfficiencyMatrix`, `RiskReward`, `PressingEngine`, `PenetrationMap`, `ControlVsChaos`), 30 never-rendered `gk_*` fields in `KeyStatsTable` + the matching dead GK block (2 queries, 30 fields) in `GET /matches/{id}/key-stats`
+
 ## Feature Ideas (backlog)
 
 ### Full i18n Translation Coverage ✅ COMPLETE (Sessions 19–21 — 2026-07-03)
@@ -96,7 +202,7 @@ All three sessions delivered. Full feature shipped in Sessions 25 A/B/C + Sessio
 - [x] `ingestion/ingestion/parse_pmsr.py` — FIFA PMSR PDF parser (PyMuPDF, 44-page coverage)
 - [x] `ingestion/ingestion/pmsr_to_sql.py` — adapter: PDF → SQL for all 7 DB tables
 - [x] All 36 available match PDFs processed and seeded into DB
-- [ ] Full crawl verification in live Docker environment
+- [x] ~~Full crawl verification in live Docker environment~~ — obsolete: web crawler removed 2026-07-04; PDF pipeline is the sole ingestion path
 
 ### M3 — FastAPI backend
 
@@ -144,7 +250,7 @@ All three sessions delivered. Full feature shipped in Sessions 25 A/B/C + Sessio
 - [x] PhaseFingerprint (radar)
 - [x] PenetrationMap (entry channel bars)
 - [x] ControlVsChaos (possession vs in-contest)
-- [ ] Full 48-team crawl integration
+- [x] ~~Full 48-team crawl integration~~ — obsolete: web crawler removed 2026-07-04; all 48 teams covered via PDF seeds
 
 ### M9 — Harden + verify
 
@@ -422,7 +528,7 @@ All three sessions delivered. Full feature shipped in Sessions 25 A/B/C + Sessio
 - [x] total_movements 2026 bug fixed (Session 14)
 - [x] Extra shot-log page detection fixed for 5 affected matches (Session 14)
 - [x] `parse_efi_pdf.py` deprecation — `DeprecationWarning` added; docstring updated to redirect to `parse_pmsr.py + pmsr_to_sql.py`
-- [ ] Full crawl verification in live Docker container
+- [x] ~~Full crawl verification in live Docker container~~ — obsolete: web crawler removed 2026-07-04
 - [ ] CI: `npm install` + `pip install` + fresh-volume seed test
 - [ ] Contract drift gate (openapi-typescript diff on schema changes)
 - [x] Missing tons of i18n translations in the whole app. (Session 26: playerDetail + compare namespaces, 70+25 keys × 6 locales)

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Phase, Team } from '$lib/types/efi';
-	import { phaseColor, teamColorVar, teamTextColor } from '$lib/tokens';
+	import { phaseColor, teamTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	let {
@@ -30,6 +30,13 @@
 		'Counter-press': 'counterPress',
 	};
 
+	// Keep the TS cast in the script block — `as`-casts in template markup have
+	// repeatedly broken the rollup SSR build in this project.
+	function phaseLabel(name: string): string {
+		const dict: Record<string, string> = $t.phases;
+		return dict[PHASE_KEYS[name]] ?? name;
+	}
+
 	const inPhases_a  = $derived(phases_a.filter((p) => p.phase_group === 'in'));
 	const outPhases_a = $derived(phases_a.filter((p) => p.phase_group === 'out'));
 	const inPhases_b  = $derived(phases_b.filter((p) => p.phase_group === 'in'));
@@ -47,9 +54,9 @@
 
 	<!-- Team header row -->
 	<div class="phases__team-row">
-		<span class="phases__team-name" style="color: {teamColorVar(team_a.color)}; text-align: right;">{team_a.name}</span>
+		<span class="phases__team-name" style="color: {teamTextColor(team_a.color)}; text-align: right;">{team_a.name}</span>
 		<span class="phases__center-blank"></span>
-		<span class="phases__team-name" style="color: {teamColorVar(team_b.color)};">{team_b.name}</span>
+		<span class="phases__team-name" style="color: {teamTextColor(team_b.color)};">{team_b.name}</span>
 	</div>
 
 	<!-- IN POSSESSION -->
@@ -69,7 +76,7 @@
 				</div>
 			</div>
 			<!-- Phase name center -->
-			<div class="phases__phase-name">{($t.phases as Record<string, string>)[PHASE_KEYS[name]] ?? name}</div>
+			<div class="phases__phase-name">{phaseLabel(name)}</div>
 			<!-- Team B bar (left-aligned, grows right) -->
 			<div class="phases__bar-cell phases__bar-cell--right">
 				<div class="phases__track phases__track--right">
@@ -98,7 +105,7 @@
 					></div>
 				</div>
 			</div>
-			<div class="phases__phase-name">{($t.phases as Record<string, string>)[PHASE_KEYS[name]] ?? name}</div>
+			<div class="phases__phase-name">{phaseLabel(name)}</div>
 			<div class="phases__bar-cell phases__bar-cell--right">
 				<div class="phases__track phases__track--right">
 					<div

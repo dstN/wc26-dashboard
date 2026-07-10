@@ -117,6 +117,27 @@ def parse_page1(page):
     date = datetime.strptime(lines[2], "%d %B %Y").strftime("%Y-%m-%d")
     kickoff = lines[3].split()[0]
     venue = lines[4]
+
+    # Knockout matches drawn after extra time carry a parenthetical note, e.g.
+    # "(Paraguay win 3-4 on Penalties)". Not present for matches decided in
+    # normal time or extra time itself.
+    # The two numbers are in home-away order (matching the page's main
+    # scoreline convention), NOT winner-loser order — e.g. for Germany
+    # (home) vs Paraguay (away), "3-4" means Germany 3, Paraguay 4, so
+    # Paraguay (away, the higher score) wins. Verified against all 3
+    # shootouts in the R32 dataset.
+    penalty_shootout = None
+    for line in lines:
+        pm = re.match(r'^\((.+?)\s+win\s+(\d+)\s*-\s*(\d+)\s+on\s+Penalties\)$', line, re.IGNORECASE)
+        if pm:
+            home_pens, away_pens = int(pm.group(2)), int(pm.group(3))
+            penalty_shootout = {
+                "winner": "home" if home_pens > away_pens else "away",
+                "home_pens": home_pens,
+                "away_pens": away_pens,
+            }
+            break
+
     return {
         "home_team_name": home_team,
         "away_team_name": away_team,
@@ -128,6 +149,7 @@ def parse_page1(page):
         "kickoff": kickoff,
         "venue": venue,
         "report_type": "Post Match Summary Report",
+        "penalty_shootout": penalty_shootout,
     }
 
 
@@ -201,10 +223,20 @@ def _lineup_minutes_with_color(page):
 
 def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
     """
-    Return (home_players, away_players, home_formation, away_formation).
+    Return (home_players, away_players, formations, went_to_extra_time).
     Each player list: starting + substitutes with goals/cards/sub times.
+
+    went_to_extra_time: True if any parsed marker's total minute (base +
+    stoppage, e.g. "120+5'" -> 125) reaches 105 — the start of extra time's
+    second half, comfortably above the longest normal-time stoppage observed
+    in this dataset (90+6' = 96) and comfortably below the lowest marker seen
+    on a confirmed extra-time match (113'). Verified against 8 known knockout
+    matches (3 decided on penalties, 2 decided in extra time, 3 decided in
+    normal time, incl. one with a lone "98'" marker that a lower/naive
+    threshold would have misclassified) — all 8 classify correctly at 105.
     """
     minute_colors = _lineup_minutes_with_color(page)
+    went_to_extra_time = False
 
     # --- Brazil side (x < 500) ---
     bra_words = page_words(page, x_max=300, y_min=100)
@@ -229,6 +261,7 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
 
     def build_players(rows, is_home):
         """Parse player rows for one team side."""
+        nonlocal went_to_extra_time
         section = None   # "starting" or "substitutes"
         players = {"starting": [], "substitutes": []}
         for row in rows:
@@ -274,6 +307,8 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
                 m_base = re.match(r'^(\d+)(?:\+(\d+))?', mtext)
                 if m_base:
                     minute_val = int(m_base.group(1)) + int(m_base.group(2) or 0)
+                    if minute_val >= 105:
+                        went_to_extra_time = True
                 else:
                     minute_val = 0
                 if mcolor == COLOR_SUB_ON:
@@ -336,7 +371,7 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
     reclassify_red_cards(home_players)
     away_players = build_players(mar_rows, is_home=False)
     reclassify_red_cards(away_players)
-    return home_players, away_players, formations
+    return home_players, away_players, formations, went_to_extra_time
 
 
 def _parse_player_identity(other_tokens, is_home):
@@ -415,7 +450,7 @@ def parse_page2(doc, home_team, away_team, home_shot_log, away_shot_log, score):
     away_goals = build_goal_map(away_shot_log)
     all_goals = {**home_goals, **away_goals}
 
-    home_players, away_players, formations = _parse_team_lineups(
+    home_players, away_players, formations, went_to_extra_time = _parse_team_lineups(
         page, home_team, away_team, all_goals
     )
 
@@ -424,6 +459,7 @@ def parse_page2(doc, home_team, away_team, home_shot_log, away_shot_log, score):
         "score": score,
         "home_team": home_players,
         "away_team": away_players,
+        "went_to_extra_time": went_to_extra_time,
     }
 
 
@@ -2139,7 +2175,7 @@ def _count_extra_shot_log_pages(doc):
     return extra
 
 
-def extract(pdf_path: str, output_path: str):
+def extract(pdf_path: str, output_path: str | None = None):
     doc = fitz.open(pdf_path)
     extra = _count_extra_shot_log_pages(doc)
     pdf_filename = Path(pdf_path).name
@@ -2170,6 +2206,7 @@ def extract(pdf_path: str, output_path: str):
 
     # ── Parse all pages ──
     p2_data = parse_page2(doc, home, away, p15_raw, p17_raw, score)
+    match["went_to_extra_time"] = p2_data.pop("went_to_extra_time")
     home_gk = find_gk(p2_data["home_team"])
     away_gk = find_gk(p2_data["away_team"])
 
@@ -2259,11 +2296,13 @@ def extract(pdf_path: str, output_path: str):
         "pages": pages,
     }
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+    doc.close()
 
-    size = Path(output_path).stat().st_size
-    print(f"Wrote {output_path} ({size:,} bytes, {len(pages)} pages)")
+    if output_path is not None:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+        size = Path(output_path).stat().st_size
+        print(f"Wrote {output_path} ({size:,} bytes, {len(pages)} pages)")
     return result
 
 

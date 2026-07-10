@@ -18,6 +18,14 @@
 		'Long Ball': 'longBall',
 		'Attacking Transition': 'attackingTransition',
 	};
+
+	// TS cast stays in the script block — `as`-casts in template markup have
+	// repeatedly broken the rollup SSR build in this project.
+	function phaseLabel(name: string): string {
+		const dict: Record<string, string> = $t.phases;
+		return dict[PHASE_KEYS[name]] ?? name;
+	}
+
 	const N = IN_PHASES.length;
 	const CX = 120;
 	const CY = 110;
@@ -79,7 +87,7 @@
 		<!-- Labels -->
 		{#each IN_PHASES as name, i}
 			{@const lp = labelPos(i)}
-			<text x={lp.x} y={lp.y} font-size="7" fill="var(--muted)" text-anchor="middle" dominant-baseline="middle">{($t.phases as Record<string, string>)[PHASE_KEYS[name]] ?? name}</text>
+			<text x={lp.x} y={lp.y} font-size="7" fill="var(--muted)" text-anchor="middle" dominant-baseline="middle">{phaseLabel(name)}</text>
 		{/each}
 	</svg>
 </figure>

@@ -20,6 +20,7 @@
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
+	import { isKnockoutGroup } from '$lib/stage';
 
 	let { data }: { data: PageData } = $props();
 
@@ -57,6 +58,22 @@
 	function lineLabel(type: string): string {
 		return type === 'defensive' ? $t.detail.lineDefensive : type === 'midfield' ? $t.detail.lineMidfield : $t.detail.lineAttacking;
 	}
+
+	// Knockout rounds carry short labels in group_letter (R32/R16/QF/SF/3RD/FIN)
+	const ROUND_LABELS = $derived<Record<string, string>>({
+		R32: $t.tournament.roundOf32,
+		R16: $t.tournament.roundOf16,
+		QF: $t.tournament.quarterFinals,
+		SF: $t.tournament.semiFinals,
+		'3RD': $t.tournament.thirdPlace,
+		FIN: $t.tournament.final,
+	});
+
+	function groupHeading(g: string): string {
+		// single letters are ALWAYS groups — guards group F against the FIN label
+		if (!isKnockoutGroup(g)) return `${$t.match.group} ${g}`;
+		return ROUND_LABELS[g] ?? `${$t.match.group} ${g}`;
+	}
 </script>
 
 <svelte:head>
@@ -73,7 +90,7 @@
 	<section class="match-header">
 		<div class="match-header__nav">
 			<a href="/matches" class="back-link">{$t.match.backToMatches}</a>
-			<span class="match-meta">{$t.match.group} {m.group_letter} · {$t.match.matchNo} {m.match_no}</span>
+			<span class="match-meta">{groupHeading(m.group_letter)} · {$t.match.matchNo} {m.match_no}</span>
 		</div>
 
 		{#if m.venue || m.match_date}
@@ -111,6 +128,15 @@
 			</div>
 		</div>
 
+		{#if m.went_to_extra_time || m.penalty_score_a != null}
+			<div class="result-note">
+				{#if m.went_to_extra_time}<span class="result-note__aet">{$t.match.aet}</span>{/if}
+				{#if m.penalty_score_a != null && m.penalty_score_b != null}
+					<span class="result-note__pens">{$t.match.penalties}: {m.penalty_score_a}–{m.penalty_score_b}</span>
+				{/if}
+			</div>
+		{/if}
+
 		{#if possession}
 			<div class="xg-row">
 				<span class="xg" style="color: {teamTextColor(m.team_a.color)};">xG {(possession.xg_a ?? 0).toFixed(2)}</span>
@@ -124,7 +150,7 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="{$t.detail.possession}" />
+				<SectionLabel label={$t.detail.possession} />
 				<PossessionBar stats={possession} team_a={m.team_a} team_b={m.team_b} />
 			</div>
 		</section>
@@ -168,7 +194,7 @@
 			<div class="two-col">
 				{#if phases}
 					<div class="two-col__cell">
-						<SectionLabel label="{$t.detail.phases}" />
+						<SectionLabel label={$t.detail.phases} />
 						<PhasesBar
 							phases_a={phases.team_a}
 							phases_b={phases.team_b}
@@ -179,7 +205,7 @@
 				{/if}
 				{#if lineBreaks}
 					<div class="two-col__cell">
-						<SectionLabel label="{$t.detail.lineBreaks}" />
+						<SectionLabel label={$t.detail.lineBreaks} />
 						<LineBreaksBars
 							breaks_a={lineBreaks.team_a}
 							breaks_b={lineBreaks.team_b}
@@ -192,19 +218,35 @@
 		</section>
 	{/if}
 
-	<!-- ── PHASE FINGERPRINT ─────────────────────────────────────────────── -->
-	{#if phases && (phases.team_a?.length || phases.team_b?.length)}
+	<!-- ── PHASE FINGERPRINT + SHOT LOG ─────────────────────────────────────── -->
+	{#if (phases && (phases.team_a?.length || phases.team_b?.length)) || (shots && (shots.team_a?.length || shots.team_b?.length))}
 		<section class="detail-section">
 			<div class="section-divider"></div>
-			<div class="section-body">
-				<SectionLabel label={$t.detail.phaseFingerprint} />
-				<div class="fingerprint-wrap">
-					<PhaseFingerprint
-						{phases}
-						team_a={m.team_a}
-						team_b={m.team_b}
-					/>
-				</div>
+			<div class="two-col">
+				{#if phases && (phases.team_a?.length || phases.team_b?.length)}
+					<div class="two-col__cell">
+						<SectionLabel label={$t.detail.phaseFingerprint} />
+						<div class="fingerprint-wrap">
+							<PhaseFingerprint
+								{phases}
+								team_a={m.team_a}
+								team_b={m.team_b}
+							/>
+						</div>
+					</div>
+				{/if}
+				{#if shots && (shots.team_a?.length || shots.team_b?.length)}
+					<div class="two-col__cell">
+						<SectionLabel label={$t.detail.shotLog} />
+						<ShotTimeline
+							shots_a={shots.team_a ?? []}
+							shots_b={shots.team_b ?? []}
+							team_a={m.team_a}
+							team_b={m.team_b}
+							{playerNameMap}
+						/>
+					</div>
+				{/if}
 			</div>
 		</section>
 	{/if}
@@ -242,7 +284,7 @@
 
 			<!-- Mobile: single pitch with scenario + team pickers (hidden on desktop) -->
 			<div class="spatial-mobile section-body">
-				<SectionLabel label="{$t.detail.spatial}" />
+				<SectionLabel label={$t.detail.spatial} />
 				<SpatialMobilePicker
 					spatial_a={spatial.team_a}
 					spatial_b={spatial.team_b}
@@ -258,29 +300,12 @@
 		<section class="detail-section">
 			<div class="section-divider"></div>
 			<div class="section-body">
-				<SectionLabel label="{$t.detail.finalThirdEntries}" />
+				<SectionLabel label={$t.detail.finalThirdEntries} />
 				<FinalThirdZones
 					entries_a={finalThird.team_a ?? []}
 					entries_b={finalThird.team_b ?? []}
 					team_a={m.team_a}
 					team_b={m.team_b}
-				/>
-			</div>
-		</section>
-	{/if}
-
-	<!-- ── SHOT TIMELINE ──────────────────────────────────────────────────────── -->
-	{#if shots && (shots.team_a?.length || shots.team_b?.length)}
-		<section class="detail-section">
-			<div class="section-divider"></div>
-			<div class="section-body">
-				<SectionLabel label={$t.detail.shotLog} />
-				<ShotTimeline
-					shots_a={shots.team_a ?? []}
-					shots_b={shots.team_b ?? []}
-					team_a={m.team_a}
-					team_b={m.team_b}
-					{playerNameMap}
 				/>
 			</div>
 		</section>
@@ -543,6 +568,26 @@
 	}
 
 	/* ── xG row ──────────────────────────────────────────────────────── */
+	.result-note {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--sp-3);
+		margin-top: calc(-1 * var(--sp-2));
+	}
+	.result-note__aet {
+		font-size: var(--fs-meta);
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--accent);
+	}
+	.result-note__pens {
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		color: var(--muted);
+	}
+
 	.xg-row {
 		display: flex;
 		justify-content: center;

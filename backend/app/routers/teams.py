@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func, case
+from sqlalchemy import select, or_, func
 
 from app.deps import get_db
 from app.models import Team, Match, MatchStats, MatchPhase, Player, PlayerStat, LineBreak, DefensiveAction, MatchGkStat, MatchSetPlayStat
@@ -16,29 +16,31 @@ router = APIRouter(prefix="/api/v1/teams", tags=["teams"])
 async def list_teams(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Team).order_by(Team.name))
     teams = result.scalars().all()
+
+    # One query for all aggregate stats (was one per team)
+    stats_result = await db.execute(
+        select(MatchStats).where(MatchStats.scope == "team_aggregate")
+    )
+    stats_by_team = {s.team_id: s for s in stats_result.scalars().all()}
+
+    # Actual goals per team from real match results, in two grouped queries
+    goals_by_team: dict[int, int] = {}
+    for team_col, score_col in ((Match.team_a_id, Match.score_a), (Match.team_b_id, Match.score_b)):
+        rows = await db.execute(
+            select(team_col, func.sum(score_col))
+            .where(score_col.is_not(None))
+            .group_by(team_col)
+        )
+        for team_id, goals in rows.all():
+            # SUM() returns Decimal on MySQL — coerce so JSON gets a number
+            goals_by_team[team_id] = goals_by_team.get(team_id, 0) + int(goals or 0)
+
     out = []
     for team in teams:
-        stats_result = await db.execute(
-            select(MatchStats).where(
-                MatchStats.team_id == team.id,
-                MatchStats.scope == "team_aggregate",
-            )
-        )
-        stats = stats_result.scalar_one_or_none()
-        # Calculate actual goals scored from real match results
-        goals_result = await db.execute(
-            select(func.sum(
-                case(
-                    (Match.team_a_id == team.id, Match.score_a),
-                    (Match.team_b_id == team.id, Match.score_b),
-                    else_=0
-                )
-            )).where(or_(Match.team_a_id == team.id, Match.team_b_id == team.id))
-        )
-        goals_actual = goals_result.scalar_one_or_none() or 0
+        stats = stats_by_team.get(team.id)
         stats_dict = MatchStatsSchema.model_validate(stats).model_dump() if stats else None
         if stats_dict is not None:
-            stats_dict["goals_a"] = goals_actual
+            stats_dict["goals_a"] = goals_by_team.get(team.id, 0)
         out.append({
             "team": TeamSchema.model_validate(team).model_dump(),
             "stats": stats_dict,
@@ -263,6 +265,9 @@ async def get_team_matches(team_id: int, db: AsyncSession = Depends(get_db)):
                 group_letter=match.group_letter or "",
                 team_a=TeamSchema.model_validate(team_a),
                 team_b=TeamSchema.model_validate(team_b),
+                went_to_extra_time=match.went_to_extra_time,
+                penalty_score_a=match.penalty_score_a,
+                penalty_score_b=match.penalty_score_b,
             ).model_dump(),
             "stats": MatchStatsSchema.model_validate(stats).model_dump() if stats else None,
         })

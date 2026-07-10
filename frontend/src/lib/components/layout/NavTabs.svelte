@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { Tabs } from 'bits-ui';
+	import { t } from '$lib/i18n';
 
 	let {
 		tabs
 	}: { tabs: Array<{ id: string; label: string; href: string }> } = $props();
 
 	let activeTab = $derived(tabs.find((t) => $page.url.pathname === t.href)?.id ?? tabs[0]?.id);
+
+	// keep the DOM cast out of the template markup (rollup SSR safety)
+	function onNavSelect(e: Event) {
+		window.location.href = (e.currentTarget as HTMLSelectElement).value;
+	}
 </script>
 
 <!-- Desktop: Tabs -->
@@ -14,7 +20,7 @@
 	<Tabs.Root value={activeTab} class="tabs-root">
 		<Tabs.List class="tabs-list">
 			{#each tabs as tab (tab.id)}
-				<Tabs.Trigger value={tab.id} class="tab-trigger" asChild>
+				<Tabs.Trigger value={tab.id} class="tab-trigger">
 					{#snippet child({ props })}
 						<a
 							{...props}
@@ -34,14 +40,8 @@
 
 <!-- Mobile: Select -->
 <div class="nav-select">
-	<label for="nav-select-input" class="sr-only">Navigate to section</label>
-	<select
-		id="nav-select-input"
-		onchange={(e) => {
-			const target = e.target as HTMLSelectElement;
-			window.location.href = target.value;
-		}}
-	>
+	<label for="nav-select-input" class="sr-only">{$t.nav.selectLabel}</label>
+	<select id="nav-select-input" onchange={onNavSelect}>
 		{#each tabs as tab (tab.id)}
 			<option value={tab.href} selected={activeTab === tab.id}>{tab.label}</option>
 		{/each}

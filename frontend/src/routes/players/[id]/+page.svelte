@@ -3,6 +3,7 @@
 	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import { t } from '$lib/i18n';
+	import { isKnockoutGroup } from '$lib/stage';
 
 	let { data }: { data: PageData } = $props();
 
@@ -28,6 +29,22 @@
 
 	const f = (v: number | null | undefined, suffix = '') => v != null ? `${v}${suffix}` : '—';
 	const fkm = (v: number | null | undefined) => v != null ? (v / 1000).toFixed(1) + ' km' : '—';
+
+	// Knockout rounds carry short labels in group_letter (R32/R16/QF/SF/3RD/FIN)
+	const ROUND_LABELS = $derived<Record<string, string>>({
+		R32: $t.tournament.roundOf32,
+		R16: $t.tournament.roundOf16,
+		QF: $t.tournament.quarterFinals,
+		SF: $t.tournament.semiFinals,
+		'3RD': $t.tournament.thirdPlace,
+		FIN: $t.tournament.final,
+	});
+
+	function groupHeading(g: string | null | undefined): string {
+		if (!g) return '';
+		if (!isKnockoutGroup(g)) return `${$t.match.group} ${g}`;
+		return ROUND_LABELS[g] ?? `${$t.match.group} ${g}`;
+	}
 
 </script>
 
@@ -323,7 +340,13 @@
 						<tbody>
 							{#each perMatch as m}
 								<tr>
-									<td class="match-no">#{m.match_no ?? '—'}</td>
+									<td class="match-no">
+										{#if m.match_id}
+											<a href="/matches/{m.match_id}" class="match-no-link">{groupHeading(m.group_letter)} · {$t.match.matchNo} {m.match_no}</a>
+										{:else}
+											{$t.match.matchNo} {m.match_no ?? '—'}
+										{/if}
+									</td>
 									<td>
 										{#if m.opponent}
 											<a href="/teams/{m.opponent.id}" class="opp-link">
@@ -364,7 +387,11 @@
 					{#if m.passes_attempted != null || m.tackles_made != null || m.total_distance_m != null}
 						<div class="match-detail-block">
 							<div class="match-detail-header">
-								<span class="match-detail-no">{$t.compare.matchNo} #{m.match_no}</span>
+								{#if m.match_id}
+									<a href="/matches/{m.match_id}" class="match-detail-no match-detail-no--link">{groupHeading(m.group_letter)} · {$t.match.matchNo} {m.match_no}</a>
+								{:else}
+									<span class="match-detail-no">{$t.match.matchNo} {m.match_no}</span>
+								{/if}
 								{#if m.opponent}
 									<a href="/teams/{m.opponent.id}" class="opp-link">vs {m.opponent.name}</a>
 								{/if}
@@ -465,7 +492,13 @@
 						<tbody>
 							{#each lineBreaks as lb}
 								<tr>
-									<td class="match-no">#{lb.match_no ?? '—'}</td>
+									<td class="match-no">
+										{#if lb.match_id}
+											<a href="/matches/{lb.match_id}" class="match-no-link">{groupHeading(lb.group_letter)} · {$t.match.matchNo} {lb.match_no}</a>
+										{:else}
+											{$t.match.matchNo} {lb.match_no ?? '—'}
+										{/if}
+									</td>
 									<td class="num">{lb.attempted ?? '—'}</td>
 									<td class="num">{lb.completed ?? '—'}</td>
 									<td class="num">{lb.dir_through ?? '—'}</td>
@@ -700,6 +733,15 @@
 		font-weight: 700;
 		color: var(--muted);
 		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+	.match-no-link {
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.match-no-link:hover {
+		color: var(--accent);
+		text-decoration: underline;
 	}
 	.opp-link {
 		font-weight: 700;
@@ -742,6 +784,13 @@
 		font-size: var(--fs-ui);
 		font-weight: 800;
 		color: var(--ink);
+	}
+	.match-detail-no--link {
+		text-decoration: none;
+	}
+	.match-detail-no--link:hover {
+		color: var(--accent);
+		text-decoration: underline;
 	}
 	.match-detail-date {
 		font-size: var(--fs-meta);

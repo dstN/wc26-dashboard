@@ -19,6 +19,8 @@ installed (pymupdf, sqlalchemy, etc.).
 
 from __future__ import annotations
 
+import asyncio
+import secrets
 import subprocess
 from pathlib import Path
 
@@ -42,7 +44,9 @@ def _require_key(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Ingest endpoint is not configured on this server.",
         )
-    if credentials is None or credentials.credentials != settings.ingest_secret_key:
+    if credentials is None or not secrets.compare_digest(
+        credentials.credentials, settings.ingest_secret_key
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key.",
@@ -69,23 +73,47 @@ async def upload_pdf(
     if len(content) > MAX_PDF_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File exceeds the 50 MB limit.",
+            detail="File exceeds the 50 MB limit.",
+        )
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File is not a valid PDF.",
         )
 
     watch_dir = Path(settings.pdf_watch_dir).expanduser().resolve()
     watch_dir.mkdir(parents=True, exist_ok=True)
 
-    dest = watch_dir / file.filename
-    dest.write_bytes(content)
+    # basename only — a client-supplied "../x.pdf" or absolute path must never
+    # escape the watch dir
+    safe_name = Path(file.filename).name
+    if not safe_name or safe_name.startswith("."):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file name.",
+        )
+    dest = (watch_dir / safe_name).resolve()
+    if dest.parent != watch_dir:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file name.",
+        )
+    await asyncio.to_thread(dest.write_bytes, content)
 
-    # Build subprocess command — force re-process this specific file
+    # Re-process only the uploaded file (not the whole drop dir)
     python = settings.ingestion_python or "python3"
-    cmd = [python, "-m", "ingestion.watch_pdfs", "--dir", str(watch_dir), "--force"]
+    cmd = [
+        python, "-m", "ingestion.watch_pdfs",
+        "--dir", str(watch_dir), "--force", "--file", str(dest),
+    ]
 
     cwd = settings.ingestion_module_dir or None
 
     try:
-        proc = subprocess.run(
+        # subprocess.run blocks — run it in a worker thread so the event loop
+        # (and every other endpoint) stays responsive during ingestion
+        proc = await asyncio.to_thread(
+            subprocess.run,
             cmd,
             capture_output=True,
             text=True,
@@ -95,6 +123,7 @@ async def upload_pdf(
         ok = proc.returncode == 0
         log = (proc.stdout + proc.stderr).strip()
     except FileNotFoundError:
+        dest.unlink(missing_ok=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=(
@@ -103,12 +132,15 @@ async def upload_pdf(
             ),
         )
     except subprocess.TimeoutExpired:
+        dest.unlink(missing_ok=True)
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
             detail="Ingestion timed out after 180 s.",
         )
 
     if not ok:
+        # remove the bad PDF so the cron fallback does not retry it forever
+        dest.unlink(missing_ok=True)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={"message": "Ingestion failed.", "log": log},
@@ -116,7 +148,7 @@ async def upload_pdf(
 
     return {
         "status": "ok",
-        "file": file.filename,
+        "file": safe_name,
         "saved_to": str(dest),
         "log": log,
     }

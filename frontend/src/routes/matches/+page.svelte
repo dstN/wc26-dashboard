@@ -6,6 +6,7 @@
 	import { t } from '$lib/i18n';
 	import { goto } from '$app/navigation';
 	import { toggleComparison, isSelected, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
+	import { isKnockoutGroup, type StageFilter } from '$lib/stage';
 
 	let { data }: { data: PageData } = $props();
 
@@ -16,6 +17,17 @@
 
 	function isPending(m: MatchMeta): boolean {
 		return m.score_a === 0 && m.score_b === 0 && !m.match_date;
+	}
+
+	// Compact "AET" / "AET · 3-4 pens" note under the scoreline. Built here
+	// (not inline in markup) so no stray whitespace leaks into the rendered text.
+	function scoreNote(m: MatchMeta): string {
+		const parts: string[] = [];
+		if (m.went_to_extra_time) parts.push($t.match.aet);
+		if (m.penalty_score_a != null && m.penalty_score_b != null) {
+			parts.push(`${m.penalty_score_a}-${m.penalty_score_b} ${$t.match.pensShort}`);
+		}
+		return parts.join(' · ');
 	}
 
 	function formatDate(raw: string): string {
@@ -33,14 +45,65 @@
 
 	// Filter state
 	let filterGroup = $state('');
+	let stageFilter: StageFilter = $state('all');
 
-	// All unique group letters for the filter dropdown
+	const STAGE_OPTIONS = $derived([
+		{ key: 'all' as const, label: $t.stage.all },
+		{ key: 'group' as const, label: $t.stage.group },
+		{ key: 'knockout' as const, label: $t.stage.knockout },
+	]);
+
+	// Reset the group/round dropdown whenever the stage changes — a previously
+	// selected round (e.g. "R32") is meaningless once "Group Stage" is picked.
+	$effect(() => {
+		stageFilter;
+		filterGroup = '';
+	});
+
+	const stageFilteredMatches = $derived(
+		stageFilter === 'all'
+			? matches
+			: matches.filter((m) => isKnockoutGroup(m.group_letter) === (stageFilter === 'knockout'))
+	);
+
+	// Knockout rounds carry short labels in group_letter (R32/R16/QF/SF/3RD/FIN)
+	const ROUND_LABELS = $derived<Record<string, string>>({
+		R32: $t.tournament.roundOf32,
+		R16: $t.tournament.roundOf16,
+		QF: $t.tournament.quarterFinals,
+		SF: $t.tournament.semiFinals,
+		'3RD': $t.tournament.thirdPlace,
+		FIN: $t.tournament.final,
+	});
+	const ROUND_ORDER = ['R32', 'R16', 'QF', 'SF', '3RD', 'FIN'];
+
+	function groupHeading(g: string): string {
+		// single letters are ALWAYS groups — guards group F against the FIN label
+		if (!isKnockoutGroup(g)) return `${$t.match.group} ${g}`;
+		return ROUND_LABELS[g] ?? `${$t.match.group} ${g}`;
+	}
+
+	// groups A–L alphabetically first, then knockout rounds in bracket order
+	function groupSort(a: string, b: string): number {
+		const ra = ROUND_ORDER.indexOf(a);
+		const rb = ROUND_ORDER.indexOf(b);
+		if (ra !== -1 || rb !== -1) {
+			if (ra === -1) return -1;
+			if (rb === -1) return 1;
+			return ra - rb;
+		}
+		return a.localeCompare(b);
+	}
+
+	// All unique group letters for the filter dropdown (within the current stage)
 	const allGroupKeys = $derived(
-		[...new Set(matches.map((m) => m.group_letter ?? '?'))].sort()
+		[...new Set(stageFilteredMatches.map((m) => m.group_letter ?? '?'))].sort(groupSort)
 	);
 
 	const filteredMatches = $derived(
-		filterGroup ? matches.filter((m) => (m.group_letter ?? '?') === filterGroup) : matches
+		filterGroup
+			? stageFilteredMatches.filter((m) => (m.group_letter ?? '?') === filterGroup)
+			: stageFilteredMatches
 	);
 
 	// Group matches by group letter
@@ -52,7 +115,7 @@
 		}, {})
 	);
 
-	const groupKeys = $derived(Object.keys(grouped).sort());
+	const groupKeys = $derived(Object.keys(grouped).sort(groupSort));
 </script>
 
 <svelte:head>
@@ -61,16 +124,25 @@
 
 <div class="page">
 	<header class="page-header">
-		<SectionLabel label="{$t.match.allMatches}" />
+		<SectionLabel label={$t.match.allMatches} />
 		<h1 class="page-title">{$t.match.overview}</h1>
 		{#if data.error}
 			<p class="error-note">{$t.error.loadFailed}</p>
 		{/if}
+		<div class="stage-pill-group" role="group" aria-label={$t.stage.ariaLabel}>
+			{#each STAGE_OPTIONS as opt}
+				<button
+					class="stage-pill"
+					class:stage-pill--active={stageFilter === opt.key}
+					onclick={() => (stageFilter = opt.key)}
+				>{opt.label}</button>
+			{/each}
+		</div>
 		<div class="filter-bar">
 			<select class="filter-select" bind:value={filterGroup} aria-label="Filter by group">
 				<option value="">{$t.match.allGroups}</option>
 				{#each allGroupKeys as g}
-					<option value={g}>{$t.match.group} {g}</option>
+					<option value={g}>{groupHeading(g)}</option>
 				{/each}
 			</select>
 			{#if filterGroup}
@@ -88,7 +160,7 @@
 		{#each groupKeys as gKey}
 			<section class="group-section">
 				<div class="group-header">
-					<span class="group-letter">{$t.match.group} {gKey}</span>
+					<span class="group-letter">{groupHeading(gKey)}</span>
 					<span class="group-count">{grouped[gKey].length} {$t.match.matches}</span>
 				</div>
 				<div class="cards-grid">
@@ -99,7 +171,7 @@
 							onkeydown={(e) => e.key === 'Enter' && goto(`/matches/${match.id}`)}>
 						<article class="match-card">
 							<div class="match-card__top">
-								<abbr title="Group {gKey}, Match {match.match_no}" class="group-badge">
+								<abbr title="{groupHeading(gKey)} · {$t.match.matchNo} {match.match_no}" class="group-badge">
 									{gKey}<span class="group-badge__num">·{match.match_no}</span>
 								</abbr>
 								<div class="card-top-right">
@@ -147,6 +219,9 @@
 										<span class="score score--pending">–:–</span>
 									{:else}
 										<span class="score">{match.score_a}:{match.score_b}</span>
+										{#if match.went_to_extra_time || match.penalty_score_a != null}
+											<span class="score-note">{scoreNote(match)}</span>
+										{/if}
 									{/if}
 								</div>
 
@@ -212,6 +287,35 @@
 		font-size: var(--fs-meta);
 		color: var(--c-red);
 		margin-top: var(--sp-1);
+	}
+
+	/* ── Stage filter ─────────────────────────────────────────────── */
+	.stage-pill-group {
+		display: flex;
+		gap: 2px;
+		background: var(--border);
+		border-radius: var(--r-pill);
+		padding: 2px;
+		width: fit-content;
+		flex-wrap: wrap;
+	}
+	.stage-pill {
+		padding: 4px var(--sp-4);
+		border: none;
+		border-radius: var(--r-pill);
+		background: transparent;
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		font-family: inherit;
+		color: var(--muted);
+		cursor: pointer;
+		transition: background 0.15s, color 0.15s;
+		white-space: nowrap;
+	}
+	.stage-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+	.stage-pill--active {
+		background: var(--accent);
+		color: var(--accent-fg);
 	}
 
 	/* ── Filter bar ───────────────────────────────────────────────── */
@@ -443,8 +547,10 @@
 
 	.score-block {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		gap: 2px;
 		flex-shrink: 0;
 	}
 	.score {
@@ -453,6 +559,14 @@
 		font-variant-numeric: tabular-nums;
 		color: var(--ink);
 		line-height: 1;
+	}
+	.score-note {
+		font-size: var(--fs-meta);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--accent);
+		white-space: nowrap;
 	}
 	.score--pending {
 		color: var(--muted);

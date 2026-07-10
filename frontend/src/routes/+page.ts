@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ fetch }) => {
 			? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
 			: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
 
-		const response = await fetch(`${baseUrl}/api/v1/dashboard?is_featured=1`);
+		const response = await fetch(`${baseUrl}/api/v1/dashboard`);
 		if (!response.ok) {
 			throw new Error(`API responded with ${response.status}`);
 		}

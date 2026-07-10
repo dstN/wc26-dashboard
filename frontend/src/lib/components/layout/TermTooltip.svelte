@@ -11,7 +11,7 @@
 
 <Tooltip.Provider delayDuration={200}>
 	<Tooltip.Root>
-		<Tooltip.Trigger asChild>
+		<Tooltip.Trigger>
 			{#snippet child({ props })}
 				<span {...props} class="trigger" aria-label="{term}: {definition}">
 					{@render children?.()}

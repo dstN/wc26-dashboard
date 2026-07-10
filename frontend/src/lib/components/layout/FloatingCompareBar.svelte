@@ -1,18 +1,24 @@
 <script lang="ts">
 	import { getComparisonIds, getComparisonType, clearComparison, compareUrl } from '$lib/stores/comparison.svelte';
+	import { t } from '$lib/i18n';
 
 	const ids = $derived(getComparisonIds());
 	const type = $derived(getComparisonType());
 	const url = $derived(compareUrl());
-	const label = $derived(type === 'teams' ? 'Teams' : type === 'players' ? 'Players' : '');
+	const label = $derived(
+		type === 'teams' ? $t.nav.teams
+		: type === 'players' ? $t.nav.players
+		: type === 'matches' ? $t.nav.matches
+		: ''
+	);
 </script>
 
 {#if ids.length >= 2}
 	<div class="cbar" role="status" aria-live="polite">
 		<span class="cbar__count">{ids.length}</span>
-		<span class="cbar__label">{label} selected</span>
-		<a href={url} class="cbar__btn">Compare →</a>
-		<button class="cbar__clear" onclick={clearComparison} aria-label="Clear comparison">✕</button>
+		<span class="cbar__label">{label} {$t.compare.selectedCount}</span>
+		<a href={url} class="cbar__btn">{$t.compare.label} →</a>
+		<button class="cbar__clear" onclick={clearComparison} aria-label={$t.compare.clearAria}>✕</button>
 	</div>
 {/if}
 

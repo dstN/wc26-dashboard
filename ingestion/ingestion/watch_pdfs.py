@@ -8,8 +8,9 @@ have not yet been processed.
 Designed for cron-based invocation on Apache / Phusion Passenger deployments.
 No daemon process is required — run this script on a schedule:
 
-    # Example crontab entry (every 5 minutes):
-    */5 * * * * cd /path/to/project && python -m ingestion.watch_pdfs >> /var/log/efi_watch.log 2>&1
+    # Example crontab entry (every 5 minutes) — note: run from the ingestion/
+    # directory (the package root), not the repo root:
+    */5 * * * * cd /path/to/project/ingestion && python -m ingestion.watch_pdfs >> /var/log/efi_watch.log 2>&1
 
 Environment variables (set in .env or shell):
     PDF_WATCH_DIR   Path to the folder where new PDFs are dropped.
@@ -38,6 +39,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -108,31 +110,27 @@ def _find_pdfs(watch_dir: Path) -> list[Path]:
 
 def _ingest_pdf(pdf_path: Path, dry_run: bool) -> bool:
     """
-    Parse a single PDF and write SQL to the database.
+    Parse a single PDF via the sanctioned PMSR pipeline
+    (parse_pmsr + pmsr_to_sql) and write the SQL to the database.
     Returns True on success, False on failure.
     """
-    from ingestion.parse_efi_pdf import extract, generate_sql  # type: ignore[attr-defined]
+    from ingestion.pmsr_to_sql import pdf_to_sql
 
     logger.info("Parsing  %s …", pdf_path.name)
     try:
-        data = extract(pdf_path)
+        sql = pdf_to_sql(str(pdf_path))
     except Exception as exc:
         logger.error("Parse failed for %s: %s", pdf_path.name, exc)
         return False
 
-    logger.info(
-        "  → Match %d · %s %d-%d %s · phases A=%d B=%d",
-        data.match_no,
-        data.team_a_slug.upper(), data.score_a, data.score_b,
-        data.team_b_slug.upper(),
-        len(data.phases_a), len(data.phases_b),
-    )
+    # First generated line is a "-- ── GER 7–1 CUR · Match 10 · …" header comment.
+    header = sql.splitlines()[0].lstrip("- ").strip() if sql else ""
+    logger.info("  → %s", header)
 
     if dry_run:
         logger.info("  [dry-run] skipping DB write")
         return True
 
-    sql = generate_sql(data)
     return _execute_sql(sql, pdf_path.name)
 
 
@@ -145,20 +143,26 @@ def _execute_sql(sql: str, label: str) -> bool:
         return False
 
     dsn = _db_dsn()
+    engine = sa.create_engine(dsn, echo=False)
     try:
-        engine = sa.create_engine(dsn, echo=False)
         with engine.connect() as conn:
-            # Split on statement boundaries and execute each
-            statements = [s.strip() for s in sql.split(";") if s.strip()]
-            for stmt in statements:
-                conn.execute(sa.text(stmt))
+            # Generated SQL terminates every statement with ";" at end-of-line,
+            # so split there instead of on every ";" (values may contain one).
+            for fragment in re.split(r";\s*\n", sql):
+                # Drop comment-only / empty fragments.
+                body = "\n".join(
+                    l for l in fragment.splitlines() if l.strip() and not l.lstrip().startswith("--")
+                )
+                if body.strip():
+                    conn.execute(sa.text(body))
             conn.commit()
-        engine.dispose()
         logger.info("  ✓ DB write complete for %s", label)
         return True
     except Exception as exc:
         logger.error("  ✗ DB write failed for %s: %s", label, exc)
         return False
+    finally:
+        engine.dispose()
 
 
 # ---------------------------------------------------------------------------
@@ -169,10 +173,15 @@ def main(argv: list[str] | None = None) -> int:
     # Load .env if python-dotenv is available
     try:
         from dotenv import load_dotenv  # type: ignore
-        env_file = Path(__file__).parent.parent / ".env"
-        if env_file.exists():
-            load_dotenv(env_file)
-            logger.debug("Loaded .env from %s", env_file)
+        # ingestion/.env takes precedence, project-root .env is the fallback
+        # (the quickstart only creates the root one).
+        for env_file in (
+            Path(__file__).parent.parent / ".env",
+            Path(__file__).parent.parent.parent / ".env",
+        ):
+            if env_file.exists():
+                load_dotenv(env_file)
+                logger.debug("Loaded .env from %s", env_file)
     except ImportError:
         pass
 
@@ -191,12 +200,22 @@ def main(argv: list[str] | None = None) -> int:
         "--force", action="store_true",
         help="Re-process all PDFs, ignoring the processed log"
     )
+    parser.add_argument(
+        "--file", dest="only_file", type=Path, default=None,
+        help="Process only this single PDF (must live inside the watch dir)"
+    )
     args = parser.parse_args(argv)
 
     watch_dir: Path = args.watch_dir.resolve() if args.watch_dir else _watch_dir()
     logger.info("Watch directory: %s", watch_dir)
 
     all_pdfs = _find_pdfs(watch_dir)
+    if args.only_file is not None:
+        target = args.only_file.resolve()
+        all_pdfs = [p for p in all_pdfs if p.resolve() == target]
+        if not all_pdfs:
+            logger.error("--file %s not found in watch dir", target)
+            return 1
     if not all_pdfs:
         logger.info("No PDF files found in %s — nothing to do", watch_dir)
         return 0

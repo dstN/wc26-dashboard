@@ -24,8 +24,14 @@ def _split_spatial(rows):
     }
 
 
-async def get_featured_match_id(db: AsyncSession) -> int:
-    result = await db.execute(select(Match.id).order_by(Match.id.desc()).limit(1))
+async def get_latest_match_id(db: AsyncSession) -> int:
+    # The home hero is labelled "Latest Match" — always return the most recent
+    # match by date (insertion order/id is NOT chronological after batch ingests).
+    result = await db.execute(
+        select(Match.id)
+        .order_by(Match.match_date.desc(), Match.match_no.desc())
+        .limit(1)
+    )
     row = result.scalar_one_or_none()
     if row is None:
         raise ValueError("No matches found")
@@ -173,6 +179,9 @@ async def get_match_dashboard(db: AsyncSession, match_id: int) -> DashboardRespo
             group_letter=match.group_letter or "",
             team_a=team_a_schema,
             team_b=team_b_schema,
+            went_to_extra_time=match.went_to_extra_time,
+            penalty_score_a=match.penalty_score_a,
+            penalty_score_b=match.penalty_score_b,
         ),
         possession=MatchStatsSchema.model_validate(stats),
         head_to_head=MatchStatsSchema.model_validate(stats),

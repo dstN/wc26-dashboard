@@ -43,6 +43,14 @@
 		else { rankSort = key; rankDir = -1; }
 	}
 
+	// defined in the script block so no `as const` assertion sits in template markup
+	const RANK_SORT_PILLS = $derived([
+		{ key: 'goals', label: $t.teams.sortGoals },
+		{ key: 'possession', label: $t.teams.sortPossession },
+		{ key: 'xg', label: $t.teams.sortXg },
+		{ key: 'conceded', label: $t.teams.sortConceded },
+	] as const);
+
 	const sortedRankings = $derived(
 		[...teamRankings].sort((a, b) => {
 			let val = 0;
@@ -66,12 +74,17 @@
 
 <div class="page">
 	<header class="page-header">
-		<SectionLabel label="{$t.teams.label}" />
+		<SectionLabel label={$t.teams.label} />
 		<h1 class="page-title">{$t.teams.rankingTitle}</h1>
 		<p class="page-sub">{teamRankings.length} {$t.teams.rankingSubtitle}</p>
 		{#if data.error}
 			<p class="error-note">{$t.error.loadFailed}</p>
 		{/if}
+		<div class="stage-pill-group" role="group" aria-label={$t.stage.ariaLabel}>
+			<a href="?" class="stage-pill" class:stage-pill--active={!data.stage}>{$t.stage.all}</a>
+			<a href="?stage=group" class="stage-pill" class:stage-pill--active={data.stage === 'group'}>{$t.stage.group}</a>
+			<a href="?stage=knockout" class="stage-pill" class:stage-pill--active={data.stage === 'knockout'}>{$t.stage.knockout}</a>
+		</div>
 	</header>
 
 	<!-- ── RANKING TABLE ─────────────────────────────────────────────────── -->
@@ -82,12 +95,7 @@
 				<div class="sort-pills">
 					<span class="sort-label">{$t.teams.sortBy}</span>
 					<div class="sort-pill-group">
-						{#each ([
-							{ key: 'goals', label: $t.teams.sortGoals },
-							{ key: 'possession', label: $t.teams.sortPossession },
-							{ key: 'xg', label: $t.teams.sortXg },
-							{ key: 'conceded', label: $t.teams.sortConceded },
-						] as const) as s}
+						{#each RANK_SORT_PILLS as s}
 							<button
 								class="sort-pill"
 								class:sort-pill--active={rankSort === s.key}
@@ -279,6 +287,36 @@
 		font-size: var(--fs-meta);
 		color: var(--c-red);
 		margin-top: var(--sp-1);
+	}
+
+	/* ── Stage filter ─────────────────────────────────────────────────── */
+	.stage-pill-group {
+		display: flex;
+		gap: 2px;
+		background: var(--border);
+		border-radius: var(--r-pill);
+		padding: 2px;
+		width: fit-content;
+		flex-wrap: wrap;
+	}
+	.stage-pill {
+		padding: 4px var(--sp-4);
+		border: none;
+		border-radius: var(--r-pill);
+		background: transparent;
+		font-size: var(--fs-meta);
+		font-weight: 600;
+		font-family: inherit;
+		color: var(--muted);
+		text-decoration: none;
+		cursor: pointer;
+		transition: background 0.15s, color 0.15s;
+		white-space: nowrap;
+	}
+	.stage-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+	.stage-pill--active {
+		background: var(--accent);
+		color: var(--accent-fg);
 	}
 
 	/* ── Ranking section ─────────────────────────────────────────────── */

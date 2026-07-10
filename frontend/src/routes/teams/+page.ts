@@ -1,19 +1,17 @@
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch }) => {
+export const load: PageLoad = async ({ fetch, url }) => {
+	const stage = url.searchParams.get('stage'); // 'group' | 'knockout' | null (= all)
+	const base = import.meta.env.SSR
+		? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
+		: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
+	const qs = stage ? `?stage=${stage}` : '';
 	try {
-		const base = import.meta.env.SSR
-			? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
-			: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
-		const [teamsRes, lbRes] = await Promise.all([
-			fetch(`${base}/api/v1/teams/`),
-			fetch(`${base}/api/v1/stats/leaderboards`),
-		]);
-		if (!teamsRes.ok) throw new Error(`${teamsRes.status}`);
-		const teams = await teamsRes.json();
-		const leaderboards = lbRes.ok ? await lbRes.json() : null;
-		return { teams, leaderboards };
+		const lbRes = await fetch(`${base}/api/v1/stats/leaderboards${qs}`);
+		if (!lbRes.ok) throw new Error(`${lbRes.status}`);
+		const leaderboards = await lbRes.json();
+		return { leaderboards, stage };
 	} catch (err) {
-		return { teams: [], leaderboards: null, error: String(err) };
+		return { leaderboards: null, stage, error: String(err) };
 	}
 };

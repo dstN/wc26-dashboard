@@ -1,6 +1,10 @@
 -- ── Final Third Entries · all 40 matches ────────────────────────────────
+-- Sole data source for final_third_entries (no PDF page exists for this table).
 SET NAMES utf8mb4;
 USE wc26;
+
+-- idempotent re-seed: this file is the only writer of this table
+DELETE FROM final_third_entries;
 
 -- Match 1: MEX vs RSA
 INSERT INTO final_third_entries (team_id, match_id, scope, zone, entry_count)

@@ -22,21 +22,19 @@ CREATE TABLE IF NOT EXISTS matches (
   score_b INT DEFAULT 0,
   venue VARCHAR(200),
   match_date DATE,
-  group_letter CHAR(1),
-  is_featured TINYINT(1) DEFAULT 0,
+  -- 'A'–'L' for group stage; 'R32'/'R16'/'QF'/'SF'/'3RD'/'FIN' for knockout rounds
+  group_letter VARCHAR(3),
   formation_a VARCHAR(20) DEFAULT NULL,
   formation_b VARCHAR(20) DEFAULT NULL,
+  -- score_a/score_b already reflect extra time when played; this only flags
+  -- that ET happened (for an "AET" badge). Penalty shootout score is separate
+  -- from score_a/score_b since a shootout doesn't change the match score.
+  went_to_extra_time TINYINT(1) NOT NULL DEFAULT 0,
+  penalty_score_a INT DEFAULT NULL,
+  penalty_score_b INT DEFAULT NULL,
   UNIQUE KEY uq_match_no (match_no),
   FOREIGN KEY (team_a_id) REFERENCES teams(id),
   FOREIGN KEY (team_b_id) REFERENCES teams(id)
-);
-
-CREATE TABLE IF NOT EXISTS tournament_overview (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  matches_played INT DEFAULT 0,
-  goals_total INT DEFAULT 0,
-  avg_in_contest_pct DECIMAL(5,2) DEFAULT 0.00,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Stat tables share this pattern:

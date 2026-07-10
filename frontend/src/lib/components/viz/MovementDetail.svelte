@@ -62,6 +62,13 @@
 		return Math.max(...keys.map((k) => (stat as unknown as Record<string, number | null>)[k] ?? 0), 1);
 	}
 
+	// Numeric lookup for the pitch-third grid — keeps all TS casts out of the
+	// template markup (they have broken the rollup SSR build before).
+	function thirdVal(stat: MovementStat | null, prefix: string, t: string): number {
+		if (!stat) return 0;
+		return (stat as unknown as Record<string, number | null>)[`${prefix}_${t}`] ?? 0;
+	}
+
 	const maxPhase = $derived(Math.max(
 		maxOf(movement_a, phases.map((p) => p.key)),
 		maxOf(movement_b, phases.map((p) => p.key))
@@ -131,16 +138,15 @@
 				<div class="mv__third-block">
 					<div class="mv__third-title">{third.label}</div>
 					{#each typeKeys as t}
-						{@const ka = `${third.prefix}_${t}` as keyof MovementStat}
-						{@const va = movement_a?.[ka] ?? 0}
-						{@const vb = movement_b?.[ka] ?? 0}
-						{@const mx = Math.max(va as number, vb as number, 1)}
+						{@const va = thirdVal(movement_a, third.prefix, t)}
+						{@const vb = thirdVal(movement_b, third.prefix, t)}
+						{@const mx = Math.max(va, vb, 1)}
 						<div class="mv__third-row">
 							<span class="mv__third-lbl">{typeLabels[t]}</span>
 							<div class="mv__third-bars">
-								<div class="mv__third-bar" style="width: {((va as number) / mx) * 100}%; background: {teamColorVar(team_a.color)};"></div>
+								<div class="mv__third-bar" style="width: {(va / mx) * 100}%; background: {teamColorVar(team_a.color)};"></div>
 								<div class="mv__third-vals"><span>{va}</span><span class="mv__third-sep">·</span><span>{vb}</span></div>
-								<div class="mv__third-bar mv__third-bar--b" style="width: {((vb as number) / mx) * 100}%; background: {teamColorVar(team_b.color)};"></div>
+								<div class="mv__third-bar mv__third-bar--b" style="width: {(vb / mx) * 100}%; background: {teamColorVar(team_b.color)};"></div>
 							</div>
 						</div>
 					{/each}

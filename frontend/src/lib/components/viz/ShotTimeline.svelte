@@ -50,6 +50,14 @@
 			...shots_b.map((s) => ({ ...s, side: 'b' as const })),
 		].sort((x, y) => x.minute - y.minute)
 	);
+
+	// Built here (not inline in the template) — a trailing space right before
+	// {/if} gets trimmed by Svelte's whitespace collapsing, which silently
+	// glued the jersey number to the name (e.g. "#7Messi").
+	function playerLabel(shot: Shot): string {
+		const name = shot.player_name ?? '—';
+		return shot.player_jersey != null ? `#${shot.player_jersey} ${name}` : name;
+	}
 </script>
 
 <div class="stl">
@@ -74,11 +82,11 @@
 				<span class="stl__min">{shot.minute}'</span>
 				{#if pId}
 					<a href="/players/{pId}" class="stl__player stl__player--link" style="color: {pColor}">
-						{#if shot.player_jersey != null}#{shot.player_jersey} {/if}{shot.player_name}
+						{playerLabel(shot)}
 					</a>
 				{:else}
 					<span class="stl__player" style="color: {pColor}">
-						{#if shot.player_jersey != null}#{shot.player_jersey} {/if}{shot.player_name ?? '—'}
+						{playerLabel(shot)}
 					</span>
 				{/if}
 				<span class="stl__meta">{shot.body_part ?? '—'}</span>

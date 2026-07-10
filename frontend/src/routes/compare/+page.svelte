@@ -42,6 +42,38 @@
 		else goto(`/compare?type=${type}&ids=${newIds.join(',')}`);
 	}
 
+	// Compact "AET" / "AET · 3-4 pens" note under a compared match's score.
+	function scoreNote(m: { went_to_extra_time?: boolean; penalty_score_a?: number | null; penalty_score_b?: number | null }): string {
+		const parts: string[] = [];
+		if (m.went_to_extra_time) parts.push($t.match.aet);
+		if (m.penalty_score_a != null && m.penalty_score_b != null) {
+			parts.push(`${m.penalty_score_a}-${m.penalty_score_b} ${$t.match.pensShort}`);
+		}
+		return parts.join(' · ');
+	}
+
+	// ── Match metrics ──────────────────────────────────────────────────────────
+	// Defined in the script block (not inline in the template) so labels are
+	// translatable and no TS annotations leak into template markup.
+	const MATCH_SCORE_METRICS = $derived([
+		{ label: $t.compare.mTotalGoals, fn: (e: any) => (e.score_a ?? 0) + (e.score_b ?? 0), fmt: (v: number) => String(v) },
+		{ label: $t.compare.mGoalsHome, fn: (e: any) => e.score_a ?? 0, fmt: (v: number) => String(v) },
+		{ label: $t.compare.mGoalsAway, fn: (e: any) => e.score_b ?? 0, fmt: (v: number) => String(v) },
+	]);
+	const MATCH_POSSESSION_METRICS = $derived([
+		{ label: $t.compare.mXgHome, key: 'xg_a', fmt: (v: number) => v.toFixed(2) },
+		{ label: $t.compare.mXgAway, key: 'xg_b', fmt: (v: number) => v.toFixed(2) },
+		{ label: $t.compare.mPossession, key: 'possession_team_a', fmt: (v: number) => `${v.toFixed(1)}%` },
+		{ label: $t.compare.mInContest, key: 'possession_in_contest', fmt: (v: number) => `${v.toFixed(1)}%` },
+		{ label: $t.compare.mTotalShots, key: 'shots_total', fmt: (v: number) => String(v) },
+	]);
+	function matchMetricVals(rowKey: string): (number | null)[] {
+		return entities.map((e: any) => {
+			const v = e.possession?.[rowKey];
+			return v != null ? Number(v) : null;
+		});
+	}
+
 	// ── Team metrics ───────────────────────────────────────────────────────────
 	const TEAM_METRICS = $derived([
 		{
@@ -386,6 +418,9 @@
 										<span class="fi fi-{flagCode(m.team_b.short_code)} entity-flag" aria-hidden="true"></span>
 									{/if}
 								</div>
+								{#if m.went_to_extra_time || m.penalty_score_a != null}
+									<span class="match-score-note">{scoreNote(m)}</span>
+								{/if}
 								<span class="entity-name match-teams">
 									{m.team_a?.short_code ?? '?'} vs {m.team_b?.short_code ?? '?'}
 								</span>
@@ -407,12 +442,8 @@
 						<div class="metric-group-label"></div>
 					{/each}
 
-					{#each [
-						{ label: 'Total Goals', fn: (e: any) => (e.score_a ?? 0) + (e.score_b ?? 0), fmt: (v: number) => String(v) },
-						{ label: 'Goals (Home)', fn: (e: any) => e.score_a ?? 0, fmt: (v: number) => String(v) },
-						{ label: 'Goals (Away)', fn: (e: any) => e.score_b ?? 0, fmt: (v: number) => String(v) },
-					] as row}
-						{@const vals = entities.map((e: any) => row.fn(e))}
+					{#each MATCH_SCORE_METRICS as row}
+						{@const vals = entities.map(row.fn)}
 						{@const maxV = Math.max(...vals, 0.01)}
 						<div class="metric-col metric-label">{row.label}</div>
 						{#each entities as entity, i}
@@ -432,18 +463,9 @@
 						<div class="metric-group-label"></div>
 					{/each}
 
-					{#each [
-						{ label: 'xG (Home)', key: 'xg_a', fmt: (v: number) => v.toFixed(2) },
-						{ label: 'xG (Away)', key: 'xg_b', fmt: (v: number) => v.toFixed(2) },
-						{ label: 'Possession %', key: 'possession_team_a', fmt: (v: number) => `${v.toFixed(1)}%` },
-						{ label: 'In Contest %', key: 'possession_in_contest', fmt: (v: number) => `${v.toFixed(1)}%` },
-						{ label: 'Total Shots', key: 'shots_total', fmt: (v: number) => String(v) },
-					] as row}
-						{@const vals = entities.map((e: any) => {
-							const v = e.possession?.[row.key];
-							return v != null ? Number(v) : null;
-						})}
-						{@const maxV = Math.max(...vals.map((v: any) => v ?? 0), 0.01)}
+					{#each MATCH_POSSESSION_METRICS as row}
+						{@const vals = matchMetricVals(row.key)}
+						{@const maxV = Math.max(...vals.map((v) => v ?? 0), 0.01)}
 						<div class="metric-col metric-label">{row.label}</div>
 						{#each entities as entity, i}
 							{@const val = vals[i]}
@@ -861,6 +883,14 @@
 		font-variant-numeric: tabular-nums;
 		color: var(--ink);
 		line-height: 1;
+	}
+	.match-score-note {
+		display: block;
+		font-size: var(--fs-meta);
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		color: var(--accent);
 	}
 	.match-teams {
 		font-size: var(--fs-meta);
