@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MatchStats, Team } from '$lib/types/efi';
-	import { teamColorVar, teamTextColor } from '$lib/tokens';
+	import { teamTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	let { stats, team_a, team_b }: { stats: MatchStats; team_a: Team; team_b: Team } = $props();

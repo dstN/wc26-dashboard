@@ -1,0 +1,6 @@
+.svelte-kit/
+build/
+node_modules/
+src/lib/types/openapi.ts
+src/lib/types/openapi-raw.json
+package-lock.json

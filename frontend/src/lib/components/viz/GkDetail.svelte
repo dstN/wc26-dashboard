@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Team } from '$lib/types/efi';
-	import { teamTextColor, teamColorVar } from '$lib/tokens';
+	import { teamTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	interface GkStat {

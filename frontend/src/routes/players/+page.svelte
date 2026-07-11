@@ -3,7 +3,7 @@
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import TermTooltip from '$lib/components/layout/TermTooltip.svelte';
 	import { sortableHeader } from '$lib/actions/sortableHeader';
-	import { teamColorVar, teamTextColor, flagCode, badgeTextColor } from '$lib/tokens';
+	import { teamColorVar, flagCode, badgeTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 	import { toggleComparison, isSelected, getComparisonIds, MAX_COMPARISON } from '$lib/stores/comparison.svelte';
 

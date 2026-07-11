@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
-	import PhasesBar from '$lib/components/viz/PhasesBar.svelte';
-	import { teamColorVar, teamTextColor, badgeTextColor, flagCode } from '$lib/tokens';
+	import { teamColorVar, badgeTextColor, flagCode } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 	import { isKnockoutGroup } from '$lib/stage';
 

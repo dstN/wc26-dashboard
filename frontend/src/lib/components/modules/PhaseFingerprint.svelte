@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Phase, Team } from '$lib/types/efi';
-	import { phaseColor, teamColorVar } from '$lib/tokens';
+	import { teamColorVar } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	let {
