@@ -477,10 +477,18 @@ def pdf_to_sql(pdf_path: str) -> str:
                 # a starter/sub who plays to the end of an AET match without
                 # being subbed off would otherwise be undercounted at 90'.
                 final_whistle = 120 if went_to_et else 90
+                # A player's stint ends at sub_off (if taken off) else the final
+                # whistle. Starters begin at 0; subs begin at sub_on. Previously
+                # subs ignored sub_off, over-counting a sub who was later taken
+                # off (e.g. on 46' off 75' → 74' instead of 29' in an AET match).
                 if is_starter:
-                    mins = int(sub_off) if sub_off is not None else final_whistle
+                    end = int(sub_off) if sub_off is not None else final_whistle
+                    mins = end
+                elif sub_on is not None:
+                    end = int(sub_off) if sub_off is not None else final_whistle
+                    mins = end - int(sub_on)
                 else:
-                    mins = (final_whistle - int(sub_on)) if sub_on is not None else 0
+                    mins = 0
                 mins = max(0, min(120, mins))
                 player_ref = (
                     f"(SELECT id FROM players WHERE team_id={_team(code)} "
@@ -729,8 +737,8 @@ def pdf_to_sql(pdf_path: str) -> str:
         L(f"  {n(_p29_val('Ball Recovery Time (s)', tk))},")
         L(f"  {n(_p29_val('Pushing on into Pressing', tk))},")
         L(f"  {n(_p29_val('Pushing on', tk))},")
-        L(f"  {n(_p29_val('Direction - Inside', tk))},")
-        L(f"  {n(_p29_val('Direction - Outside', tk))},")
+        L(f"  {n(_p29_val('Pressing Direction Inside', tk))},")
+        L(f"  {n(_p29_val('Pressing Direction Outside', tk))},")
         L(f"  {_q(most_pl)}, {n(most_ct)})")
         L("ON DUPLICATE KEY UPDATE")
         L("  total_pressures=VALUES(total_pressures), direct_pressures=VALUES(direct_pressures),")
