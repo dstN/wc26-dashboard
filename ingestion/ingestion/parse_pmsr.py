@@ -15,10 +15,27 @@ from datetime import datetime
 from pathlib import Path
 
 import fitz  # PyMuPDF
-import math
 
 
 # ─── Constants ────────────────────────────────────────────────────────────────
+
+# PMSR page-1 dates are always English ("13 June 2026"). Parse the month name
+# from this explicit map instead of strptime("%d %B %Y"), which depends on the
+# process LC_TIME locale and would fail on a non-English host (e.g. a German
+# cron/Passenger box) — the exact environment the watcher runs in.
+_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11,
+    "december": 12,
+}
+
+
+def _parse_pmsr_date(text: str) -> str:
+    """'13 June 2026' → '2026-06-13' (locale-independent)."""
+    day_s, month_s, year_s = text.strip().split()
+    month = _MONTHS[month_s.lower()]
+    return datetime(int(year_s), month, int(day_s)).strftime("%Y-%m-%d")
+
 
 SKIP_PAGES_1IDX = {5, 24, 30, 38, 41, 46, 49, 52}
 PROCESSED_PAGES = sorted(set(range(1, 53)) - SKIP_PAGES_1IDX)
@@ -114,7 +131,7 @@ def parse_page1(page):
     stage = m2.group(1).strip()
     match_num = int(m2.group(2))
     # "13 June 2026"
-    date = datetime.strptime(lines[2], "%d %B %Y").strftime("%Y-%m-%d")
+    date = _parse_pmsr_date(lines[2])
     kickoff = lines[3].split()[0]
     venue = lines[4]
 

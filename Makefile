@@ -33,7 +33,7 @@ test:
 	docker compose --profile test up --abort-on-container-exit --exit-code-from test
 
 contract:
-	cd backend && python app/export_openapi.py > ../frontend/src/lib/types/openapi-raw.json
+	cd backend && python -m app.export_openapi > ../frontend/src/lib/types/openapi-raw.json
 	cd frontend && npx openapi-typescript src/lib/types/openapi-raw.json -o src/lib/types/openapi.ts
 
 fmt:

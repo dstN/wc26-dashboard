@@ -69,6 +69,16 @@ async def upload_pdf(
             detail="Only .pdf files are accepted.",
         )
 
+    # Reject oversized uploads on the declared size BEFORE materializing the
+    # body into RAM. Starlette spools the multipart part to a temp file and
+    # populates file.size; .read() then loads the whole thing into memory, so
+    # checking up front avoids allocating a multi-GB bytes object.
+    if file.size is not None and file.size > MAX_PDF_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File exceeds the 50 MB limit.",
+        )
+
     content = await file.read()
     if len(content) > MAX_PDF_BYTES:
         raise HTTPException(

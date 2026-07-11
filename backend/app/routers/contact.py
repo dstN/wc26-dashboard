@@ -4,7 +4,7 @@ import time
 from email.message import EmailMessage
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 from app.config import settings
 
@@ -38,6 +38,16 @@ class ContactPayload(BaseModel):
     email: EmailStr
     message: str
 
+    @field_validator("name")
+    @classmethod
+    def _no_header_injection(cls, v: str) -> str:
+        # The name is interpolated into the Subject header. Reject CR/LF (and
+        # other control chars) here so a crafted value can't inject headers and
+        # so EmailMessage.as_string() can't raise an unhandled ValueError → 500.
+        if any(ord(c) < 32 and c not in "\t" for c in v):
+            raise ValueError("Name must not contain control characters.")
+        return v[:200]
+
 
 def _send_email(payload: ContactPayload) -> None:
     if not settings.smtp_user or not settings.smtp_pass:
@@ -54,7 +64,8 @@ def _send_email(payload: ContactPayload) -> None:
         f"\n{payload.message}"
     )
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as s:
+    # timeout so a black-holed SMTP host can't hang the worker thread forever
+    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15) as s:
         s.ehlo()
         s.starttls()
         s.login(settings.smtp_user, settings.smtp_pass)
@@ -75,5 +86,9 @@ async def contact(payload: ContactPayload, request: Request) -> dict:
         raise HTTPException(status_code=503, detail=str(e))
     except smtplib.SMTPException as e:
         raise HTTPException(status_code=502, detail=f"Mail delivery failed: {e}")
+    except OSError as e:
+        # DNS failure / connection refused / timeout — not an SMTPException,
+        # so it would otherwise surface as an unhandled 500.
+        raise HTTPException(status_code=502, detail=f"Mail server unreachable: {e}")
 
     return {"ok": True}
