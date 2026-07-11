@@ -302,18 +302,39 @@ behind (CI-only, no runtime risk).
 
 ## 7. Known limitations & conformance statement
 
-**This 1.0 does not claim full WCAG 2.1 AA / BFSG conformance.** The two Critical
-keyboard blockers, the systemic contrast failures, the worst `role="img"` data
-loss, and state-exposure on the primary filters were fixed and verified. A
-**tracked backlog remains** (§3–§5 "Deferred"), most notably:
+Beyond the initial audit fixes, a **second remediation wave closed most of the
+deferred backlog** (see the CHANGELOG "backlog closed" blocks):
 
-1. **SSR locale/`lang`/`dir`** (A-D1/F-D1) — the largest single a11y+i18n gap.
-2. **Async status announcements** & **table semantics** for the stat grids
-   (A-D2/A-D3).
-3. **Remaining hardcoded control labels** (A-D8/F-D2).
-4. **Backend data-integrity re-ingest items** — pressure-direction NULLs (B-D1)
-   and extra-shot-log attribution (B-D2) require a parser fix + full re-ingest.
+**Now fixed:**
 
-None of the deferred items block a portfolio/soft launch, but the a11y backlog
-should be closed before the product is marketed as BFSG-conformant. This
-document, `CHANGELOG.md`, and `ROADMAP.md` track every item.
+- ✅ SSR `lang`/`dir` via cookie + `hooks.server.ts` (A-D1/F-D1).
+- ✅ Live-region announcements on forms + filter counts; dialog names (A-D2).
+- ✅ Table semantics for the stat grids (real `<th>` in StatTable; ARIA table
+  roles on KeyStats/ShotTimeline/GkDetail/Pressure/Defensive; PhaseFingerprint
+  data-table alternative + legend) (A-D3/A-D4-partial).
+- ✅ Shot-log team short-code (1.4.1, A-D7); `font-size: 100%` (1.4.4).
+- ✅ Remaining hardcoded control labels + page titles i18n'd (A-D8/F-D2).
+- ✅ Backend data integrity: pressure-direction NULLs and sub-off minutes fixed
+  and re-ingested (B-D1, B-D3).
+- ✅ N+1 batching (B-D5); `response_model` on `/overview` (B-D7 partial).
+- ✅ Dependencies: `npm update` applied; Python deps pinned.
+
+**Still deferred (tracked):**
+
+1. **Extra-shot-log attribution** (B-D2) — deliberately not touched; a
+   high-risk rewrite of the coordinate-parser's page-shift logic that works for
+   the non-spilling matches. Needs isolated PDF-layout iteration.
+2. **A11y long tail** — `aria-sort` on the (now keyboard-operable) sortable
+   headers; complete the players `role="tablist"` keyboard model; mobile-menu
+   focus trap/Escape (A-D5/A-D6); Movement/Offerings/Crosses zone-viz semantics.
+3. **Composite response models** (key-stats, leaderboards, player profile) kept
+   intentionally untyped (brittle for no consumer benefit today).
+4. **Remaining backend robustness** (B-D4/B-D6/B-D8–B-D15) and the F-D3–F-D7
+   frontend polish items.
+
+**Conformance:** the Critical/High WCAG 2.1 AA failures (keyboard operability,
+contrast, `lang`/`dir`, `role="img"` data loss, live regions, table semantics)
+are fixed and verified. Full formal BFSG/WCAG 2.1 AA certification would still
+require an external audit against the remaining long-tail items above — so this
+1.0 is **substantially conformant, not formally certified.** `CHANGELOG.md` and
+`ROADMAP.md` track every remaining item.

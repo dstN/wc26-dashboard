@@ -87,10 +87,63 @@ OpenAPI · live Docker smoke test green (health/db, dashboard AET/pens, contact
   (8.0 EOL), bumped test-container & CI Node 20 (EOL) → 24. `asyncmy`
   CVE-2025-65896 has no fix — accepted as low practical risk (documented).
 
+### Accessibility — backlog closed (post-audit, same release)
+
+- **SSR `<html lang>`/`dir` (3.1.1/1.3.2):** new `hooks.server.ts` reads an
+  `efi-locale` cookie and stamps the correct language + direction into the
+  served HTML (was hardcoded `lang="en"` LTR, corrected only after hydration).
+  Verified: `ar` → `lang="ar" dir="rtl"`.
+- **Live regions (4.1.3):** `role="status"`/`alert`/`aria-live` on contact &
+  admin form results and the matches/players filter counts; `aria-labelledby`
+  on the footer dialogs.
+- **Table semantics (1.3.1/1.1.1):** `StatTable` gets real `<th scope>`;
+  PhaseFingerprint gets a visually-hidden data table + solid/dashed legend
+  (SVG had no text alternative); KeyStatsTable/ShotTimeline/Defensive/Pressure/
+  GkDetail get ARIA table roles; ShotTimeline shows a team short-code (was
+  color-only, 1.4.1); global `.visually-hidden`; body `font-size: 100%` (1.4.4).
+- **Remaining hardcoded control labels (3.1.2):** nav/search/filter/theme/error/
+  comparison labels + page `<title>`s routed through a new `a11y.*` namespace
+  (671 keys/locale, parity verified); dead `NavTabs.svelte` deleted; TopBar &
+  `+error.svelte` migrated `$app/stores` → `$app/state`.
+
+### Fixed — data integrity (re-ingested)
+
+- **`match_pressure_stats.direction_inside/outside`** were NULL for all 192 rows
+  — the adapter looked up `'Direction - Inside/Outside'` but the parser emits
+  `'Pressing Direction Inside/Outside'`. Fixed; 192/192 rows now populated.
+- **`minutes_played`** for a substitute later taken off used `final_whistle −
+  sub_on` (ignoring `sub_off`); now `(sub_off or final_whistle) − sub_on`.
+- All 96 PDFs re-ingested with `--force`; `04_all_matches.sql` regenerated
+  (idempotent). (Extra-shot-log attribution B-D2 deliberately not touched —
+  high-risk parser rewrite, tracked in `AUDIT.md`.)
+
+### Performance
+
+- N+1 batching: `/stats/leaderboards` team rankings (~190 sequential queries →
+  3), `/teams/{id}/avg-stats` (6/match → 6 total), `/teams/{id}/matches`
+  (3/match → 2). API output byte-identical (hash-verified).
+
+### Fixed — UI
+
+- Filter/sort/tab **active state** stayed grey after switching: a `:hover` rule
+  (higher specificity) outranked `--active`. Scoped hover to `:not(--active)`
+  across matches/teams/players pills, sort pills, and position tabs.
+- Home featured **scoreline** overflowed on long team names; columns now shrink
+  and on mobile the badge stacks above the full name (no mid-word breaks).
+- TopBar: theme switch + burger pinned flush-right on mobile, tighter gutters.
+- Players page: search + filters moved **above** the top-20 rankings.
+
+### Tooling & deps
+
+- `npm update` to latest safe minors (kit 2.69.2, svelte 5.56.4, adapter-node
+  5.5.7, …); Python deps pinned to exact tested versions; `response_model` on
+  `GET /overview`.
+
 ### Docs
 
 - New [`AUDIT.md`](AUDIT.md) — complete five-track audit record (fixed + deferred).
-- README match count 88 → 96 and "Round of 16"; DEPLOY expected-count floors → 96.
+- README match count 88 → 96 and "Round of 16"; DEPLOY.md rewritten as a
+  step-by-step (super-novice) guide + shared deployment artifact synced to 96.
 
 ---
 

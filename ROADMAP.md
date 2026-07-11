@@ -27,19 +27,32 @@ lint green · backend pytest 10/10 · ingestion pytest 14/14 · live smoke test 
   Node 24 in CI/test container
 - [x] Docs: new `AUDIT.md`; README/DEPLOY counts 88 → 96
 
-**Deferred (tracked in `AUDIT.md`, do not block soft launch):**
+**Backlog closed (second remediation wave):**
 
-- [ ] SSR `lang`/`dir` from a cookie/`handle` hook (largest a11y+i18n gap —
-  currently client-only, SSR ships `lang="en"` LTR for all locales)
-- [ ] Live-region announcements (forms, filter counts); table semantics for the
-  `<div>`-grid stat blocks; ~20 remaining hardcoded control labels
-- [ ] Backend data re-ingest items: `match_pressure_stats.direction_*` all-NULL
-  (parser gap); extra-shot-log page attribution; sub-off minutes
-- [ ] N+1 query batching (`/stats/leaderboards`, `/teams/{id}/*`); real response
-  models for the contract gate; pin Python deps
+- [x] SSR `lang`/`dir` from an `efi-locale` cookie + `hooks.server.ts` (verified
+  `ar` → `lang="ar" dir="rtl"`)
+- [x] Live-region announcements (contact/admin forms, filter counts) + dialog names
+- [x] Table semantics: real `<th>` in StatTable; ARIA table roles on
+  KeyStats/ShotTimeline/Gk/Pressure/Defensive; PhaseFingerprint data-table + legend
+- [x] Remaining hardcoded control labels + page titles → new `a11y.*` i18n namespace
+  (671 keys/locale, parity verified); dead `NavTabs.svelte` removed
+- [x] Backend data integrity re-ingested: `direction_*` NULLs fixed (192/192),
+  sub-off minutes corrected
+- [x] N+1 batching (`/stats/leaderboards`, `/teams/{id}/avg-stats`, `/matches`);
+  `response_model` on `/overview`; Python deps pinned; `npm update` (safe minors)
+- [x] UI: filter active-state specificity, mobile scoreline stacking, header
+  right-alignment, players search moved above rankings
+- [x] DEPLOY.md rewritten (DAU step-by-step) + shared deployment artifact synced
+
+**Still deferred (tracked in `AUDIT.md` §7):**
+
+- [ ] Extra-shot-log page attribution (B-D2) — high-risk parser rewrite
+- [ ] A11y long tail: `aria-sort`, players tablist keyboard model, mobile-menu
+  focus trap; composite endpoint response models
 - [ ] Post-1.0 dep majors: mysql 8.4 LTS, vite 8 + vitest 4, eslint 10 / TS 7
 
-**Explicitly NOT claimed:** full BFSG/WCAG 2.1 AA conformance — see `AUDIT.md` §7.
+**Conformance:** substantially WCAG 2.1 AA — Critical/High failures fixed; formal
+BFSG certification needs an external audit of the long tail. See `AUDIT.md` §7.
 
 ## Round of 16 ingest (2026-07-08)
 
