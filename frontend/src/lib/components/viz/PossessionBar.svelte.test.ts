@@ -24,11 +24,15 @@ describe("PossessionBar", () => {
     expect(getByText("35.3%")).toBeTruthy();
   });
 
-  it("includes team names in aria-label", () => {
-    const { container } = render(PossessionBar, { props: { stats, team_a: teamA, team_b: teamB } });
-    const figure = container.querySelector("[role='img']");
-    expect(figure?.getAttribute("aria-label")).toContain("Germany");
-    expect(figure?.getAttribute("aria-label")).toContain("Curaçao");
+  it("exposes team names as real text (not flattened into a role=img label)", () => {
+    // role="img" was removed so screen readers read the actual team links +
+    // labels instead of one collapsed aria-label (WCAG 1.1.1/4.1.2).
+    const { container, getByText } = render(PossessionBar, {
+      props: { stats, team_a: teamA, team_b: teamB },
+    });
+    expect(container.querySelector("[role='img']")).toBeNull();
+    expect(getByText("Germany")).toBeTruthy();
+    expect(getByText("Curaçao")).toBeTruthy();
   });
 
   it("renders all three bar segments", () => {

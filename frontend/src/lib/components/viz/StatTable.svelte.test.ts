@@ -24,9 +24,11 @@ describe("StatTable", () => {
   });
 
   it("shows team names in header", () => {
-    const { getByText } = render(StatTable, { props: { stats, team_a: teamA, team_b: teamB } });
-    expect(getByText("Germany")).toBeTruthy();
-    expect(getByText("Curaçao")).toBeTruthy();
+    // Team names appear twice now: the visual header + a visually-hidden
+    // <th scope="col"> added for table semantics (WCAG 1.3.1).
+    const { getAllByText } = render(StatTable, { props: { stats, team_a: teamA, team_b: teamB } });
+    expect(getAllByText("Germany").length).toBeGreaterThan(0);
+    expect(getAllByText("Curaçao").length).toBeGreaterThan(0);
   });
 
   it("shows Goals row with correct values", () => {
