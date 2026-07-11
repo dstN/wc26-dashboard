@@ -33,10 +33,17 @@
 	);
 
 	/* ── Readable team text colors (adapt per theme) ────────────────────── */
+	/* Light-theme inks: darkened so team-colored TEXT meets WCAG AA (≥4.5:1)
+	   on both --surface (#fff) and --bg (#f5f2ea). Never use raw --c-* as text. */
 	--c-yellow-ink: #8a6200;
 	--c-lime-ink: #2d5a00;
 	--c-lavender-ink: #4d1fc7;
 	--c-pink-ink: #c01041;
+	--c-teal-ink: #0f766e;
+	--c-orange-ink: #b8420f;
+	--c-red-ink: #c81e2f;
+	--c-blue-ink: #2547c7;
+	--c-indigo-ink: #5b21b6;
 
 	/* ── Light theme (default) ───────────────────────────────────────────── */
 	--bg: #f5f2ea;
@@ -89,10 +96,16 @@
 }
 
 [data-theme='dark'] {
+	/* Dark-theme inks: lightened so team-colored text meets AA on --surface (#111118). */
 	--c-yellow-ink: #ffd23f;
 	--c-lime-ink: #b6e62e;
 	--c-lavender-ink: #a78bfa;
 	--c-pink-ink: #ff7e9d;
+	--c-teal-ink: #2dd4bf;
+	--c-orange-ink: #fb923c;
+	--c-red-ink: #fb7185;
+	--c-blue-ink: #7ea2ff;
+	--c-indigo-ink: #b39df5;
 	--bg: #0b0b0f;
 	--surface: #111118;
 	--border: rgba(255, 255, 255, 0.08);

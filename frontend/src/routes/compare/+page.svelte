@@ -17,6 +17,18 @@
 
 	// ── Search ─────────────────────────────────────────────────────────────────
 	let searchQuery = $state('');
+	// Active option for keyboard navigation of the combobox listbox (-1 = none).
+	let activeIndex = $state(-1);
+
+	const searchLabel = $derived(
+		isFull
+			? $t.compare.maxSelected
+			: type === 'teams'
+				? $t.compare.addTeam
+				: type === 'players'
+					? $t.compare.addPlayer
+					: $t.compare.addMatch
+	);
 
 	const filteredOptions = $derived(
 		searchQuery.length >= 2 && !isFull
@@ -34,6 +46,30 @@
 		const newIds = [...ids, id];
 		goto(`/compare?type=${type}&ids=${newIds.join(',')}`);
 		searchQuery = '';
+		activeIndex = -1;
+	}
+
+	// Keyboard operation of the combobox: arrows move the highlight, Enter picks
+	// the active (or first) option, Escape clears. Makes the search fully usable
+	// without a mouse (the options themselves select on pointer-down).
+	function onSearchKeydown(e: KeyboardEvent) {
+		const n = filteredOptions.length;
+		if (e.key === 'ArrowDown') {
+			e.preventDefault();
+			if (n) activeIndex = (activeIndex + 1) % n;
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			if (n) activeIndex = (activeIndex - 1 + n) % n;
+		} else if (e.key === 'Enter') {
+			const opt = filteredOptions[activeIndex] ?? filteredOptions[0];
+			if (opt) {
+				e.preventDefault();
+				addEntity(opt.id);
+			}
+		} else if (e.key === 'Escape') {
+			searchQuery = '';
+			activeIndex = -1;
+		}
 	}
 
 	function removeEntity(id: number) {
@@ -257,21 +293,29 @@
 				<input
 					class="search-input"
 					type="text"
-					placeholder={isFull
-						? $t.compare.maxSelected
-						: type === 'teams' ? $t.compare.addTeam : type === 'players' ? $t.compare.addPlayer : $t.compare.addMatch}
+					role="combobox"
+					aria-label={searchLabel}
+					aria-autocomplete="list"
+					aria-controls="compare-search-listbox"
+					aria-expanded={filteredOptions.length > 0}
+					aria-activedescendant={activeIndex >= 0 ? `compare-opt-${activeIndex}` : undefined}
+					placeholder={searchLabel}
 					disabled={isFull}
 					autocomplete="off"
 					bind:value={searchQuery}
-					onblur={() => setTimeout(() => (searchQuery = ''), 150)}
+					oninput={() => (activeIndex = -1)}
+					onkeydown={onSearchKeydown}
+					onblur={() => setTimeout(() => { searchQuery = ''; activeIndex = -1; }, 150)}
 				/>
 				{#if filteredOptions.length > 0}
-					<div class="search-dropdown" role="listbox">
-						{#each filteredOptions as opt (opt.id)}
+					<div class="search-dropdown" role="listbox" id="compare-search-listbox">
+						{#each filteredOptions as opt, i (opt.id)}
 							<button
 								class="search-option"
+								class:search-option--active={i === activeIndex}
+								id="compare-opt-{i}"
 								role="option"
-								aria-selected="false"
+								aria-selected={i === activeIndex}
 								onmousedown={(e) => {
 									e.preventDefault();
 									addEntity(opt.id);
@@ -637,7 +681,8 @@
 		transition: background 0.12s;
 		font-family: inherit;
 	}
-	.search-option:hover {
+	.search-option:hover,
+	.search-option--active {
 		background: var(--border-soft);
 	}
 	.option-name {

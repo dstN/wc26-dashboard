@@ -1,4 +1,7 @@
 export default {
+	a11y: {
+		skipToContent: 'Skip to main content',
+	},
 	stage: {
 		all: 'All Matches',
 		group: 'Group Stage',
@@ -43,6 +46,7 @@ export default {
 		aet: 'AET',
 		penalties: 'Penalties',
 		pensShort: 'pens',
+		filterByGroup: 'Filter by group',
 	},
 	detail: {
 		possession: 'Possession',

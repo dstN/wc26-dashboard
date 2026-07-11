@@ -1,4 +1,7 @@
 export default {
+	a11y: {
+		skipToContent: 'Zum Hauptinhalt springen',
+	},
 	stage: {
 		all: 'Alle Spiele',
 		group: 'Gruppenphase',
@@ -43,6 +46,7 @@ export default {
 		aet: 'n. V.',
 		penalties: 'Elfmeterschießen',
 		pensShort: 'i.E.',
+		filterByGroup: 'Nach Gruppe filtern',
 	},
 	detail: {
 		possession: 'Ballbesitz',

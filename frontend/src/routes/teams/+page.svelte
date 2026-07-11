@@ -81,9 +81,9 @@
 			<p class="error-note">{$t.error.loadFailed}</p>
 		{/if}
 		<div class="stage-pill-group" role="group" aria-label={$t.stage.ariaLabel}>
-			<a href="?" class="stage-pill" class:stage-pill--active={!data.stage}>{$t.stage.all}</a>
-			<a href="?stage=group" class="stage-pill" class:stage-pill--active={data.stage === 'group'}>{$t.stage.group}</a>
-			<a href="?stage=knockout" class="stage-pill" class:stage-pill--active={data.stage === 'knockout'}>{$t.stage.knockout}</a>
+			<a href="?" class="stage-pill" class:stage-pill--active={!data.stage} aria-current={!data.stage ? 'true' : undefined}>{$t.stage.all}</a>
+			<a href="?stage=group" class="stage-pill" class:stage-pill--active={data.stage === 'group'} aria-current={data.stage === 'group' ? 'true' : undefined}>{$t.stage.group}</a>
+			<a href="?stage=knockout" class="stage-pill" class:stage-pill--active={data.stage === 'knockout'} aria-current={data.stage === 'knockout' ? 'true' : undefined}>{$t.stage.knockout}</a>
 		</div>
 	</header>
 
@@ -397,7 +397,7 @@
 	.rank-num { font-size: var(--fs-meta); font-weight: 700; color: var(--muted); }
 	.num { text-align: right; font-variant-numeric: tabular-nums; }
 	.goals-col { font-weight: 800; color: var(--accent); }
-	.positive { color: var(--c-lime-dark, var(--c-teal)); font-weight: 700; }
+	.positive { color: var(--c-teal-ink); font-weight: 700; }
 	.negative { color: var(--c-red); font-weight: 700; }
 	.muted { color: var(--muted); }
 
@@ -471,7 +471,7 @@
 		color: var(--muted);
 		margin-left: var(--sp-2);
 	}
-	.card-yellow { font-weight: 800; color: var(--c-yellow); }
+	.card-yellow { font-weight: 800; color: var(--c-yellow-ink); }
 	.card-red { font-weight: 800; color: var(--c-red); }
 
 	/* ── Empty state ─────────────────────────────────────────────────── */

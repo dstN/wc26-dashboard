@@ -26,7 +26,9 @@
 	}
 </script>
 
-<figure class="lb" role="img" aria-label="Line breaks — {team_a.name} vs {team_b.name}">
+<!-- No role="img": contains team links + labeled data rows that must stay
+     individually reachable by keyboard and screen reader. -->
+<figure class="lb">
 	<!-- Team header row -->
 	<div class="lb__teams">
 		<a href="/teams/{team_a.id}" class="lb__team-name" style="color: {teamTextColor(team_a.color)}; text-align: right;">{team_a.name}</a>

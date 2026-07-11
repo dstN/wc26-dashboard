@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 	import PhasesBar from '$lib/components/viz/PhasesBar.svelte';
-	import { teamColorVar, teamTextColor, flagCode } from '$lib/tokens';
+	import { teamColorVar, teamTextColor, badgeTextColor, flagCode } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 	import { isKnockoutGroup } from '$lib/stage';
 
@@ -70,10 +70,6 @@
 	const inPhases  = $derived(phases.filter((p: any) => p.phase_group === 'in'));
 	const outPhases = $derived(phases.filter((p: any) => p.phase_group === 'out'));
 	const hasPhases = $derived(inPhases.length > 0 || outPhases.length > 0);
-
-	function badgeTextColor(colorVar: string): string {
-		return colorVar === '--c-yellow' || colorVar === '--c-lime' ? 'var(--c-forest)' : '#fff';
-	}
 
 	function formatDate(raw: string): string {
 		if (!raw) return '';
@@ -996,7 +992,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.squad__chip--goal { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
-	.squad__chip--yellow { background: color-mix(in srgb, var(--c-yellow) 15%, transparent); color: var(--c-yellow); }
+	.squad__chip--yellow { background: color-mix(in srgb, var(--c-yellow) 15%, transparent); color: var(--c-yellow-ink); }
 	.squad__chip--red { background: color-mix(in srgb, var(--c-red) 15%, transparent); color: var(--c-red); }
 
 	/* ── Match list ──────────────────────────────────────────────────── */

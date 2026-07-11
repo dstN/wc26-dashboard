@@ -41,7 +41,7 @@ const OUT_POSSESSION_COLORS: Record<string, string> = {
 };
 
 export function phaseColor(name: string): string {
-	const cssVar = IN_POSSESSION_COLORS[name] ?? OUT_POSSESSION_COLORS[name] ?? '--c-muted';
+	const cssVar = IN_POSSESSION_COLORS[name] ?? OUT_POSSESSION_COLORS[name] ?? '--muted';
 	return `var(${cssVar})`;
 }
 
@@ -58,12 +58,20 @@ export function badgeTextColor(color: string): string {
 	return LIGHT_BG_COLORS.has(color) ? '#0c1a10' : '#ffffff';
 }
 
-/** Returns a version of the team color that is readable as text on both light and dark surfaces. */
+/** Spectrum colors that have a contrast-safe `-ink` text variant (both themes). */
+const INK_VARIANTS = new Set([
+	'--c-yellow', '--c-lime', '--c-lavender', '--c-pink',
+	'--c-teal', '--c-orange', '--c-red', '--c-blue', '--c-indigo'
+]);
+
+/**
+ * Returns a version of the team color that is readable as TEXT (WCAG AA, ≥4.5:1)
+ * on both light and dark surfaces. Every brand spectrum color maps to its
+ * theme-adaptive `-ink` variant — the raw `--c-*` values are background-only
+ * and fail contrast as text (e.g. teal/orange on light, blue/indigo on dark).
+ */
 export function teamTextColor(color: string): string {
-	if (color === '--c-yellow')   return 'var(--c-yellow-ink)';
-	if (color === '--c-lime')     return 'var(--c-lime-ink)';
-	if (color === '--c-lavender') return 'var(--c-lavender-ink)';
-	if (color === '--c-pink')     return 'var(--c-pink-ink)';
-	if (color.startsWith('--'))   return `var(${color})`;
+	if (INK_VARIANTS.has(color)) return `var(${color}-ink)`;
+	if (color.startsWith('--'))  return `var(${color})`;
 	return color;
 }

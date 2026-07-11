@@ -134,12 +134,13 @@
 				<button
 					class="stage-pill"
 					class:stage-pill--active={stageFilter === opt.key}
+					aria-pressed={stageFilter === opt.key}
 					onclick={() => (stageFilter = opt.key)}
 				>{opt.label}</button>
 			{/each}
 		</div>
 		<div class="filter-bar">
-			<select class="filter-select" bind:value={filterGroup} aria-label="Filter by group">
+			<select class="filter-select" bind:value={filterGroup} aria-label={$t.match.filterByGroup}>
 				<option value="">{$t.match.allGroups}</option>
 				{#each allGroupKeys as g}
 					<option value={g}>{groupHeading(g)}</option>

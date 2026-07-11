@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { FinalThirdEntry, Team } from '$lib/types/efi';
-	import { teamColorVar } from '$lib/tokens';
+	import { teamColorVar, teamTextColor } from '$lib/tokens';
 	import { t } from '$lib/i18n';
 
 	let {
@@ -37,27 +37,27 @@
 	}
 </script>
 
-<figure
-	class="zones"
-	role="img"
-	aria-label="Final third entry zones for {activeTeam.name}"
->
+<!-- No role="img": the caption holds interactive team toggles that must stay
+     reachable; zone counts below are labeled text. -->
+<figure class="zones">
 	<figcaption class="zones__caption">
 		<span>{$t.detail.finalThirdEntries}</span>
 		<div class="zones__toggle">
 			<button
 				class="zones__toggle-btn"
 				class:zones__toggle-btn--active={showTeam === 'a'}
+				aria-pressed={showTeam === 'a'}
 				onclick={() => (showTeam = 'a')}
-				style={showTeam === 'a' ? `color: ${teamColorVar(team_a.color)}` : ''}
+				style={showTeam === 'a' ? `color: ${teamTextColor(team_a.color)}` : ''}
 			>
 				{team_a.short_code}
 			</button>
 			<button
 				class="zones__toggle-btn"
 				class:zones__toggle-btn--active={showTeam === 'b'}
+				aria-pressed={showTeam === 'b'}
 				onclick={() => (showTeam = 'b')}
-				style={showTeam === 'b' ? `color: ${teamColorVar(team_b.color)}` : ''}
+				style={showTeam === 'b' ? `color: ${teamTextColor(team_b.color)}` : ''}
 			>
 				{team_b.short_code}
 			</button>

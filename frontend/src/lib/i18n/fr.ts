@@ -1,4 +1,7 @@
 export default {
+	a11y: {
+		skipToContent: 'Aller au contenu principal',
+	},
 	stage: {
 		all: 'Tous les matchs',
 		group: 'Phase de groupes',
@@ -43,6 +46,7 @@ export default {
 		aet: 'Prolongation',
 		penalties: 'Tirs au But',
 		pensShort: 't.a.b.',
+		filterByGroup: 'Filtrer par groupe',
 	},
 	detail: {
 		possession: 'Possession',

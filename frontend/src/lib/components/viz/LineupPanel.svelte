@@ -180,10 +180,10 @@
 		color: var(--muted);
 		text-align: center;
 	}
-	[data-pos='GK'] { color: var(--c-lime); }
-	[data-pos='DF'] { color: var(--c-teal); }
-	[data-pos='MF'] { color: var(--c-blue); }
-	[data-pos='FW'] { color: var(--c-red); }
+	[data-pos='GK'] { color: var(--c-lime-ink); }
+	[data-pos='DF'] { color: var(--c-teal-ink); }
+	[data-pos='MF'] { color: var(--c-blue-ink); }
+	[data-pos='FW'] { color: var(--c-red-ink); }
 
 	.lu-name {
 		font-size: var(--fs-ui);

@@ -1,4 +1,7 @@
 export default {
+	a11y: {
+		skipToContent: 'Saltar al contenido principal',
+	},
 	stage: {
 		all: 'Todos los partidos',
 		group: 'Fase de grupos',
@@ -43,6 +46,7 @@ export default {
 		aet: 'Prórroga',
 		penalties: 'Tanda de Penaltis',
 		pensShort: 'pens',
+		filterByGroup: 'Filtrar por grupo',
 	},
 	detail: {
 		possession: 'Posesión',

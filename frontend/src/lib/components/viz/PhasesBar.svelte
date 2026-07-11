@@ -50,7 +50,9 @@
 	}
 </script>
 
-<figure class="phases" role="img" aria-label="Phases of play — {team_a.name} vs {team_b.name}">
+<!-- No role="img": the bars are labeled text (team names + percentages), which
+     screen readers should read directly rather than collapsing to one label. -->
+<figure class="phases">
 
 	<!-- Team header row -->
 	<div class="phases__team-row">

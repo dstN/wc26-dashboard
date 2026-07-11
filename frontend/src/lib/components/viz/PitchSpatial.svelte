@@ -62,8 +62,8 @@
 	{#if !lockedScenario}
 	<div class="spatial__header">
 		<div class="scenario-tabs" role="group" aria-label={$t.detail.ariaScenario}>
-			<button class="scenario-tab" class:active={scenario === 'defensive'} onclick={() => userScenario = 'defensive'}>{$t.detail.outOfPossession}</button>
-			<button class="scenario-tab" class:active={scenario === 'possession'} onclick={() => userScenario = 'possession'}>{$t.detail.inPossession}</button>
+			<button class="scenario-tab" class:active={scenario === 'defensive'} aria-pressed={scenario === 'defensive'} onclick={() => userScenario = 'defensive'}>{$t.detail.outOfPossession}</button>
+			<button class="scenario-tab" class:active={scenario === 'possession'} aria-pressed={scenario === 'possession'} onclick={() => userScenario = 'possession'}>{$t.detail.inPossession}</button>
 		</div>
 	</div>
 	{/if}
@@ -76,11 +76,11 @@
 				<div class="toggle-group" role="group">
 					{#if scenario === 'defensive'}
 						{#each defBlocks as b}
-							<button class="toggle-item" class:active={defBlockA === b.key} onclick={() => defBlockA = b.key}>{b.label}</button>
+							<button class="toggle-item" class:active={defBlockA === b.key} aria-pressed={defBlockA === b.key} onclick={() => defBlockA = b.key}>{b.label}</button>
 						{/each}
 					{:else}
 						{#each posBlocks as b}
-							<button class="toggle-item" class:active={posBlockA === b.key} onclick={() => posBlockA = b.key}>{b.label}</button>
+							<button class="toggle-item" class:active={posBlockA === b.key} aria-pressed={posBlockA === b.key} onclick={() => posBlockA = b.key}>{b.label}</button>
 						{/each}
 					{/if}
 				</div>
@@ -126,11 +126,11 @@
 				<div class="toggle-group" role="group">
 					{#if scenario === 'defensive'}
 						{#each defBlocks as b}
-							<button class="toggle-item" class:active={defBlockB === b.key} onclick={() => defBlockB = b.key}>{b.label}</button>
+							<button class="toggle-item" class:active={defBlockB === b.key} aria-pressed={defBlockB === b.key} onclick={() => defBlockB = b.key}>{b.label}</button>
 						{/each}
 					{:else}
 						{#each posBlocks as b}
-							<button class="toggle-item" class:active={posBlockB === b.key} onclick={() => posBlockB = b.key}>{b.label}</button>
+							<button class="toggle-item" class:active={posBlockB === b.key} aria-pressed={posBlockB === b.key} onclick={() => posBlockB = b.key}>{b.label}</button>
 						{/each}
 					{/if}
 				</div>

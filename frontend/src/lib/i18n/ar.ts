@@ -1,4 +1,7 @@
 export default {
+	a11y: {
+		skipToContent: 'تخطي إلى المحتوى الرئيسي',
+	},
 	stage: {
 		all: 'جميع المباريات',
 		group: 'دور المجموعات',
@@ -43,6 +46,7 @@ export default {
 		aet: 'بعد التمديد',
 		penalties: 'ركلات الترجيح',
 		pensShort: 'ترجيح',
+		filterByGroup: 'تصفية حسب المجموعة',
 	},
 	detail: {
 		possession: 'الاستحواذ',

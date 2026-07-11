@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { MatchStats, Team } from '$lib/types/efi';
 	import { teamColorVar, teamTextColor } from '$lib/tokens';
+	import { t } from '$lib/i18n';
 
 	let {
 		stats,
@@ -13,14 +14,10 @@
 	const pC = $derived(stats.possession_in_contest ?? 0);
 </script>
 
-<figure
-	class="possession"
-	role="img"
-	aria-label="{team_a.name} {pA}%, In Contest {pC}%, {team_b.name} {pB}%"
->
+<figure class="possession">
 	<div class="possession__labels">
 		<a href="/teams/{team_a.id}" class="possession__team" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="possession__contest-label">In Contest</span>
+		<span class="possession__contest-label">{$t.detail.inContest}</span>
 		<a href="/teams/{team_b.id}" class="possession__team possession__team--right" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 	<div class="possession__bar">
