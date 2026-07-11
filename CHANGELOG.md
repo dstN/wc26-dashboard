@@ -5,6 +5,96 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [1.0.0] - 2026-07-11
+
+First tagged release. Rolls up the full pre-1.0 build history (below) plus a
+five-track pre-release audit and remediation sweep. Full findings — fixed and
+deferred — are documented in [`AUDIT.md`](AUDIT.md).
+
+Post-remediation verification: `svelte-check` 0/0 · `npm run build` green ·
+`npm run lint` green · backend pytest 10/10 · ingestion pytest 14/14 · live
+Docker smoke test green (health/db, dashboard AET/pens, contact 422 on header
+injection, `stage=xyz` 422, SSR renders).
+
+### Security
+
+- **SQL injection hardening (MEDIUM):** `_q`/`_qs` in `pmsr_to_sql.py` now escape
+  backslashes as well as single quotes (MySQL's default `sql_mode` has no
+  `NO_BACKSLASH_ESCAPES`, so a PDF free-text field ending in `\` could break out
+  of a string literal). `watch_pdfs._execute_sql` uses `exec_driver_sql` so
+  `:word` tokens in generated SQL are not reinterpreted as bind params.
+- **Compose exposure (MEDIUM):** MySQL `3306` and backend `8000` are now bound to
+  `127.0.0.1` (were `0.0.0.0` with weak default creds).
+- **Upload memory (MEDIUM):** `POST /ingest/upload` rejects on the declared
+  `file.size` before reading the body into RAM.
+- **Contact form (LOW):** a Pydantic validator rejects control characters in
+  `name` (blocks email-header injection and the resulting 500); SMTP now has a
+  15 s timeout and maps `OSError` (DNS/refused/timeout) to 502.
+
+### Fixed
+
+- **Production API base URL (CRITICAL, frontend):** `import.meta.env.PUBLIC_API_URL`
+  is always `undefined` in the browser bundle (Vite only exposes `VITE_`-prefixed
+  vars), so client-side navigations fell back to `http://localhost:8000` — every
+  page after the first, and the admin upload, broke in the split-origin Passenger
+  deploy. New `$lib/api-base.ts` resolves the base via `$env/dynamic/public`
+  (browser) / `INTERNAL_API_URL` (SSR); all 11 loaders + the admin page use it.
+- **Contract gate (HIGH, backend):** `make contract` ran `python
+  app/export_openapi.py`, which put `backend/app` on `sys.path` →
+  `ModuleNotFoundError: app`. Now runs `python -m app.export_openapi`.
+- **Locale-dependent date parse (HIGH on a German host):** page-1 dates were
+  parsed with `strptime("%d %B %Y")`, which depends on `LC_TIME` and would fail
+  on the non-English cron/Passenger target — every ingest. Replaced with a
+  locale-independent English month map.
+- **`/health/db`** returns 503 (not a raw 500 + stack trace) on DB outage.
+- **Backend tests:** `test_matches.py` was testing DB columns that never existed
+  (`team_id`/`team_name`/`match_number`…) — every dashboard test errored. Rewritten
+  against the real schema; `Match.went_to_extra_time` got a `server_default`.
+
+### Accessibility (BFSG → WCAG 2.1 AA)
+
+- **Contrast (1.4.3):** added contrast-safe `-ink` text variants (both themes)
+  for teal/orange/red/blue/indigo; `teamTextColor` now routes every brand color
+  through its `-ink` variant; fixed `card-yellow`, GK/DF/MF/FW position tags, the
+  `.positive` undefined-var fallback, and deleted a failing local
+  `badgeTextColor` override in `teams/[id]`. All pairs computed ≥ 4.5:1.
+- **Keyboard (2.1.1):** the 41 sortable `/players` table headers are now
+  focusable and Enter/Space-operable (new `sortableHeader` action); the compare
+  search is a real ARIA combobox (arrow/Enter/Escape, `aria-expanded` /
+  `-controls` / `-activedescendant`, labelled) instead of mouse-only.
+- **Roles/state (1.1.1, 4.1.2):** removed `role="img"` from text-bearing figures
+  (PossessionBar, PhasesBar, LineBreaksBars, FinalThirdZones) so data + nested
+  links/toggles are exposed; `aria-pressed` on stage/scenario/block toggles;
+  `aria-current` on stage link-pills.
+- **Skip link (2.4.1)** to `<main id="main">`; `a11y.skipToContent` added to all
+  6 locales; translated PossessionBar "In Contest" and the group-filter label.
+- Remaining a11y backlog (SSR `lang`/`dir`, live-region announcements, table
+  semantics for stat grids, ~20 hardcoded control labels) is tracked in
+  `AUDIT.md` — **1.0 does not claim full BFSG conformance.**
+
+### Tooling & dependencies
+
+- **Lint gate:** `npm run lint` was dead (ESLint 9 found no flat config). Added
+  `eslint.config.js` (js + typescript-eslint + svelte recommended) and
+  `.prettierrc`; the gate now runs and passes clean. Removed unused token imports
+  flagged by eslint. Prettier is available via `npm run format` but not a
+  blocking gate (a blanket reformat was deferred as too risky today).
+- **Dependency floors raised** for admitted CVEs: `pymysql>=1.1.1`,
+  `python-multipart>=0.0.32`, `cryptography>=44.0.0`. Pinned `mysql:8.0.46`
+  (8.0 EOL), bumped test-container & CI Node 20 (EOL) → 24. `asyncmy`
+  CVE-2025-65896 has no fix — accepted as low practical risk (documented).
+
+### Docs
+
+- New [`AUDIT.md`](AUDIT.md) — complete five-track audit record (fixed + deferred).
+- README match count 88 → 96 and "Round of 16"; DEPLOY expected-count floors → 96.
+
+---
+
+_The build history below (originally under `[Unreleased]`) is part of 1.0.0._
+
 ### Ingestion — Round of 16 (2026-07-08)
 
 - **8 new PDFs ingested** via `watch_pdfs.py`: Paraguay–France, Canada–Morocco,

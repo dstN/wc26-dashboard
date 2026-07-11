@@ -1,5 +1,46 @@
 # Roadmap — EFI WC26 Data Engine
 
+## 1.0.0 — Pre-release audit & remediation (2026-07-11)
+
+Five-track audit (Security · Backend/Ingestion correctness · Frontend
+best-practice · Accessibility BFSG/WCAG 2.1 AA · Dependency currency). Full
+record in [`AUDIT.md`](AUDIT.md). Verification: svelte-check 0/0 · build green ·
+lint green · backend pytest 10/10 · ingestion pytest 14/14 · live smoke test green.
+
+**Fixed:**
+
+- [x] **CRITICAL** production API base URL — `import.meta.env.PUBLIC_API_URL` is
+  `undefined` in the browser; client-side nav fell back to localhost. New
+  `$lib/api-base.ts` via `$env/dynamic/public`, applied to all 11 loaders + admin
+- [x] Security: backslash SQL escaping (`_q`/`_qs` + `exec_driver_sql`); loopback
+  DB/backend ports; upload `file.size` pre-check; contact control-char validator
+  + SMTP timeout + `OSError`→502
+- [x] Backend: `make contract` module-mode fix; locale-independent date parse
+  (would break every ingest on the German host); `/health/db` 503; rewrote
+  `test_matches.py` (had tested non-existent columns) → 10/10
+- [x] A11Y: contrast `-ink` variants for teal/orange/red/blue/indigo + call-site
+  fixes; keyboard-operable sortable headers (41) + compare ARIA combobox;
+  `role="img"` removed from text figures; `aria-pressed`/`aria-current` on
+  toggles/filters; skip link + `a11y.skipToContent` in 6 locales
+- [x] Tooling: working ESLint flat-config gate (`npm run lint` was dead); dep
+  floors for CVEs (`pymysql`, `python-multipart`, `cryptography`); `mysql:8.0.46`,
+  Node 24 in CI/test container
+- [x] Docs: new `AUDIT.md`; README/DEPLOY counts 88 → 96
+
+**Deferred (tracked in `AUDIT.md`, do not block soft launch):**
+
+- [ ] SSR `lang`/`dir` from a cookie/`handle` hook (largest a11y+i18n gap —
+  currently client-only, SSR ships `lang="en"` LTR for all locales)
+- [ ] Live-region announcements (forms, filter counts); table semantics for the
+  `<div>`-grid stat blocks; ~20 remaining hardcoded control labels
+- [ ] Backend data re-ingest items: `match_pressure_stats.direction_*` all-NULL
+  (parser gap); extra-shot-log page attribution; sub-off minutes
+- [ ] N+1 query batching (`/stats/leaderboards`, `/teams/{id}/*`); real response
+  models for the contract gate; pin Python deps
+- [ ] Post-1.0 dep majors: mysql 8.4 LTS, vite 8 + vitest 4, eslint 10 / TS 7
+
+**Explicitly NOT claimed:** full BFSG/WCAG 2.1 AA conformance — see `AUDIT.md` §7.
+
 ## Round of 16 ingest (2026-07-08)
 
 - [x] 8 R16 PDFs ingested (matches 89–96): Paraguay–France, Canada–Morocco, Brazil–Norway,

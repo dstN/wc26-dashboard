@@ -109,6 +109,12 @@ cd ingestion && python3 -m pytest tests/test_watch_pdfs.py -v
 
 Architecture, data model, API surface and conventions: see [DOCS.md](DOCS.md).
 Deployment walkthrough: [DEPLOY.md](DEPLOY.md).
+Pre-1.0 audit — security, correctness, accessibility (BFSG/WCAG 2.1 AA),
+dependencies — with fixed and deferred findings: [AUDIT.md](AUDIT.md).
+
+> **Accessibility note:** 1.0 fixes the critical keyboard and contrast issues but
+> does **not** yet claim full BFSG/WCAG 2.1 AA conformance — see the tracked
+> backlog in [AUDIT.md](AUDIT.md) §7.
 
 ## Stack
 
