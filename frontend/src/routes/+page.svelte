@@ -28,7 +28,7 @@
 </script>
 
 <svelte:head>
-	<title>EFI Dashboard — Overview</title>
+	<title>{$t.nav.overview} — EFI Data Engine</title>
 </svelte:head>
 
 {#if !d}

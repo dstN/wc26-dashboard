@@ -1,17 +1,18 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 	import SectionLabel from '$lib/components/primitives/SectionLabel.svelte';
 </script>
 
 <svelte:head>
-	<title>Error — EFI Data Engine</title>
+	<title>{$t.a11y.errorTitle} — EFI Data Engine</title>
 </svelte:head>
 
 <section class="error-page">
-	<SectionLabel label="Error {$page.status}" color="var(--c-red)" />
-	<h1 class="error-title">Something went wrong</h1>
-	<p class="error-msg">{$page.error?.message ?? 'An unexpected error occurred.'}</p>
-	<a href="/" class="back-link">← Back to Home</a>
+	<SectionLabel label="{$t.a11y.errorTitle} {page.status}" color="var(--c-red)" />
+	<h1 class="error-title">{$t.a11y.errorHeading}</h1>
+	<p class="error-msg">{page.error?.message ?? $t.a11y.errorGeneric}</p>
+	<a href="/" class="back-link">← {$t.a11y.backToHome}</a>
 </section>
 
 <style>

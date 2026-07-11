@@ -61,7 +61,7 @@
 	const polyB = $derived(teamPolygon(phases.team_b));
 </script>
 
-<figure class="module" role="img" aria-label="Phase Fingerprint radar for {team_a.name} and {team_b.name}">
+<figure class="module" role="img" aria-label={$t.a11y.phaseFingerprintRadar}>
 	<p class="module__title">{$t.detail.phaseFingerprint}</p>
 	<p class="module__sub">{$t.detail.phaseDNA}</p>
 	<svg viewBox="0 0 240 220" class="module__svg" aria-hidden="true">

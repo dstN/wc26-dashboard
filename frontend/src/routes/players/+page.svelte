@@ -271,7 +271,7 @@
 </script>
 
 <svelte:head>
-	<title>Players — EFI Data Engine</title>
+	<title>{$t.nav.players} — EFI Data Engine</title>
 </svelte:head>
 
 <div class="page">
@@ -305,7 +305,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
-							<th class="cmp-col" title="Select for comparison"></th>
+							<th class="cmp-col" title={$t.a11y.selectForComparison}></th>
 							<th class="rank-col">#</th>
 							<th>{$t.stats.player}</th>
 							<th>{$t.stats.team}</th>
@@ -324,7 +324,7 @@
 									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
 										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+										aria-label={isSelected(p.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 									>
 									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
 								</button>
@@ -356,7 +356,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
-							<th class="cmp-col" title="Select for comparison"></th>
+							<th class="cmp-col" title={$t.a11y.selectForComparison}></th>
 							<th class="rank-col">#</th>
 							<th>{$t.stats.player}</th>
 							<th>{$t.stats.team}</th>
@@ -375,7 +375,7 @@
 									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
 										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+										aria-label={isSelected(p.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 									>
 									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
 								</button>
@@ -407,7 +407,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
-							<th class="cmp-col" title="Select for comparison"></th>
+							<th class="cmp-col" title={$t.a11y.selectForComparison}></th>
 							<th class="rank-col">#</th>
 							<th>{$t.stats.player}</th>
 							<th>{$t.stats.team}</th>
@@ -426,7 +426,7 @@
 									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
 										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+										aria-label={isSelected(p.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 									>
 									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
 								</button>
@@ -458,7 +458,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
-							<th class="cmp-col" title="Select for comparison"></th>
+							<th class="cmp-col" title={$t.a11y.selectForComparison}></th>
 							<th class="rank-col">#</th>
 							<th>{$t.stats.player}</th>
 							<th>{$t.stats.team}</th>
@@ -477,7 +477,7 @@
 									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
 										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+										aria-label={isSelected(p.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 									>
 									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
 								</button>
@@ -509,7 +509,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
-							<th class="cmp-col" title="Select for comparison"></th>
+							<th class="cmp-col" title={$t.a11y.selectForComparison}></th>
 							<th class="rank-col">#</th>
 							<th>{$t.stats.player}</th>
 							<th>{$t.stats.team}</th>
@@ -529,7 +529,7 @@
 									<button class="cmp-check" class:cmp-check--on={isSelected(p.id)}
 										disabled={!isSelected(p.id) && cmpFull}
 										onclick={() => toggleComparison(p.id, 'players')}
-										aria-label="{isSelected(p.id) ? 'Remove' : 'Add'} {p.name} from comparison"
+										aria-label={isSelected(p.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 									>
 									{#if isSelected(p.id)}<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{:else}+{/if}
 								</button>
@@ -659,15 +659,15 @@
 					type="search"
 					placeholder={$t.players.searchPlaceholder}
 					bind:value={searchQuery}
-					aria-label="Search players"
+					aria-label={$t.a11y.searchPlayers}
 				/>
-				<select class="filter-select" bind:value={filterTeam} aria-label="Filter by team">
+				<select class="filter-select" bind:value={filterTeam} aria-label={$t.a11y.filterByTeam}>
 					<option value="">{$t.players.allTeams}</option>
 					{#each teams as team (team.id)}
 						<option value={team.id}>{team.name}</option>
 					{/each}
 				</select>
-				<select class="filter-select" bind:value={filterPos} aria-label="Filter by position">
+				<select class="filter-select" bind:value={filterPos} aria-label={$t.a11y.filterByPosition}>
 					<option value="">{$t.players.allPositions}</option>
 					<option value="GK">{$t.players.goalkeepers}</option>
 					<option value="DF">{$t.players.defenders}</option>

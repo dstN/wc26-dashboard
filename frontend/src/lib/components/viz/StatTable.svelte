@@ -26,7 +26,7 @@
 		<span class="stat-table__header-center">{$t.detail.headToHead.toUpperCase()}</span>
 		<span class="stat-table__team-name stat-table__team-name--right" style="color: {teamTextColor(team_b.color)}">{team_b.name}</span>
 	</div>
-	<table class="stat-table" aria-label="Head-to-head match statistics">
+	<table class="stat-table" aria-label={$t.a11y.headToHeadStats}>
 		<tbody>
 			{#each rows as row}
 				<tr class="stat-table__row">

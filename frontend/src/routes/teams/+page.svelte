@@ -69,7 +69,7 @@
 </script>
 
 <svelte:head>
-	<title>Teams — EFI Data Engine</title>
+	<title>{$t.nav.teams} — EFI Data Engine</title>
 </svelte:head>
 
 <div class="page">
@@ -109,7 +109,7 @@
 				<table class="rank-table">
 					<thead>
 						<tr>
-							<th class="cmp-col" title="Select for comparison"></th>
+							<th class="cmp-col" title={$t.a11y.selectForComparison}></th>
 							<th class="rk">#</th>
 							<th>{$t.teams.colNation}</th>
 							<th class="num">{$t.teams.colPlayed}</th>
@@ -130,7 +130,7 @@
 										class:cmp-check--on={isSelected(r.team.id)}
 										disabled={!isSelected(r.team.id) && cmpFull}
 										onclick={() => toggleComparison(r.team.id, 'teams')}
-										aria-label="{isSelected(r.team.id) ? 'Remove' : 'Add'} {r.team.name} from comparison"
+										aria-label={isSelected(r.team.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 										title={!isSelected(r.team.id) && cmpFull ? `Max ${MAX_COMPARISON} teams` : ''}
 									>
 										{#if isSelected(r.team.id)}

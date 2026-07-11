@@ -119,7 +119,7 @@
 </script>
 
 <svelte:head>
-	<title>All Matches — EFI Data Engine</title>
+	<title>{$t.nav.matches} — EFI Data Engine</title>
 </svelte:head>
 
 <div class="page">
@@ -185,7 +185,7 @@
 										class="cmp-check"
 										class:cmp-check--on={isSelected(match.id)}
 										disabled={!isSelected(match.id) && cmpFull}
-										aria-label={isSelected(match.id) ? 'Remove from comparison' : 'Add to comparison'}
+										aria-label={isSelected(match.id) ? $t.a11y.removeFromComparison : $t.a11y.addToComparison}
 										onclick={(e) => { e.stopPropagation(); toggleComparison(match.id, 'matches'); }}
 									>
 										{#if isSelected(match.id)}

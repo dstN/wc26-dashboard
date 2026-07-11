@@ -15,6 +15,12 @@
 	const MAX = 5;
 	const isFull = $derived(entities.length >= MAX);
 
+	// Localized noun for the entity type — avoids interpolating the raw English
+	// route param ("teams"/"players"/"matches") into translated sentences.
+	const typeNoun = $derived(
+		type === 'teams' ? $t.nav.teams : type === 'players' ? $t.nav.players : $t.nav.matches
+	);
+
 	// ── Search ─────────────────────────────────────────────────────────────────
 	let searchQuery = $state('');
 	// Active option for keyboard navigation of the combobox listbox (-1 = none).
@@ -368,9 +374,9 @@
 			<div class="empty-state">
 				<p>
 					{$t.compare.selectHintBefore}
-					{type} {$t.compare.selectHintFrom}
+					{typeNoun} {$t.compare.selectHintFrom}
 					<a href="/{type}">{$t.compare.rankingPage}</a>
-					or search above.
+					{$t.compare.orSearchAbove}
 				</p>
 			</div>
 		{/if}
@@ -402,7 +408,7 @@
 								</div>
 								<button
 									class="entity-remove"
-									aria-label="Remove {tm.name}"
+									aria-label={$t.a11y.removeFromComparison}
 									onclick={() => removeEntity(tm.id)}>✕</button
 								>
 							</div>
@@ -473,7 +479,7 @@
 								</span>
 								<button
 									class="entity-remove"
-									aria-label="Remove match"
+									aria-label={$t.a11y.removeFromComparison}
 									onclick={() => removeEntity(m.id)}>✕</button
 								>
 							</div>
@@ -553,7 +559,7 @@
 								</div>
 								<button
 									class="entity-remove"
-									aria-label="Remove {pl?.name}"
+									aria-label={$t.a11y.removeFromComparison}
 									onclick={() => removeEntity(pl?.id)}>✕</button
 								>
 							</div>

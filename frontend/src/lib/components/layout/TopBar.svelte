@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import ThemeSwitch from './ThemeSwitch.svelte';
 	import { t, locale, setLocale, LOCALES } from '$lib/i18n';
 
@@ -7,7 +7,7 @@
 	let menuOpen = $state(false);
 
 	$effect(() => {
-		$page.url.pathname;
+		page.url.pathname;
 		menuOpen = false;
 	});
 
@@ -21,23 +21,23 @@
 </script>
 
 <header class="topbar">
-	<a href="/" class="topbar__brand" aria-label="EFI Data Engine — Home">
+	<a href="/" class="topbar__brand" aria-label={$t.a11y.home}>
 		<span class="efi-dot" aria-hidden="true"></span>
 		<span class="topbar__efi">EFI</span>
 		<span class="topbar__sub">DATA ENGINE</span>
 	</a>
-	<nav class="topbar__nav" aria-label="Main navigation">
+	<nav class="topbar__nav" aria-label={$t.a11y.mainNav}>
 		{#each navItems as item}
 			<a
 				href={item.href}
 				class="topbar__link"
-				class:active={$page.url.pathname === item.href}
-				aria-current={$page.url.pathname === item.href ? 'page' : undefined}
+				class:active={page.url.pathname === item.href}
+				aria-current={page.url.pathname === item.href ? 'page' : undefined}
 			>{item.label}</a>
 		{/each}
 	</nav>
 	<div class="topbar__right">
-		<div class="lang-switcher" role="group" aria-label="Language">
+		<div class="lang-switcher" role="group" aria-label={$t.a11y.language}>
 			{#each LOCALES as loc}
 				<button
 					class="lang-btn"
@@ -68,24 +68,24 @@
 
 {#if menuOpen}
 	<div class="mobile-backdrop" aria-hidden="true" onclick={() => (menuOpen = false)}></div>
-	<nav class="mobile-menu" aria-label="Mobile navigation">
+	<nav class="mobile-menu" aria-label={$t.a11y.mobileNav}>
 		<div class="mobile-menu__links">
 			{#each navItems as item}
 				<a
 					href={item.href}
 					class="mobile-menu__link"
-					class:active={$page.url.pathname === item.href}
-					aria-current={$page.url.pathname === item.href ? 'page' : undefined}
+					class:active={page.url.pathname === item.href}
+					aria-current={page.url.pathname === item.href ? 'page' : undefined}
 				>
 					<span>{item.label}</span>
-					{#if $page.url.pathname === item.href}
+					{#if page.url.pathname === item.href}
 						<span class="mobile-menu__active-dot" aria-hidden="true"></span>
 					{/if}
 				</a>
 			{/each}
 		</div>
 		<div class="mobile-menu__footer">
-			<div class="lang-switcher" role="group" aria-label="Language">
+			<div class="lang-switcher" role="group" aria-label={$t.a11y.language}>
 				{#each LOCALES as loc}
 					<button
 						class="lang-btn lang-btn--lg"

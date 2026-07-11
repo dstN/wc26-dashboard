@@ -1,6 +1,24 @@
 export default {
 	a11y: {
 		skipToContent: 'Skip to main content',
+		mainNav: 'Main navigation',
+		mobileNav: 'Mobile navigation',
+		language: 'Language',
+		home: 'Home',
+		searchPlayers: 'Search players',
+		filterByTeam: 'Filter by team',
+		filterByPosition: 'Filter by position',
+		selectForComparison: 'Select for comparison',
+		addToComparison: 'Add to comparison',
+		removeFromComparison: 'Remove from comparison',
+		phaseFingerprintRadar: 'Phase fingerprint radar',
+		headToHeadStats: 'Head-to-head match statistics',
+		switchToLight: 'Switch to light mode',
+		switchToDark: 'Switch to dark mode',
+		errorTitle: 'Error',
+		errorHeading: 'Something went wrong',
+		errorGeneric: 'An unexpected error occurred.',
+		backToHome: 'Back to Home',
 	},
 	stage: {
 		all: 'All Matches',
@@ -577,6 +595,7 @@ export default {
 		selectHintBefore: 'Select 2–5',
 		selectHintFrom: 'from the',
 		rankingPage: 'ranking page',
+		orSearchAbove: 'or search above.',
 		metricLabel: 'Metric',
 
 		grpPossession: 'Possession',

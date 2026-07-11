@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { toggleTheme, getTheme } from '$lib/theme/theme.svelte';
+	import { t } from '$lib/i18n';
 
 	const isDark = $derived(getTheme() === 'dark');
+	const label = $derived(isDark ? $t.a11y.switchToLight : $t.a11y.switchToDark);
 </script>
 
-<button
-	class="theme-btn"
-	onclick={() => toggleTheme()}
-	aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-	title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
->
+<button class="theme-btn" onclick={() => toggleTheme()} aria-label={label} title={label}>
 	{#if isDark}
 		<!-- Sun — click to go light -->
 		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

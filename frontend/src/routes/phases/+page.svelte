@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head>
-	<title>Tournament — EFI Data Engine</title>
+	<title>{$t.nav.tournament} — EFI Data Engine</title>
 </svelte:head>
 
 <div class="page">
