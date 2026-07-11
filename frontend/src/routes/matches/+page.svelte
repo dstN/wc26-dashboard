@@ -313,7 +313,7 @@
 		transition: background 0.15s, color 0.15s;
 		white-space: nowrap;
 	}
-	.stage-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+	.stage-pill:not(.stage-pill--active):hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
 	.stage-pill--active {
 		background: var(--accent);
 		color: var(--accent-fg);

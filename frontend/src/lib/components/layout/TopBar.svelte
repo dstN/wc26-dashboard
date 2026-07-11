@@ -55,7 +55,7 @@
 		<button
 			class="topbar__burger"
 			class:topbar__burger--open={menuOpen}
-			aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+			aria-label={menuOpen ? $t.a11y.closeMenu : $t.a11y.openMenu}
 			aria-expanded={menuOpen}
 			onclick={() => (menuOpen = !menuOpen)}
 		>
@@ -169,6 +169,7 @@
 		align-items: center;
 		gap: 16px;
 		flex: none;
+		margin-left: auto;
 	}
 	/* ── Language switcher ───────────────────────────────────────────── */
 	.lang-switcher {
@@ -340,5 +341,14 @@
 		/* Hide these from the topbar only — they reappear inside the mobile menu */
 		.topbar__right .lang-switcher,
 		.reports-pill { display: none; }
+	}
+	@media (max-width: 720px) {
+		/* tighter gutters on phones so the theme switch + burger sit flush right */
+		.topbar { padding: 0 16px; }
+		.topbar__right { gap: 10px; }
+	}
+	@media (max-width: 400px) {
+		/* free up width on the narrowest screens */
+		.topbar__sub { display: none; }
 	}
 </style>

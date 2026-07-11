@@ -302,15 +302,21 @@
 		display: flex;
 		align-items: center;
 		gap: var(--sp-3);
+		/* shrink + wrap so long names (e.g. "Bosnia and Herzegovina") never
+		   overflow the scoreline row */
+		flex: 1 1 0;
+		min-width: 0;
 	}
 
 	.match-band__team--left {
 		flex-direction: row;
+		justify-content: flex-end;
 		text-align: right;
 	}
 
 	.match-band__team--right {
 		flex-direction: row;
+		justify-content: flex-start;
 		text-align: left;
 	}
 
@@ -319,6 +325,10 @@
 		font-weight: 700;
 		color: var(--ink);
 		text-decoration: none;
+		/* break only between words (not mid-word); long single words shrink
+		   via the mobile stacked layout below */
+		overflow-wrap: break-word;
+		min-width: 0;
 	}
 	.match-band__team-name:hover { color: var(--accent); }
 
@@ -335,12 +345,15 @@
 		line-height: 1;
 		min-width: 44px;
 		min-height: 28px;
+		flex-shrink: 0;
 	}
 
 	.match-band__scoreline {
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		gap: var(--sp-2);
+		flex: 0 0 auto;
 	}
 
 	.match-band__score {
@@ -418,6 +431,22 @@
 		}
 		.match-band__team-name {
 			font-size: var(--fs-body);
+			text-align: center;
+		}
+		/* Mobile: stack the badge (abbreviation) above the full country name so
+		   long names ("Switzerland", "Bosnia and Herzegovina") get the full
+		   column width instead of breaking mid-word. */
+		.match-band__team {
+			gap: var(--sp-1);
+			align-items: center;
+		}
+		.match-band__team--left {
+			flex-direction: column-reverse;
+			text-align: center;
+		}
+		.match-band__team--right {
+			flex-direction: column;
+			text-align: center;
 		}
 	}
 </style>

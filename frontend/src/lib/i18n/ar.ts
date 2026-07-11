@@ -3,6 +3,8 @@ export default {
 		skipToContent: 'تخطي إلى المحتوى الرئيسي',
 		mainNav: 'التنقل الرئيسي',
 		mobileNav: 'التنقل عبر الجوال',
+		openMenu: 'فتح القائمة',
+		closeMenu: 'إغلاق القائمة',
 		language: 'اللغة',
 		home: 'الرئيسية',
 		searchPlayers: 'البحث عن اللاعبين',

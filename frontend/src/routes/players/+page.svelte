@@ -286,8 +286,100 @@
 		</div>
 	</header>
 
+	<!-- ── BROWSE ALL PLAYERS ─────────────────────────────────────────────── -->
+	<section class="browse-section">
+		<div class="browse-body">
+			<SectionLabel label={$t.players.sectionBrowse} />
+
+			<div class="filters">
+				<input
+					class="filter-input"
+					type="search"
+					placeholder={$t.players.searchPlaceholder}
+					bind:value={searchQuery}
+					aria-label={$t.a11y.searchPlayers}
+				/>
+				<select class="filter-select" bind:value={filterTeam} aria-label={$t.a11y.filterByTeam}>
+					<option value="">{$t.players.allTeams}</option>
+					{#each teams as team (team.id)}
+						<option value={team.id}>{team.name}</option>
+					{/each}
+				</select>
+				<select class="filter-select" bind:value={filterPos} aria-label={$t.a11y.filterByPosition}>
+					<option value="">{$t.players.allPositions}</option>
+					<option value="GK">{$t.players.goalkeepers}</option>
+					<option value="DF">{$t.players.defenders}</option>
+					<option value="MF">{$t.players.midfielders}</option>
+					<option value="FW">{$t.players.forwards}</option>
+				</select>
+				{#if filterTeam || filterPos || searchQuery}
+					<button
+						class="filter-clear"
+						onclick={() => { filterTeam = ''; filterPos = ''; searchQuery = ''; }}
+					>{$t.players.clearFilters}</button>
+				{/if}
+				{#if filterTeam || filterPos || searchQuery}
+					<span class="filter-count" role="status" aria-live="polite">{filtered.length} {$t.players.players}</span>
+				{/if}
+			</div>
+
+			{#if !filterTeam && !filterPos && !searchQuery}
+				<div class="browse-prompt">
+					<p class="browse-prompt__text">{$t.players.browsePlaceholder}</p>
+				</div>
+			{:else if filtered.length === 0}
+				<div class="empty">
+					<p class="empty__text">{$t.players.browseNoResults}</p>
+				</div>
+			{:else}
+				{#each groupKeys as teamName}
+					{@const teamPlayers = grouped[teamName]}
+					{@const team = teamPlayers[0].team}
+					<section class="team-section">
+						<div class="team-header">
+							{#if flagCode(team.short_code)}
+								<span class="fi fi-{flagCode(team.short_code)} team-flag" aria-hidden="true"></span>
+							{/if}
+							<span class="team-badge" style="background: {teamColorVar(team.color)}; color: {badgeTextColor(team.color)};">{team.short_code}</span>
+							<a href="/teams/{team.id}" class="team-name-link">{teamName}</a>
+							<span class="team-count">{teamPlayers.length} players</span>
+						</div>
+						<div class="player-grid">
+							{#each teamPlayers as p (p.id)}
+								<a href="/players/{p.id}" class="player-card">
+									<span class="player-number">#{p.jersey_number ?? '—'}</span>
+									<div class="player-info">
+										<span class="player-name">{p.name}</span>
+										<span class="player-pos" data-pos={p.position ?? ''}>{posLabel[p.position ?? ''] ?? p.position ?? '—'}</span>
+									</div>
+									{#if p.stats}
+										<div class="player-stats">
+											{#if p.stats.goals > 0}
+												<span class="pstat pstat--goal">⚽ {p.stats.goals}</span>
+											{/if}
+											{#if p.stats.yellow_cards > 0}
+												<span class="pstat pstat--yellow">🟨 {p.stats.yellow_cards}</span>
+											{/if}
+											{#if p.stats.red_cards > 0}
+												<span class="pstat pstat--red">🟥 {p.stats.red_cards}</span>
+											{/if}
+											{#if p.stats.minutes_played > 0}
+											<span class="pstat pstat--apps">{p.stats.appearances}g</span>
+										{/if}
+										</div>
+									{/if}
+								</a>
+							{/each}
+						</div>
+					</section>
+				{/each}
+			{/if}
+		</div>
+	</section>
+
 	<!-- ── RANKINGS ──────────────────────────────────────────────────────── -->
 	<section class="rankings-section">
+		<div class="section-divider"></div>
 		<div class="tab-nav" role="tablist">
 			{#each RANKING_TABS as tab}
 				<button
@@ -647,97 +739,7 @@
 		</div>
 	</section>
 
-	<!-- ── BROWSE ALL PLAYERS ─────────────────────────────────────────────── -->
-	<section class="browse-section">
-		<div class="section-divider"></div>
-		<div class="browse-body">
-			<SectionLabel label={$t.players.sectionBrowse} />
 
-			<div class="filters">
-				<input
-					class="filter-input"
-					type="search"
-					placeholder={$t.players.searchPlaceholder}
-					bind:value={searchQuery}
-					aria-label={$t.a11y.searchPlayers}
-				/>
-				<select class="filter-select" bind:value={filterTeam} aria-label={$t.a11y.filterByTeam}>
-					<option value="">{$t.players.allTeams}</option>
-					{#each teams as team (team.id)}
-						<option value={team.id}>{team.name}</option>
-					{/each}
-				</select>
-				<select class="filter-select" bind:value={filterPos} aria-label={$t.a11y.filterByPosition}>
-					<option value="">{$t.players.allPositions}</option>
-					<option value="GK">{$t.players.goalkeepers}</option>
-					<option value="DF">{$t.players.defenders}</option>
-					<option value="MF">{$t.players.midfielders}</option>
-					<option value="FW">{$t.players.forwards}</option>
-				</select>
-				{#if filterTeam || filterPos || searchQuery}
-					<button
-						class="filter-clear"
-						onclick={() => { filterTeam = ''; filterPos = ''; searchQuery = ''; }}
-					>{$t.players.clearFilters}</button>
-				{/if}
-				{#if filterTeam || filterPos || searchQuery}
-					<span class="filter-count" role="status" aria-live="polite">{filtered.length} {$t.players.players}</span>
-				{/if}
-			</div>
-
-			{#if !filterTeam && !filterPos && !searchQuery}
-				<div class="browse-prompt">
-					<p class="browse-prompt__text">{$t.players.browsePlaceholder}</p>
-				</div>
-			{:else if filtered.length === 0}
-				<div class="empty">
-					<p class="empty__text">{$t.players.browseNoResults}</p>
-				</div>
-			{:else}
-				{#each groupKeys as teamName}
-					{@const teamPlayers = grouped[teamName]}
-					{@const team = teamPlayers[0].team}
-					<section class="team-section">
-						<div class="team-header">
-							{#if flagCode(team.short_code)}
-								<span class="fi fi-{flagCode(team.short_code)} team-flag" aria-hidden="true"></span>
-							{/if}
-							<span class="team-badge" style="background: {teamColorVar(team.color)}; color: {badgeTextColor(team.color)};">{team.short_code}</span>
-							<a href="/teams/{team.id}" class="team-name-link">{teamName}</a>
-							<span class="team-count">{teamPlayers.length} players</span>
-						</div>
-						<div class="player-grid">
-							{#each teamPlayers as p (p.id)}
-								<a href="/players/{p.id}" class="player-card">
-									<span class="player-number">#{p.jersey_number ?? '—'}</span>
-									<div class="player-info">
-										<span class="player-name">{p.name}</span>
-										<span class="player-pos" data-pos={p.position ?? ''}>{posLabel[p.position ?? ''] ?? p.position ?? '—'}</span>
-									</div>
-									{#if p.stats}
-										<div class="player-stats">
-											{#if p.stats.goals > 0}
-												<span class="pstat pstat--goal">⚽ {p.stats.goals}</span>
-											{/if}
-											{#if p.stats.yellow_cards > 0}
-												<span class="pstat pstat--yellow">🟨 {p.stats.yellow_cards}</span>
-											{/if}
-											{#if p.stats.red_cards > 0}
-												<span class="pstat pstat--red">🟥 {p.stats.red_cards}</span>
-											{/if}
-											{#if p.stats.minutes_played > 0}
-											<span class="pstat pstat--apps">{p.stats.appearances}g</span>
-										{/if}
-										</div>
-									{/if}
-								</a>
-							{/each}
-						</div>
-					</section>
-				{/each}
-			{/if}
-		</div>
-	</section>
 </div>
 
 <style>
@@ -789,7 +791,7 @@
 		transition: background 0.15s, color 0.15s;
 		white-space: nowrap;
 	}
-	.stage-pill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+	.stage-pill:not(.stage-pill--active):hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
 	.stage-pill--active {
 		background: var(--accent);
 		color: var(--accent-fg);
@@ -825,7 +827,7 @@
 		margin-bottom: -1px;
 		transition: color 0.15s, border-color 0.15s;
 	}
-	.tab-btn:hover { color: var(--ink); }
+	.tab-btn:not(.tab-btn--active):hover { color: var(--ink); }
 	.tab-btn--active {
 		color: var(--accent);
 		border-bottom-color: var(--accent);
