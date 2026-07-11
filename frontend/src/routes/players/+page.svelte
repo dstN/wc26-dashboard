@@ -681,7 +681,7 @@
 					>{$t.players.clearFilters}</button>
 				{/if}
 				{#if filterTeam || filterPos || searchQuery}
-					<span class="filter-count">{filtered.length} {$t.players.players}</span>
+					<span class="filter-count" role="status" aria-live="polite">{filtered.length} {$t.players.players}</span>
 				{/if}
 			</div>
 

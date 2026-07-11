@@ -136,12 +136,12 @@
 
 		<!-- Result -->
 		{#if status === 'ok'}
-			<div class="result result--ok">
+			<div class="result result--ok" role="status">
 				<p class="result__title">✓ {$t.admin.successTitle}</p>
 				{#if log}<pre class="result__log">{log}</pre>{/if}
 			</div>
 		{:else if status === 'error'}
-			<div class="result result--error">
+			<div class="result result--error" role="alert">
 				<p class="result__title">✗ {$t.admin.errorTitle}: {errorMsg}</p>
 				{#if log}<pre class="result__log">{log}</pre>{/if}
 			</div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from '$lib/i18n';
-	import { env } from '$env/dynamic/public';
+	import { apiBase } from '$lib/api-base';
 
 	let impressumDialog: HTMLDialogElement;
 	let legalDialog: HTMLDialogElement;
@@ -22,8 +22,7 @@
 		contactError = '';
 		contactLoading = true;
 		try {
-			const base = env.PUBLIC_API_URL ?? 'http://localhost:8000';
-			const res = await fetch(`${base}/api/v1/contact`, {
+			const res = await fetch(`${apiBase()}/api/v1/contact`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ name: contactName, email: contactEmail, message: contactMessage }),
@@ -35,7 +34,7 @@
 				contactSent = true;
 			}
 		} catch {
-			contactError = 'Network error. Please try again.';
+			contactError = $t.footer.contactNetworkError;
 		} finally {
 			contactLoading = false;
 		}
@@ -59,7 +58,7 @@
 </footer>
 
 <!-- ── Impressum ──────────────────────────────────────────────── -->
-<dialog bind:this={impressumDialog} onclick={(e) => closeOnBackdrop(e, impressumDialog)}>
+<dialog bind:this={impressumDialog} aria-labelledby="dlg-impressum-title" onclick={(e) => closeOnBackdrop(e, impressumDialog)}>
 	<div class="modal">
 		<button class="modal__close" onclick={() => impressumDialog.close()} aria-label={$t.footer.close}>
 			<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -67,7 +66,7 @@
 			</svg>
 		</button>
 
-		<h2 class="modal__title">{$t.footer.impressumTitle}</h2>
+		<h2 class="modal__title" id="dlg-impressum-title">{$t.footer.impressumTitle}</h2>
 		<p class="modal__subtitle">{$t.footer.impressumSubtitle}</p>
 
 		<div class="modal__section">
@@ -97,7 +96,7 @@
 </dialog>
 
 <!-- ── Privacy & Legal ────────────────────────────────────────── -->
-<dialog bind:this={legalDialog} class="dialog--wide" onclick={(e) => closeOnBackdrop(e, legalDialog)}>
+<dialog bind:this={legalDialog} class="dialog--wide" aria-labelledby="dlg-legal-title" onclick={(e) => closeOnBackdrop(e, legalDialog)}>
 	<div class="modal">
 		<button class="modal__close" onclick={() => legalDialog.close()} aria-label={$t.footer.close}>
 			<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -105,7 +104,7 @@
 			</svg>
 		</button>
 
-		<h2 class="modal__title">{$t.footer.legalTitle}</h2>
+		<h2 class="modal__title" id="dlg-legal-title">{$t.footer.legalTitle}</h2>
 
 		<div class="modal__grid">
 			<div class="modal__section">
@@ -137,7 +136,7 @@
 </dialog>
 
 <!-- ── Contact ────────────────────────────────────────────────── -->
-<dialog bind:this={contactDialog} onclick={(e) => closeOnBackdrop(e, contactDialog)}>
+<dialog bind:this={contactDialog} aria-labelledby="dlg-contact-title" onclick={(e) => closeOnBackdrop(e, contactDialog)}>
 	<div class="modal">
 		<button class="modal__close" onclick={() => { contactDialog.close(); resetContact(); }} aria-label={$t.footer.close}>
 			<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -145,11 +144,11 @@
 			</svg>
 		</button>
 
-		<h2 class="modal__title">{$t.footer.contactTitle}</h2>
+		<h2 class="modal__title" id="dlg-contact-title">{$t.footer.contactTitle}</h2>
 
 		{#if contactSent}
 			<div class="modal__section">
-				<p class="modal__success">{$t.footer.contactSuccess}</p>
+				<p class="modal__success" role="status">{$t.footer.contactSuccess}</p>
 				<button class="btn-sec" onclick={resetContact}>{$t.footer.contactNewMessage}</button>
 			</div>
 		{:else}
@@ -168,10 +167,10 @@
 						<textarea id="cf-msg" bind:value={contactMessage} required rows="4" placeholder={$t.footer.contactMessagePlaceholder}></textarea>
 					</div>
 					{#if contactError}
-						<p class="form-error">{contactError}</p>
+						<p class="form-error" role="alert">{contactError}</p>
 					{/if}
 					<div class="form-footer">
-						<button type="submit" class="btn-pri" disabled={contactLoading}>
+						<button type="submit" class="btn-pri" disabled={contactLoading} aria-busy={contactLoading}>
 							{contactLoading ? '…' : $t.footer.contactSubmit}
 						</button>
 						<p class="modal__fine">{$t.footer.contactNote}</p>

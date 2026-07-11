@@ -149,7 +149,7 @@
 			{#if filterGroup}
 				<button class="filter-clear" onclick={() => filterGroup = ''}>{$t.match.clearFilter}</button>
 			{/if}
-			<span class="filter-count">{filteredMatches.length} {$t.match.matches}</span>
+			<span class="filter-count" role="status" aria-live="polite">{filteredMatches.length} {$t.match.matches}</span>
 		</div>
 	</header>
 

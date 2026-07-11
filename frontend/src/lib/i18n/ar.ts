@@ -469,6 +469,7 @@ export default {
 		contactEmailPlaceholder: 'بريدك@الإلكتروني.com',
 		contactMessagePlaceholder: 'رسالتك…',
 		contactSubmit: 'إرسال الرسالة',
+		contactNetworkError: 'خطأ في الشبكة. يرجى المحاولة مرة أخرى.',
 		contactSuccess: 'تم إرسال الرسالة! سنتواصل معك قريباً.',
 		contactNewMessage: 'رسالة جديدة',
 		contactNote: 'رسالتك تُرسَل مباشرةً إلينا. سنرد على عنوان البريد الإلكتروني الذي تقدّمه.',

@@ -469,6 +469,7 @@ export default {
 		contactEmailPlaceholder: 'o.seu@email.com',
 		contactMessagePlaceholder: 'A sua mensagem…',
 		contactSubmit: 'Enviar mensagem',
+		contactNetworkError: 'Erro de rede. Tenta novamente.',
 		contactSuccess: 'Mensagem enviada! Entraremos em contacto em breve.',
 		contactNewMessage: 'Nova mensagem',
 		contactNote: 'A sua mensagem é enviada diretamente para nós. Responderemos ao endereço de e-mail que indicar.',
