@@ -41,20 +41,20 @@
 	}
 </script>
 
-<div class="pr">
-	<div class="pr__header">
-		<a href="/teams/{team_a.id}" class="pr__tname" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="pr__center">{$t.detail.pressureHeader}</span>
-		<a href="/teams/{team_b.id}" class="pr__tname pr__tname--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
+<div class="pr" role="table" aria-label="{team_a.name} vs {team_b.name}">
+	<div class="pr__header" role="row">
+		<a href="/teams/{team_a.id}" class="pr__tname" role="columnheader" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
+		<span class="pr__center" role="columnheader">{$t.detail.pressureHeader}</span>
+		<a href="/teams/{team_b.id}" class="pr__tname pr__tname--r" role="columnheader" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
 	{#each rows as row}
 		{@const va = get(pressure_a, row.key)}
 		{@const vb = get(pressure_b, row.key)}
-		<div class="pr__row">
-			<span class="pr__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
-			<span class="pr__label">{row.label}</span>
-			<span class="pr__val pr__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
+		<div role="row" class="pr__row">
+			<span role="cell" class="pr__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
+			<span role="rowheader" class="pr__label">{row.label}</span>
+			<span role="cell" class="pr__val pr__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
 		</div>
 	{/each}
 

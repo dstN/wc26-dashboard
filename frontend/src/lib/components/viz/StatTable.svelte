@@ -27,11 +27,18 @@
 		<span class="stat-table__team-name stat-table__team-name--right" style="color: {teamTextColor(team_b.color)}">{team_b.name}</span>
 	</div>
 	<table class="stat-table" aria-label={$t.a11y.headToHeadStats}>
+		<thead class="visually-hidden">
+			<tr>
+				<th scope="col">{team_a.name}</th>
+				<th scope="col">{$t.detail.headToHead}</th>
+				<th scope="col">{team_b.name}</th>
+			</tr>
+		</thead>
 		<tbody>
 			{#each rows as row}
 				<tr class="stat-table__row">
 					<td class="stat-table__val stat-table__val--a" style="color: {teamTextColor(team_a.color)}">{row.a}</td>
-					<td class="stat-table__label">{row.label}</td>
+					<th scope="row" class="stat-table__label">{row.label}</th>
 					<td class="stat-table__val stat-table__val--b" style="color: {teamTextColor(team_b.color)}">{row.b}</td>
 				</tr>
 			{/each}

@@ -101,88 +101,88 @@
 	]);
 </script>
 
-<div class="gk">
-	<div class="gk__header">
-		<a href="/teams/{team_a.id}" class="gk__tname" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="gk__center">{$t.detail.goalkeepers}</span>
-		<a href="/teams/{team_b.id}" class="gk__tname gk__tname--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
+<div class="gk" role="table" aria-label="{team_a.name} vs {team_b.name}">
+	<div class="gk__header" role="row">
+		<a href="/teams/{team_a.id}" class="gk__tname" role="columnheader" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
+		<span class="gk__center" role="columnheader">{$t.detail.goalkeepers}</span>
+		<a href="/teams/{team_b.id}" class="gk__tname gk__tname--r" role="columnheader" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
 	<!-- GK names -->
 	{#if gk_a?.gk_name || gk_b?.gk_name}
-		<div class="gk__row gk__row--name">
-			<span class="gk__name" style="color: {teamTextColor(team_a.color)}">{str(gk_a, 'gk_name') ?? '—'}</span>
-			<span class="gk__label">{$t.players.posGK}</span>
-			<span class="gk__name gk__name--r" style="color: {teamTextColor(team_b.color)}">{str(gk_b, 'gk_name') ?? '—'}</span>
+		<div role="row" class="gk__row gk__row--name">
+			<span role="cell" class="gk__name" style="color: {teamTextColor(team_a.color)}">{str(gk_a, 'gk_name') ?? '—'}</span>
+			<span role="rowheader" class="gk__label">{$t.players.posGK}</span>
+			<span role="cell" class="gk__name gk__name--r" style="color: {teamTextColor(team_b.color)}">{str(gk_b, 'gk_name') ?? '—'}</span>
 		</div>
 	{/if}
 
 	<!-- Involvements & Distributions -->
-	<div class="gk__subheader">{$t.detail.gkActivity}</div>
+	<div role="presentation" class="gk__subheader">{$t.detail.gkActivity}</div>
 	{#each activityRows as row}
 		{@const va = get(gk_a, row.key)}
 		{@const vb = get(gk_b, row.key)}
 		{#if va != null || vb != null}
-			<div class="gk__row">
-				<span class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
-				<span class="gk__label">{row.label}</span>
-				<span class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
+			<div role="row" class="gk__row">
+				<span role="cell" class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
+				<span role="rowheader" class="gk__label">{row.label}</span>
+				<span role="cell" class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
 			</div>
 		{/if}
 	{/each}
 
 	<!-- Attempts Faced -->
-	<div class="gk__subheader">{$t.detail.gkShotStopping}</div>
+	<div role="presentation" class="gk__subheader">{$t.detail.gkShotStopping}</div>
 	{#each attemptRows as row}
 		{@const va = get(gk_a, row.key)}
 		{@const vb = get(gk_b, row.key)}
 		{#if va != null || vb != null}
-			<div class="gk__row">
-				<span class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
-				<span class="gk__label">{row.label}</span>
-				<span class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
+			<div role="row" class="gk__row">
+				<span role="cell" class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
+				<span role="rowheader" class="gk__label">{row.label}</span>
+				<span role="cell" class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
 			</div>
 		{/if}
 	{/each}
 
 	<!-- Goal Interventions -->
-	<div class="gk__subheader">{$t.detail.gkShotStopping}</div>
+	<div role="presentation" class="gk__subheader">{$t.detail.gkShotStopping}</div>
 	{#each interventionRows as row}
 		{@const va = get(gk_a, row.key)}
 		{@const vb = get(gk_b, row.key)}
 		{#if va != null || vb != null}
-			<div class="gk__row">
-				<span class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
-				<span class="gk__label">{row.label}</span>
-				<span class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
+			<div role="row" class="gk__row">
+				<span role="cell" class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
+				<span role="rowheader" class="gk__label">{row.label}</span>
+				<span role="cell" class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
 			</div>
 		{/if}
 	{/each}
 
 	<!-- Aerial Interventions -->
-	<div class="gk__subheader">{$t.detail.gkAerialActions}</div>
+	<div role="presentation" class="gk__subheader">{$t.detail.gkAerialActions}</div>
 	{#each aerialRows as row}
 		{@const va = get(gk_a, row.key)}
 		{@const vb = get(gk_b, row.key)}
 		{#if va != null || vb != null}
-			<div class="gk__row">
-				<span class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
-				<span class="gk__label">{row.label}</span>
-				<span class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
+			<div role="row" class="gk__row">
+				<span role="cell" class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
+				<span role="rowheader" class="gk__label">{row.label}</span>
+				<span role="cell" class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
 			</div>
 		{/if}
 	{/each}
 
 	<!-- Crosses Faced -->
-	<div class="gk__subheader">{$t.detail.gkCrossesSection}</div>
+	<div role="presentation" class="gk__subheader">{$t.detail.gkCrossesSection}</div>
 	{#each crossesRows as row}
 		{@const va = get(gk_a, row.key)}
 		{@const vb = get(gk_b, row.key)}
 		{#if va != null || vb != null}
-			<div class="gk__row">
-				<span class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
-				<span class="gk__label">{row.label}</span>
-				<span class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
+			<div role="row" class="gk__row">
+				<span role="cell" class="gk__val" style="color: {teamTextColor(team_a.color)}">{row.format(va)}</span>
+				<span role="rowheader" class="gk__label">{row.label}</span>
+				<span role="cell" class="gk__val gk__val--r" style="color: {teamTextColor(team_b.color)}">{row.format(vb)}</span>
 			</div>
 		{/if}
 	{/each}

@@ -67,31 +67,32 @@
 		<a href="/teams/{team_b.id}" class="stl__team stl__team--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
-	<div class="stl__table">
-		<div class="stl__row stl__row--header">
-			<span>{$t.detail.shotMin}</span>
-			<span>{$t.detail.shotPlayer}</span>
-			<span>{$t.detail.shotBody}</span>
-			<span>{$t.detail.shotDelivery}</span>
-			<span>{$t.detail.shotOutcome}</span>
+	<div class="stl__table" role="table" aria-label={$t.detail.shotLog}>
+		<div class="stl__row stl__row--header" role="row">
+			<span role="columnheader">{$t.detail.shotMin}</span>
+			<span role="columnheader">{$t.detail.shotPlayer}</span>
+			<span role="columnheader">{$t.detail.shotBody}</span>
+			<span role="columnheader">{$t.detail.shotDelivery}</span>
+			<span role="columnheader">{$t.detail.shotOutcome}</span>
 		</div>
 		{#each allShots as shot}
 			{@const pColor = shot.side === 'a' ? teamTextColor(team_a.color) : teamTextColor(team_b.color)}
 			{@const pId = shot.player_name ? playerNameMap[shot.player_name] : undefined}
-			<div class="stl__row stl__row--{shot.side}" class:stl__row--goal={shot.outcome?.includes('Goal')}>
-				<span class="stl__min">{shot.minute}'</span>
+			{@const sc = shot.side === 'a' ? team_a.short_code : team_b.short_code}
+			<div class="stl__row stl__row--{shot.side}" class:stl__row--goal={shot.outcome?.includes('Goal')} role="row">
+				<span class="stl__min" role="cell">{shot.minute}'</span>
 				{#if pId}
-					<a href="/players/{pId}" class="stl__player stl__player--link" style="color: {pColor}">
-						{playerLabel(shot)}
+					<a href="/players/{pId}" class="stl__player stl__player--link" role="cell" style="color: {pColor}">
+						<span class="stl__team-code">{sc}</span>{playerLabel(shot)}
 					</a>
 				{:else}
-					<span class="stl__player" style="color: {pColor}">
-						{playerLabel(shot)}
+					<span class="stl__player" role="cell" style="color: {pColor}">
+						<span class="stl__team-code">{sc}</span>{playerLabel(shot)}
 					</span>
 				{/if}
-				<span class="stl__meta">{shot.body_part ?? '—'}</span>
-				<span class="stl__meta">{shot.delivery_type ?? '—'}</span>
-				<span class="stl__outcome stl__outcome--{outcomeClass(shot.outcome)}">{outcomeLabel(shot.outcome)}</span>
+				<span class="stl__meta" role="cell">{shot.body_part ?? '—'}</span>
+				<span class="stl__meta" role="cell">{shot.delivery_type ?? '—'}</span>
+				<span class="stl__outcome stl__outcome--{outcomeClass(shot.outcome)}" role="cell">{outcomeLabel(shot.outcome)}</span>
 			</div>
 		{/each}
 	</div>
@@ -165,6 +166,18 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	/* Team short code prefix — non-color cue for which team a shot belongs to
+	   (WCAG 1.4.1: affiliation was previously encoded by name color only). */
+	.stl__team-code {
+		display: inline-block;
+		margin-inline-end: 4px;
+		padding: 0 3px;
+		border-radius: 2px;
+		background: color-mix(in srgb, currentColor 14%, transparent);
+		font-size: 0.85em;
+		font-weight: 700;
+		letter-spacing: 0.02em;
 	}
 	.stl__meta {
 		color: var(--muted);

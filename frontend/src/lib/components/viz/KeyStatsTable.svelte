@@ -120,21 +120,23 @@
 	]);
 </script>
 
-<div class="kst">
-	<div class="kst__header">
-		<a href="/teams/{team_a.id}" class="kst__tname" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="kst__center">{$t.keyStats.header}</span>
-		<a href="/teams/{team_b.id}" class="kst__tname kst__tname--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
+<div class="kst" role="table" aria-label="{team_a.name} {$t.keyStats.header} {team_b.name}">
+	<div class="kst__header" role="row">
+		<a href="/teams/{team_a.id}" class="kst__tname" role="columnheader" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
+		<span class="kst__center" role="columnheader">{$t.keyStats.header}</span>
+		<a href="/teams/{team_b.id}" class="kst__tname kst__tname--r" role="columnheader" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 	{#each groups as group}
-		<div class="kst__group-title">{group.title}</div>
-		{#each group.rows as row}
-			<div class="kst__row" class:kst__row--highlight={row.highlight}>
-				<span class="kst__val kst__val--a" style="color: {teamTextColor(team_a.color)}">{row.a}</span>
-				<span class="kst__label">{row.label}</span>
-				<span class="kst__val kst__val--b" style="color: {teamTextColor(team_b.color)}">{row.b}</span>
-			</div>
-		{/each}
+		<div class="kst__group" role="rowgroup" aria-label={group.title}>
+			<div class="kst__group-title" role="presentation">{group.title}</div>
+			{#each group.rows as row}
+				<div class="kst__row" class:kst__row--highlight={row.highlight} role="row">
+					<span class="kst__val kst__val--a" role="cell" style="color: {teamTextColor(team_a.color)}">{row.a}</span>
+					<span class="kst__label" role="rowheader">{row.label}</span>
+					<span class="kst__val kst__val--b" role="cell" style="color: {teamTextColor(team_b.color)}">{row.b}</span>
+				</div>
+			{/each}
+		</div>
 	{/each}
 </div>
 

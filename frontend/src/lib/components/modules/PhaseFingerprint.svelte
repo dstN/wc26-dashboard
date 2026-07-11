@@ -59,9 +59,22 @@
 
 	const polyA = $derived(teamPolygon(phases.team_a));
 	const polyB = $derived(teamPolygon(phases.team_b));
+
+	// Text alternative for the SVG radar (WCAG 1.1.1): per-phase percentages for
+	// both teams, exposed to screen readers via a visually-hidden table.
+	function pctFor(rows: Phase[], name: string): number {
+		return rows.filter((p) => p.phase_group === 'in').find((p) => p.phase_name === name)?.pct ?? 0;
+	}
+	const tableRows = $derived(
+		IN_PHASES.map((name) => ({
+			label: phaseLabel(name),
+			a: pctFor(phases.team_a, name),
+			b: pctFor(phases.team_b, name)
+		}))
+	);
 </script>
 
-<figure class="module" role="img" aria-label={$t.a11y.phaseFingerprintRadar}>
+<figure class="module">
 	<p class="module__title">{$t.detail.phaseFingerprint}</p>
 	<p class="module__sub">{$t.detail.phaseDNA}</p>
 	<svg viewBox="0 0 240 220" class="module__svg" aria-hidden="true">
@@ -90,6 +103,33 @@
 			<text x={lp.x} y={lp.y} font-size="7" fill="var(--muted)" text-anchor="middle" dominant-baseline="middle">{phaseLabel(name)}</text>
 		{/each}
 	</svg>
+
+	<!-- Visible legend: non-color cue (solid vs dashed) maps polygons to teams -->
+	<ul class="module__legend">
+		<li><span class="legend-line legend-line--solid" style="border-color: {teamColorVar(team_a.color)}" aria-hidden="true"></span>{team_a.name}</li>
+		<li><span class="legend-line legend-line--dashed" style="border-color: {teamColorVar(team_b.color)}" aria-hidden="true"></span>{team_b.name}</li>
+	</ul>
+
+	<!-- Text alternative to the radar for screen readers -->
+	<table class="visually-hidden">
+		<caption>{$t.a11y.phaseFingerprintRadar}</caption>
+		<thead>
+			<tr>
+				<th scope="col">{$t.detail.phaseFingerprint}</th>
+				<th scope="col">{team_a.name}</th>
+				<th scope="col">{team_b.name}</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each tableRows as row}
+				<tr>
+					<th scope="row">{row.label}</th>
+					<td>{row.a}%</td>
+					<td>{row.b}%</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 </figure>
 
 <style>
@@ -97,4 +137,15 @@
 	.module__title { font-size: var(--fs-ui); font-weight: 800; color: var(--ink); }
 	.module__sub { font-size: var(--fs-meta); color: var(--muted); }
 	.module__svg { width: 100%; height: auto; display: block; }
+	.module__legend {
+		display: flex;
+		gap: var(--sp-4);
+		justify-content: center;
+		list-style: none;
+		font-size: var(--fs-meta);
+		color: var(--muted);
+	}
+	.module__legend li { display: flex; align-items: center; gap: var(--sp-2); }
+	.legend-line { width: 16px; border-top-width: 2px; border-top-style: solid; }
+	.legend-line--dashed { border-top-style: dashed; }
 </style>

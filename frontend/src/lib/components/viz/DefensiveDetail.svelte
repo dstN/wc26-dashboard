@@ -58,42 +58,42 @@
 	}
 </script>
 
-<div class="dd">
-	<div class="dd__header">
-		<a href="/teams/{team_a.id}" class="dd__tname" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
-		<span class="dd__center">{$t.detail.defensiveHeader}</span>
-		<a href="/teams/{team_b.id}" class="dd__tname dd__tname--r" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
+<div class="dd" role="table" aria-label="{team_a.name} vs {team_b.name}">
+	<div class="dd__header" role="row">
+		<a href="/teams/{team_a.id}" class="dd__tname" role="columnheader" style="color: {teamTextColor(team_a.color)}">{team_a.name}</a>
+		<span class="dd__center" role="columnheader">{$t.detail.defensiveHeader}</span>
+		<a href="/teams/{team_b.id}" class="dd__tname dd__tname--r" role="columnheader" style="color: {teamTextColor(team_b.color)}">{team_b.name}</a>
 	</div>
 
 	{#each summaryRows as row}
 		{@const va = get(defensive_a, row.key)}
 		{@const vb = get(defensive_b, row.key)}
-		<div class="dd__row">
-			<span class="dd__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
-			<span class="dd__label">{row.label}</span>
-			<span class="dd__val dd__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
+		<div role="row" class="dd__row">
+			<span role="cell" class="dd__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
+			<span role="rowheader" class="dd__label">{row.label}</span>
+			<span role="cell" class="dd__val dd__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
 		</div>
 	{/each}
 
-	<div class="dd__subheader">{$t.detail.blocksBreakdown}</div>
+	<div role="presentation" class="dd__subheader">{$t.detail.blocksBreakdown}</div>
 	{#each blockRows as row}
 		{@const va = get(defensive_a, row.key)}
 		{@const vb = get(defensive_b, row.key)}
-		<div class="dd__row dd__row--sub">
-			<span class="dd__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
-			<span class="dd__label">{row.label}</span>
-			<span class="dd__val dd__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
+		<div role="row" class="dd__row dd__row--sub">
+			<span role="cell" class="dd__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
+			<span role="rowheader" class="dd__label">{row.label}</span>
+			<span role="cell" class="dd__val dd__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
 		</div>
 	{/each}
 
-	<div class="dd__subheader">{$t.detail.possessionContests}</div>
+	<div role="presentation" class="dd__subheader">{$t.detail.possessionContests}</div>
 	{#each contestRows as row}
 		{@const va = get(defensive_a, row.key)}
 		{@const vb = get(defensive_b, row.key)}
-		<div class="dd__row dd__row--sub">
-			<span class="dd__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
-			<span class="dd__label">{row.label}</span>
-			<span class="dd__val dd__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
+		<div role="row" class="dd__row dd__row--sub">
+			<span role="cell" class="dd__val" style="color: {teamTextColor(team_a.color)}">{row.fmt(va)}</span>
+			<span role="rowheader" class="dd__label">{row.label}</span>
+			<span role="cell" class="dd__val dd__val--r" style="color: {teamTextColor(team_b.color)}">{row.fmt(vb)}</span>
 		</div>
 	{/each}
 
