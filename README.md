@@ -2,11 +2,11 @@
 
 Portfolio-grade full-stack data engine: Python pipeline ingests FIFA Enhanced Football Intelligence (EFI) Post Match Summary PDFs into MySQL 8.0, FastAPI serves the data, and a Svelte 5 editorial dashboard renders it — all behind one `docker compose up`.
 
-The home hero always shows the **latest ingested match** (by match date) — currently deep into the Round of 32.
+The home hero always shows the **latest ingested match** (by match date) — currently through the Round of 16.
 
 ## Features
 
-- **88 matches ingested** from real FIFA PMSR PDFs — possession, phases, spatial, line breaks, final-third zones, defensive actions
+- **96 matches ingested** from real FIFA PMSR PDFs — possession, phases, spatial, line breaks, final-third zones, defensive actions
 - **Full match detail pages** — 7 EFI data sections per match (Possession, Head-to-Head, Phase Analysis, Line Breaks, Spatial Control, Defensive Actions, Final Third Zones)
 - **Team detail pages** — aggregate stats and per-match history
 - **1 248 players** — searchable and filterable roster across all 48 teams

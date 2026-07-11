@@ -1,6 +1,7 @@
 services:
   db:
-    image: mysql:8.0
+    # pinned: mysql:8.0 major is past EOL (2026-04-30) — 8.4 LTS migration planned post-1.0
+    image: mysql:8.0.46
     env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -8,7 +9,8 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3306:3306"
+      # loopback-only: never expose MySQL (weak dev creds) beyond the host
+      - "127.0.0.1:3306:3306"
     volumes:
       - ./db/conf.d/charset.cnf:/etc/mysql/conf.d/charset.cnf:ro
       - ./db/init/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
@@ -27,7 +29,7 @@ services:
     build: ./backend
     env_file: .env
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -71,7 +73,7 @@ services:
       - ingest
 
   test:
-    image: node:20-slim
+    image: node:24-slim
     working_dir: /app
     command: npm run test:e2e
     volumes:

@@ -7,20 +7,26 @@ from sqlalchemy import text
 async def seeded_match_10(db_session):
     """Insert minimal Germany vs Curaçao match 10 data for tests."""
     await db_session.execute(text(
-        "INSERT IGNORE INTO teams (team_id, team_name, team_slug, group_name, color_primary) "
-        "VALUES (1, 'Germany', 'germany', 'E', '#000000'), "
-        "       (2, 'Curaçao', 'curacao', 'E', '#0072CE')"
+        "INSERT INTO teams (id, name, short_code, slug, color, group_letter) "
+        "VALUES (1, 'Germany', 'GER', 'germany', '--c-yellow', 'E'), "
+        "       (2, 'Curaçao', 'CUW', 'curacao', '--c-blue', 'E')"
     ))
     await db_session.execute(text(
-        "INSERT IGNORE INTO matches (match_id, match_number, group_name, stage, "
-        "home_team_id, away_team_id, home_score, away_score, match_date, venue, city) "
-        "VALUES (10, 10, 'E', 'Group', 1, 2, 7, 1, '2026-06-14', 'NRG Stadium', 'Houston')"
+        "INSERT INTO matches (id, match_no, team_a_id, team_b_id, score_a, score_b, "
+        "venue, match_date, group_letter) "
+        "VALUES (10, 10, 1, 2, 7, 1, 'NRG Stadium', '2026-06-14', 'E')"
     ))
     await db_session.execute(text(
-        "INSERT IGNORE INTO match_stats "
-        "(team_id, match_id, scope, possession_pct, in_contest_pct, out_of_possession_pct, xg, goals) "
-        "VALUES (1, 10, 'match', 57.8, 6.9, 35.3, 3.1, 7), "
-        "       (2, 10, 'match', 35.3, 6.9, 57.8, 0.4, 1)"
+        "INSERT INTO match_stats (team_id, match_id, scope, possession_team_a, "
+        "possession_team_b, possession_in_contest, xg_a, xg_b, goals_a, goals_b) "
+        "VALUES (1, 10, 'match', 57.8, 35.3, 6.9, 4.17, 0.40, 7, 1)"
+    ))
+    # get_match_dashboard resolves defensive stats with scalar_one() — one row
+    # per team is required, or the dashboard 404s.
+    await db_session.execute(text(
+        "INSERT INTO defensive_actions (team_id, match_id, scope, forced_turnovers, "
+        "pressure_on_ball) "
+        "VALUES (1, 10, 'match', 12, 'heavy'), (2, 10, 'match', 5, 'moderate')"
     ))
     await db_session.flush()
     yield
@@ -28,33 +34,45 @@ async def seeded_match_10(db_session):
 
 @pytest.mark.asyncio
 async def test_dashboard_returns_200(client, seeded_match_10):
-    resp = await client.get("/api/v1/dashboard?match_id=10")
+    resp = await client.get("/api/v1/dashboard")
     assert resp.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_dashboard_possession_values(client, seeded_match_10):
-    resp = await client.get("/api/v1/dashboard?match_id=10")
+    resp = await client.get("/api/v1/dashboard")
     assert resp.status_code == 200
-    data = resp.json()
-    poss = data["possession"]
-    team_a = poss["team_a"]
-    assert team_a["possession_pct"] == pytest.approx(57.8)
-    assert team_a["in_contest_pct"] == pytest.approx(6.9)
-    assert team_a["out_of_possession_pct"] == pytest.approx(35.3)
+    poss = resp.json()["possession"]
+    assert poss["possession_team_a"] == pytest.approx(57.8)
+    assert poss["possession_team_b"] == pytest.approx(35.3)
+    assert poss["possession_in_contest"] == pytest.approx(6.9)
 
 
 @pytest.mark.asyncio
 async def test_dashboard_has_required_keys(client, seeded_match_10):
-    resp = await client.get("/api/v1/dashboard?match_id=10")
+    resp = await client.get("/api/v1/dashboard")
     data = resp.json()
-    required = {"overview", "featured", "possession", "head_to_head", "phases", "kpi_cards"}
+    required = {
+        "overview", "featured", "possession", "head_to_head", "phases",
+        "spatial", "line_breaks", "final_third", "defensive", "kpi_cards",
+    }
     assert required.issubset(set(data.keys()))
 
 
 @pytest.mark.asyncio
-async def test_dashboard_404_for_unknown_match(client, create_tables):
-    resp = await client.get("/api/v1/dashboard?match_id=9999")
+async def test_dashboard_featured_is_latest_match(client, seeded_match_10):
+    resp = await client.get("/api/v1/dashboard")
+    featured = resp.json()["featured"]
+    assert featured["id"] == 10
+    assert featured["score_a"] == 7
+    assert featured["score_b"] == 1
+    assert featured["went_to_extra_time"] is False
+    assert featured["penalty_score_a"] is None
+
+
+@pytest.mark.asyncio
+async def test_dashboard_404_on_empty_db(client, create_tables):
+    resp = await client.get("/api/v1/dashboard")
     assert resp.status_code == 404
 
 
@@ -70,6 +88,11 @@ async def test_possession_endpoint(client, seeded_match_10):
     resp = await client.get("/api/v1/matches/10/possession")
     assert resp.status_code == 200
     data = resp.json()
-    assert "team_a" in data
-    assert "team_b" in data
-    assert data["team_a"]["possession_pct"] == pytest.approx(57.8)
+    assert data["possession_team_a"] == pytest.approx(57.8)
+    assert data["possession_team_b"] == pytest.approx(35.3)
+
+
+@pytest.mark.asyncio
+async def test_match_404_for_unknown_id(client, seeded_match_10):
+    resp = await client.get("/api/v1/matches/9999")
+    assert resp.status_code == 404

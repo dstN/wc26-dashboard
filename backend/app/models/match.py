@@ -20,6 +20,6 @@ class Match(Base):
     # score_a/score_b already reflect extra time when played; this only flags
     # that ET happened (for an "AET" badge). Penalty score is separate from
     # score_a/score_b since a shootout doesn't change the match score.
-    went_to_extra_time = Column(Boolean, nullable=False, default=False)
+    went_to_extra_time = Column(Boolean, nullable=False, default=False, server_default="0")
     penalty_score_a = Column(Integer, nullable=True)
     penalty_score_b = Column(Integer, nullable=True)

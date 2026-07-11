@@ -1,12 +1,11 @@
 import type { PageLoad } from './$types';
 import type { DashboardData } from '$lib/types/efi';
+import { apiBase } from '$lib/api-base';
 
 export const load: PageLoad = async ({ fetch }) => {
 	try {
 		// Use SvelteKit's fetch for SSR (handles INTERNAL_API_URL automatically via env)
-		const baseUrl = import.meta.env.SSR
-			? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
-			: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
+		const baseUrl = apiBase();
 
 		const response = await fetch(`${baseUrl}/api/v1/dashboard`);
 		if (!response.ok) {

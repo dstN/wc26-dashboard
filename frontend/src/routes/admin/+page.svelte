@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { t } from '$lib/i18n';
+	import { apiBase } from '$lib/api-base';
 
 	const KEY_STORAGE = 'efi_ingest_key';
 
@@ -11,9 +12,7 @@
 	let log = $state('');
 	let errorMsg = $state('');
 
-	const apiBase = browser
-		? (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000')
-		: '';
+	const uploadBase = browser ? apiBase() : '';
 
 	function onFileChange(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
@@ -40,7 +39,7 @@
 		form.append('file', file);
 
 		try {
-			const res = await fetch(`${apiBase}/api/v1/ingest/upload`, {
+			const res = await fetch(`${uploadBase}/api/v1/ingest/upload`, {
 				method: 'POST',
 				headers: { Authorization: `Bearer ${apiKey}` },
 				body: form,

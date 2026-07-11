@@ -1,9 +1,8 @@
 import type { LayoutLoad } from './$types';
+import { apiBase } from '$lib/api-base';
 
 export const load: LayoutLoad = async ({ fetch }) => {
-	const base = import.meta.env.SSR
-		? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
-		: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
+	const base = apiBase();
 
 	try {
 		const r = await fetch(`${base}/api/v1/matches/`);

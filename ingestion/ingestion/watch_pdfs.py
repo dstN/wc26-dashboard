@@ -154,7 +154,10 @@ def _execute_sql(sql: str, label: str) -> bool:
                     l for l in fragment.splitlines() if l.strip() and not l.lstrip().startswith("--")
                 )
                 if body.strip():
-                    conn.execute(sa.text(body))
+                    # exec_driver_sql passes the literal statement straight to the
+                    # DBAPI driver — unlike text(), it does NOT interpret ":word"
+                    # tokens (e.g. a "12:30" in a venue/name) as bind parameters.
+                    conn.exec_driver_sql(body)
             conn.commit()
         logger.info("  ✓ DB write complete for %s", label)
         return True

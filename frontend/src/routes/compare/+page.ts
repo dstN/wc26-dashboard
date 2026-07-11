@@ -1,4 +1,5 @@
 import type { PageLoad } from './$types';
+import { apiBase } from '$lib/api-base';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const type = url.searchParams.get('type') as 'teams' | 'players' | 'matches' | null;
@@ -8,9 +9,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
 		.map((s) => parseInt(s, 10))
 		.filter((n) => !isNaN(n) && n > 0);
 
-	const base = import.meta.env.SSR
-		? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
-		: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
+	const base = apiBase();
 
 	const get = (path: string) =>
 		fetch(`${base}${path}`)

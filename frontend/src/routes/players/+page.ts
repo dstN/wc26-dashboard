@@ -1,10 +1,9 @@
 import type { PageLoad } from './$types';
+import { apiBase } from '$lib/api-base';
 
 export const load: PageLoad = async ({ fetch, url }) => {
 	const stage = url.searchParams.get('stage'); // 'group' | 'knockout' | null (= all)
-	const base = import.meta.env.SSR
-		? (process.env.INTERNAL_API_URL ?? 'http://localhost:8000')
-		: (import.meta.env.PUBLIC_API_URL ?? 'http://localhost:8000');
+	const base = apiBase();
 	const qs = stage ? `?stage=${stage}` : '';
 	try {
 		// Player identities (roster) never change by stage — only the stats do.

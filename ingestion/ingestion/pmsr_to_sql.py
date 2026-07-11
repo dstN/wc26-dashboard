@@ -80,10 +80,16 @@ def _code(name: str) -> str:
 
 
 def _q(v: object) -> str:
-    """Quote a value for SQL (handles None → NULL, strings → escaped)."""
+    """Quote a value for SQL (handles None → NULL, strings → escaped).
+
+    Escapes backslashes as well as single quotes: MySQL's default sql_mode
+    does NOT include NO_BACKSLASH_ESCAPES, so a trailing/embedded backslash in
+    PDF-extracted free text (player/venue names) would otherwise escape the
+    closing quote and break out of the string literal.
+    """
     if v is None:
         return "NULL"
-    return "'{}'".format(str(v).replace("'", "''"))
+    return "'{}'".format(str(v).replace("\\", "\\\\").replace("'", "''"))
 
 
 def _n(v: object) -> str:
@@ -712,7 +718,8 @@ def pdf_to_sql(pdf_path: str) -> str:
         tipped     = aer_data.get("tipped_palmed") or {}
 
         def _qs(v):
-            return "NULL" if not v else f"'{v.replace(chr(39), chr(39)+chr(39))}'"
+            # Delegate to _q so backslash + single-quote escaping stay identical.
+            return _q(v) if v else "NULL"
 
         if total_inv is not None or total_dist is not None:
             L("INSERT INTO match_gk_stats")
