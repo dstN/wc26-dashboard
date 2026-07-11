@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_db
@@ -226,60 +226,54 @@ async def get_leaderboards(
     ]
 
     # ── Team rankings ─────────────────────────────────────────────────────────
+    # Batched: 3 grouped queries total (was ~4 per team → ~190 sequential
+    # round-trips). goals-for/against/played come from the home (team_a) and away
+    # (team_b) perspectives merged in Python; averages from one GROUP BY team.
     teams_result = await db.execute(select(Team).order_by(Team.name))
     all_teams = teams_result.scalars().all()
 
-    team_rankings = []
-    for team in all_teams:
-        team_match_conds = [or_(Match.team_a_id == team.id, Match.team_b_id == team.id)]
-        if cond is not None:
-            team_match_conds.append(cond)
+    home_q = select(
+        Match.team_a_id.label("tid"),
+        func.sum(Match.score_a).label("gf"),
+        func.sum(Match.score_b).label("ga"),
+        func.count(Match.id).label("played"),
+    ).group_by(Match.team_a_id)
+    away_q = select(
+        Match.team_b_id.label("tid"),
+        func.sum(Match.score_b).label("gf"),
+        func.sum(Match.score_a).label("ga"),
+        func.count(Match.id).label("played"),
+    ).group_by(Match.team_b_id)
+    if cond is not None:
+        home_q = home_q.where(cond)
+        away_q = away_q.where(cond)
 
-        goals_result = await db.execute(
-            select(
-                func.sum(
-                    case(
-                        (Match.team_a_id == team.id, Match.score_a),
-                        (Match.team_b_id == team.id, Match.score_b),
-                        else_=0,
-                    )
-                )
-            ).where(*team_match_conds)
-        )
-        goals = int(goals_result.scalar_one_or_none() or 0)
+    agg: dict[int, dict] = {}
+    for rows in (await db.execute(home_q)).all(), (await db.execute(away_q)).all():
+        for r in rows:
+            d = agg.setdefault(r.tid, {"gf": 0, "ga": 0, "played": 0})
+            d["gf"] += int(r.gf or 0)
+            d["ga"] += int(r.ga or 0)
+            d["played"] += int(r.played or 0)
 
-        conceded_result = await db.execute(
-            select(
-                func.sum(
-                    case(
-                        (Match.team_a_id == team.id, Match.score_b),
-                        (Match.team_b_id == team.id, Match.score_a),
-                        else_=0,
-                    )
-                )
-            ).where(*team_match_conds)
-        )
-        conceded = int(conceded_result.scalar_one_or_none() or 0)
-
-        matches_result = await db.execute(select(func.count(Match.id)).where(*team_match_conds))
-        played = int(matches_result.scalar_one_or_none() or 0)
-
-        # Avg possession, xG and in-contest from per-match rows (team_aggregate has no xG)
-        match_avgs_query = select(
+    avg_q = (
+        select(
+            MatchStats.team_id.label("tid"),
             func.avg(MatchStats.possession_team_a).label("avg_poss"),
             func.avg(MatchStats.xg_a).label("avg_xg"),
             func.avg(MatchStats.possession_in_contest).label("avg_ic"),
-        ).where(
-            MatchStats.team_id == team.id,
-            MatchStats.scope == "match",
         )
-        if cond is not None:
-            match_avgs_query = match_avgs_query.join(Match, Match.id == MatchStats.match_id).where(
-                cond
-            )
-        match_avgs = await db.execute(match_avgs_query)
-        avgs = match_avgs.one()
+        .where(MatchStats.scope == "match")
+        .group_by(MatchStats.team_id)
+    )
+    if cond is not None:
+        avg_q = avg_q.join(Match, Match.id == MatchStats.match_id).where(cond)
+    avg_map = {r.tid: r for r in (await db.execute(avg_q)).all()}
 
+    team_rankings = []
+    for team in all_teams:
+        a = agg.get(team.id, {"gf": 0, "ga": 0, "played": 0})
+        av = avg_map.get(team.id)
         team_rankings.append(
             {
                 "team": {
@@ -289,16 +283,16 @@ async def get_leaderboards(
                     "color": team.color,
                     "slug": team.slug,
                 },
-                "played": played,
-                "goals_scored": goals,
-                "goals_conceded": conceded,
-                "goal_diff": goals - conceded,
+                "played": a["played"],
+                "goals_scored": a["gf"],
+                "goals_conceded": a["ga"],
+                "goal_diff": a["gf"] - a["ga"],
                 "avg_possession": (
-                    round(float(avgs.avg_poss), 1) if avgs.avg_poss is not None else None
+                    round(float(av.avg_poss), 1) if av and av.avg_poss is not None else None
                 ),
-                "avg_xg": (round(float(avgs.avg_xg), 2) if avgs.avg_xg is not None else None),
+                "avg_xg": (round(float(av.avg_xg), 2) if av and av.avg_xg is not None else None),
                 "avg_in_contest": (
-                    round(float(avgs.avg_ic), 1) if avgs.avg_ic is not None else None
+                    round(float(av.avg_ic), 1) if av and av.avg_ic is not None else None
                 ),
             }
         )

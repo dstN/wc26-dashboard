@@ -159,44 +159,58 @@ async def get_team_avg_stats(team_id: int, db: AsyncSession = Depends(get_db)):
         totals[key] = totals.get(key, 0) + val
         counts[key] = counts.get(key, 0) + 1
 
-    for mid in match_ids:
-        ms = (
+    # Batch every stat table across all match_ids at once (was 6 queries per
+    # match → 6 queries total), keyed by match_id; the per-match accumulation
+    # below is unchanged so the averages are identical.
+    ms_by_match = {
+        s.match_id: s
+        for s in (
             await db.execute(
                 select(MatchStats).where(
-                    MatchStats.match_id == mid,
                     MatchStats.team_id == team_id,
                     MatchStats.scope == "match",
+                    MatchStats.match_id.in_(match_ids),
                 )
             )
-        ).scalar_one_or_none()
-
-        lb_rows = (
-            (
-                await db.execute(
-                    select(LineBreak).where(
-                        LineBreak.match_id == mid,
-                        LineBreak.team_id == team_id,
-                        LineBreak.scope == "match",
-                    )
-                )
-            )
-            .scalars()
-            .all()
         )
-
-        da = (
+        .scalars()
+        .all()
+    }
+    lb_by_match: dict[int, list] = {}
+    for r in (
+        (
+            await db.execute(
+                select(LineBreak).where(
+                    LineBreak.team_id == team_id,
+                    LineBreak.scope == "match",
+                    LineBreak.match_id.in_(match_ids),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    ):
+        lb_by_match.setdefault(r.match_id, []).append(r)
+    da_by_match = {
+        s.match_id: s
+        for s in (
             await db.execute(
                 select(DefensiveAction).where(
-                    DefensiveAction.match_id == mid,
                     DefensiveAction.team_id == team_id,
                     DefensiveAction.scope == "match",
+                    DefensiveAction.match_id.in_(match_ids),
                 )
             )
-        ).scalar_one_or_none()
-
-        pl = (
+        )
+        .scalars()
+        .all()
+    }
+    pl_by_match = {
+        r.match_id: r
+        for r in (
             await db.execute(
                 select(
+                    PlayerStat.match_id.label("match_id"),
                     func.sum(PlayerStat.passes_attempted).label("passes_att"),
                     func.sum(PlayerStat.passes_completed).label("passes_comp"),
                     func.sum(PlayerStat.crosses_completed).label("crosses"),
@@ -215,32 +229,50 @@ async def get_team_avg_stats(team_id: int, db: AsyncSession = Depends(get_db)):
                 )
                 .join(Player, Player.id == PlayerStat.player_id)
                 .where(
-                    PlayerStat.match_id == mid,
                     Player.team_id == team_id,
                     PlayerStat.scope == "match",
+                    PlayerStat.match_id.in_(match_ids),
                 )
+                .group_by(PlayerStat.match_id)
             )
-        ).first()
-
-        gk = (
+        ).all()
+    }
+    gk_by_match = {
+        s.match_id: s
+        for s in (
             await db.execute(
                 select(MatchGkStat).where(
-                    MatchGkStat.match_id == mid,
                     MatchGkStat.team_id == team_id,
                     MatchGkStat.scope == "match",
+                    MatchGkStat.match_id.in_(match_ids),
                 )
             )
-        ).scalar_one_or_none()
-
-        sp = (
+        )
+        .scalars()
+        .all()
+    }
+    sp_by_match = {
+        s.match_id: s
+        for s in (
             await db.execute(
                 select(MatchSetPlayStat).where(
-                    MatchSetPlayStat.match_id == mid,
                     MatchSetPlayStat.team_id == team_id,
                     MatchSetPlayStat.scope == "match",
+                    MatchSetPlayStat.match_id.in_(match_ids),
                 )
             )
-        ).scalar_one_or_none()
+        )
+        .scalars()
+        .all()
+    }
+
+    for mid in match_ids:
+        ms = ms_by_match.get(mid)
+        lb_rows = lb_by_match.get(mid, [])
+        da = da_by_match.get(mid)
+        pl = pl_by_match.get(mid)
+        gk = gk_by_match.get(mid)
+        sp = sp_by_match.get(mid)
 
         if ms:
             _add("xg", _f(ms.xg_a))
@@ -311,18 +343,31 @@ async def get_team_matches(team_id: int, db: AsyncSession = Depends(get_db)):
         .order_by(Match.match_no)
     )
     matches = result.scalars().all()
-    out = []
-    for match in matches:
-        team_a = (await db.execute(select(Team).where(Team.id == match.team_a_id))).scalar_one()
-        team_b = (await db.execute(select(Team).where(Team.id == match.team_b_id))).scalar_one()
-        stats_result = await db.execute(
+
+    # Batch-load referenced teams + this team's per-match stats (was 3 queries
+    # per match → 2 queries total).
+    match_ids = [m.id for m in matches]
+    team_ids = {tid for m in matches for tid in (m.team_a_id, m.team_b_id)}
+    teams_by_id: dict[int, Team] = {}
+    if team_ids:
+        tr = await db.execute(select(Team).where(Team.id.in_(team_ids)))
+        teams_by_id = {t.id: t for t in tr.scalars().all()}
+    stats_by_match: dict[int, MatchStats] = {}
+    if match_ids:
+        sr = await db.execute(
             select(MatchStats).where(
-                MatchStats.match_id == match.id,
                 MatchStats.team_id == team_id,
                 MatchStats.scope == "match",
+                MatchStats.match_id.in_(match_ids),
             )
         )
-        stats = stats_result.scalar_one_or_none()
+        stats_by_match = {s.match_id: s for s in sr.scalars().all()}
+
+    out = []
+    for match in matches:
+        team_a = teams_by_id[match.team_a_id]
+        team_b = teams_by_id[match.team_b_id]
+        stats = stats_by_match.get(match.id)
         out.append(
             {
                 "match": MatchMeta(
