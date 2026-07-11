@@ -14,9 +14,10 @@ five-track pre-release audit and remediation sweep. Full findings — fixed and
 deferred — are documented in [`AUDIT.md`](AUDIT.md).
 
 Post-remediation verification: `svelte-check` 0/0 · `npm run build` green ·
-`npm run lint` green · backend pytest 10/10 · ingestion pytest 14/14 · live
-Docker smoke test green (health/db, dashboard AET/pens, contact 422 on header
-injection, `stage=xyz` 422, SSR renders).
+`npm run lint` (eslint) green · backend `black --check` + `ruff check` green ·
+backend pytest 10/10 · ingestion pytest 14/14 · `make contract` emits valid
+OpenAPI · live Docker smoke test green (health/db, dashboard AET/pens, contact
+422 on header injection, `stage=xyz` 422, SSR renders).
 
 ### Security
 

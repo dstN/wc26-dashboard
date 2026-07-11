@@ -13,8 +13,10 @@ deferred** as a tracked backlog. It is deliberately honest about the remaining
 gaps — see [§7 Known limitations & conformance statement](#7-known-limitations--conformance-statement).
 
 Verification after remediation: `svelte-check` 0 errors / 0 warnings · `npm run
-build` green (adapter-node) · `npm run lint` green · backend pytest 10/10 ·
-ingestion pytest 14/14 · live smoke test on the running Docker stack green.
+build` green (adapter-node) · `npm run lint` (eslint) green · backend
+`black --check` + `ruff check` green · backend pytest 10/10 · ingestion pytest
+14/14 · `make contract` emits valid OpenAPI · live smoke test on the running
+Docker stack green.
 
 ---
 
@@ -92,6 +94,7 @@ USER`.
 | B4 | LOW | `_q`/`_qs` backslash escaping (same as S1). | Fixed. |
 | B5 | LOW | `/health/db` returned a raw 500 with a stack trace on DB outage. | Returns 503 on `SQLAlchemyError`. |
 | B6 | INFO | Upload memory (same as S3). | Fixed. |
+| B7 | HIGH (CI) | CI `lint-backend` (`black --check` + `ruff check`) was pre-existingly red — 24 unformatted files + 139 ruff issues (the `ingestion/` package had no tooling config, so black/ruff ran with mismatched defaults). | black-formatted backend+ingestion at line-length 100; added a root `pyproject.toml` so `ingestion/` shares the config; `ruff --fix` + a documented ignore set (E501/E741, per-file F841 for `parse_pmsr.py`). Both checks now green. |
 
 \* Rated LOW by the auditor generically, but HIGH for **this** deployment
 (documented German host).
