@@ -23,6 +23,16 @@ class TournamentOverviewSchema(BaseModel):
     avg_in_contest_pct: float
 
 
+class OverviewSchema(BaseModel):
+    """Response model for GET /overview (tournament KPIs + per-stage played counts)."""
+
+    matches_played: int
+    goals_total: int
+    avg_in_contest_pct: float
+    # keys: "group", "R32", "R16", "QF", "SF", "3RD", "FIN"
+    stage_counts: dict[str, int]
+
+
 class MatchMeta(BaseModel):
     id: int
     match_no: int
