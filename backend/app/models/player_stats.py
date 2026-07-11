@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, SmallInteger, Numeric, ForeignKey, Enum, Computed
+from sqlalchemy import (
+    Column,
+    Computed,
+    Enum,
+    ForeignKey,
+    Integer,
+    Numeric,
+    SmallInteger,
+)
+
 from app.models.base import Base
 
 

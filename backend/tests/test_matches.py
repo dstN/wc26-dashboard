@@ -6,28 +6,36 @@ from sqlalchemy import text
 @pytest_asyncio.fixture
 async def seeded_match_10(db_session):
     """Insert minimal Germany vs Curaçao match 10 data for tests."""
-    await db_session.execute(text(
-        "INSERT INTO teams (id, name, short_code, slug, color, group_letter) "
-        "VALUES (1, 'Germany', 'GER', 'germany', '--c-yellow', 'E'), "
-        "       (2, 'Curaçao', 'CUW', 'curacao', '--c-blue', 'E')"
-    ))
-    await db_session.execute(text(
-        "INSERT INTO matches (id, match_no, team_a_id, team_b_id, score_a, score_b, "
-        "venue, match_date, group_letter) "
-        "VALUES (10, 10, 1, 2, 7, 1, 'NRG Stadium', '2026-06-14', 'E')"
-    ))
-    await db_session.execute(text(
-        "INSERT INTO match_stats (team_id, match_id, scope, possession_team_a, "
-        "possession_team_b, possession_in_contest, xg_a, xg_b, goals_a, goals_b) "
-        "VALUES (1, 10, 'match', 57.8, 35.3, 6.9, 4.17, 0.40, 7, 1)"
-    ))
+    await db_session.execute(
+        text(
+            "INSERT INTO teams (id, name, short_code, slug, color, group_letter) "
+            "VALUES (1, 'Germany', 'GER', 'germany', '--c-yellow', 'E'), "
+            "       (2, 'Curaçao', 'CUW', 'curacao', '--c-blue', 'E')"
+        )
+    )
+    await db_session.execute(
+        text(
+            "INSERT INTO matches (id, match_no, team_a_id, team_b_id, score_a, score_b, "
+            "venue, match_date, group_letter) "
+            "VALUES (10, 10, 1, 2, 7, 1, 'NRG Stadium', '2026-06-14', 'E')"
+        )
+    )
+    await db_session.execute(
+        text(
+            "INSERT INTO match_stats (team_id, match_id, scope, possession_team_a, "
+            "possession_team_b, possession_in_contest, xg_a, xg_b, goals_a, goals_b) "
+            "VALUES (1, 10, 'match', 57.8, 35.3, 6.9, 4.17, 0.40, 7, 1)"
+        )
+    )
     # get_match_dashboard resolves defensive stats with scalar_one() — one row
     # per team is required, or the dashboard 404s.
-    await db_session.execute(text(
-        "INSERT INTO defensive_actions (team_id, match_id, scope, forced_turnovers, "
-        "pressure_on_ball) "
-        "VALUES (1, 10, 'match', 12, 'heavy'), (2, 10, 'match', 5, 'moderate')"
-    ))
+    await db_session.execute(
+        text(
+            "INSERT INTO defensive_actions (team_id, match_id, scope, forced_turnovers, "
+            "pressure_on_ball) "
+            "VALUES (1, 10, 'match', 12, 'heavy'), (2, 10, 'match', 5, 'moderate')"
+        )
+    )
     await db_session.flush()
     yield
 
@@ -53,8 +61,16 @@ async def test_dashboard_has_required_keys(client, seeded_match_10):
     resp = await client.get("/api/v1/dashboard")
     data = resp.json()
     required = {
-        "overview", "featured", "possession", "head_to_head", "phases",
-        "spatial", "line_breaks", "final_third", "defensive", "kpi_cards",
+        "overview",
+        "featured",
+        "possession",
+        "head_to_head",
+        "phases",
+        "spatial",
+        "line_breaks",
+        "final_third",
+        "defensive",
+        "kpi_cards",
     }
     assert required.issubset(set(data.keys()))
 

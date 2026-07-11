@@ -7,12 +7,10 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-
 # ---------------------------------------------------------------------------
 # Helpers used in tests
 # ---------------------------------------------------------------------------
+
 
 def _write_processed_log(watch_dir: Path, paths: list[Path]) -> None:
     log = watch_dir / ".processed_pdfs"
@@ -23,8 +21,10 @@ def _write_processed_log(watch_dir: Path, paths: list[Path]) -> None:
 # Unit tests
 # ---------------------------------------------------------------------------
 
+
 def test_find_pdfs_empty_dir():
     from ingestion.watch_pdfs import _find_pdfs
+
     with tempfile.TemporaryDirectory() as tmp:
         result = _find_pdfs(Path(tmp))
     assert result == []
@@ -32,6 +32,7 @@ def test_find_pdfs_empty_dir():
 
 def test_find_pdfs_returns_pdfs():
     from ingestion.watch_pdfs import _find_pdfs
+
     with tempfile.TemporaryDirectory() as tmp:
         p = Path(tmp)
         (p / "match_01.pdf").touch()
@@ -44,12 +45,14 @@ def test_find_pdfs_returns_pdfs():
 
 def test_find_pdfs_nonexistent_dir():
     from ingestion.watch_pdfs import _find_pdfs
+
     result = _find_pdfs(Path("/nonexistent/path/that/does/not/exist"))
     assert result == []
 
 
 def test_load_processed_empty():
     from ingestion.watch_pdfs import _load_processed
+
     with tempfile.TemporaryDirectory() as tmp:
         result = _load_processed(Path(tmp))
     assert result == set()
@@ -57,6 +60,7 @@ def test_load_processed_empty():
 
 def test_load_processed_reads_log():
     from ingestion.watch_pdfs import _load_processed, _mark_processed
+
     with tempfile.TemporaryDirectory() as tmp:
         watch_dir = Path(tmp)
         dummy = watch_dir / "match_01.pdf"
@@ -67,7 +71,8 @@ def test_load_processed_reads_log():
 
 
 def test_mark_processed_appends():
-    from ingestion.watch_pdfs import _mark_processed, _load_processed
+    from ingestion.watch_pdfs import _load_processed, _mark_processed
+
     with tempfile.TemporaryDirectory() as tmp:
         watch_dir = Path(tmp)
         p1 = watch_dir / "a.pdf"
@@ -83,6 +88,7 @@ def test_mark_processed_appends():
 
 def test_db_dsn_defaults():
     from ingestion.watch_pdfs import _db_dsn
+
     env = {
         "MYSQL_USER": "testuser",
         "MYSQL_PASSWORD": "testpass",
@@ -100,6 +106,7 @@ def test_db_dsn_defaults():
 
 def test_watch_dir_from_env():
     from ingestion.watch_pdfs import _watch_dir
+
     with tempfile.TemporaryDirectory() as tmp:
         with patch.dict(os.environ, {"PDF_WATCH_DIR": tmp}, clear=False):
             result = _watch_dir()
@@ -109,6 +116,7 @@ def test_watch_dir_from_env():
 def test_main_no_pdfs_returns_zero():
     """main() returns 0 when the watch dir is empty."""
     from ingestion.watch_pdfs import main
+
     with tempfile.TemporaryDirectory() as tmp:
         ret = main(["--dir", tmp])
     assert ret == 0
@@ -116,7 +124,7 @@ def test_main_no_pdfs_returns_zero():
 
 def test_main_dry_run_marks_nothing():
     """In dry-run mode, no PDFs are marked as processed."""
-    from ingestion.watch_pdfs import main, _load_processed
+    from ingestion.watch_pdfs import _load_processed, main
 
     with tempfile.TemporaryDirectory() as tmp:
         watch_dir = Path(tmp)
@@ -133,7 +141,7 @@ def test_main_dry_run_marks_nothing():
         mock_data.phases_b = []
 
         with patch("ingestion.watch_pdfs._ingest_pdf", return_value=True) as mock_ingest:
-            ret = main(["--dir", tmp, "--dry-run"])
+            main(["--dir", tmp, "--dry-run"])
 
         # dry-run still calls _ingest_pdf (which internally skips DB write)
         assert mock_ingest.called
@@ -144,7 +152,7 @@ def test_main_dry_run_marks_nothing():
 
 def test_main_processes_new_pdfs():
     """main() marks PDFs as processed after successful ingestion."""
-    from ingestion.watch_pdfs import main, _load_processed
+    from ingestion.watch_pdfs import _load_processed, main
 
     with tempfile.TemporaryDirectory() as tmp:
         watch_dir = Path(tmp)
@@ -162,7 +170,7 @@ def test_main_processes_new_pdfs():
 
 def test_main_skips_already_processed():
     """PDFs already in the log are not re-ingested."""
-    from ingestion.watch_pdfs import main, _mark_processed
+    from ingestion.watch_pdfs import _mark_processed, main
 
     with tempfile.TemporaryDirectory() as tmp:
         watch_dir = Path(tmp)
@@ -179,7 +187,7 @@ def test_main_skips_already_processed():
 
 def test_main_force_reprocesses():
     """--force causes already-processed PDFs to be re-ingested."""
-    from ingestion.watch_pdfs import main, _mark_processed
+    from ingestion.watch_pdfs import _mark_processed, main
 
     with tempfile.TemporaryDirectory() as tmp:
         watch_dir = Path(tmp)

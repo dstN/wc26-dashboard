@@ -1,4 +1,5 @@
 """Export FastAPI OpenAPI schema to stdout for contract drift checks."""
+
 import json
 
 if __name__ == "__main__":

@@ -1,13 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
 
 from app.deps import get_db
-from app.models import Team, Match, MatchStats, MatchPhase, Player, PlayerStat, LineBreak, DefensiveAction, MatchGkStat, MatchSetPlayStat
-from app.schemas.team import TeamSchema
-from app.schemas.match_stats import MatchStatsSchema
+from app.models import (
+    DefensiveAction,
+    LineBreak,
+    Match,
+    MatchGkStat,
+    MatchPhase,
+    MatchSetPlayStat,
+    MatchStats,
+    Player,
+    PlayerStat,
+    Team,
+)
 from app.schemas.dashboard import MatchMeta
-from app.schemas.phase import PhaseSchema
+from app.schemas.match_stats import MatchStatsSchema
+from app.schemas.team import TeamSchema
 
 router = APIRouter(prefix="/api/v1/teams", tags=["teams"])
 
@@ -18,18 +28,17 @@ async def list_teams(db: AsyncSession = Depends(get_db)):
     teams = result.scalars().all()
 
     # One query for all aggregate stats (was one per team)
-    stats_result = await db.execute(
-        select(MatchStats).where(MatchStats.scope == "team_aggregate")
-    )
+    stats_result = await db.execute(select(MatchStats).where(MatchStats.scope == "team_aggregate"))
     stats_by_team = {s.team_id: s for s in stats_result.scalars().all()}
 
     # Actual goals per team from real match results, in two grouped queries
     goals_by_team: dict[int, int] = {}
-    for team_col, score_col in ((Match.team_a_id, Match.score_a), (Match.team_b_id, Match.score_b)):
+    for team_col, score_col in (
+        (Match.team_a_id, Match.score_a),
+        (Match.team_b_id, Match.score_b),
+    ):
         rows = await db.execute(
-            select(team_col, func.sum(score_col))
-            .where(score_col.is_not(None))
-            .group_by(team_col)
+            select(team_col, func.sum(score_col)).where(score_col.is_not(None)).group_by(team_col)
         )
         for team_id, goals in rows.all():
             # SUM() returns Decimal on MySQL — coerce so JSON gets a number
@@ -41,10 +50,12 @@ async def list_teams(db: AsyncSession = Depends(get_db)):
         stats_dict = MatchStatsSchema.model_validate(stats).model_dump() if stats else None
         if stats_dict is not None:
             stats_dict["goals_a"] = goals_by_team.get(team.id, 0)
-        out.append({
-            "team": TeamSchema.model_validate(team).model_dump(),
-            "stats": stats_dict,
-        })
+        out.append(
+            {
+                "team": TeamSchema.model_validate(team).model_dump(),
+                "stats": stats_dict,
+            }
+        )
     return out
 
 
@@ -60,7 +71,12 @@ async def get_team_players(team_id: int, db: AsyncSession = Depends(get_db)):
     )
     players = result.scalars().all()
     return [
-        {"id": p.id, "name": p.name, "position": p.position, "jersey_number": p.jersey_number}
+        {
+            "id": p.id,
+            "name": p.name,
+            "position": p.position,
+            "jersey_number": p.jersey_number,
+        }
         for p in players
     ]
 
@@ -73,14 +89,22 @@ async def get_team_phases(team_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Team {team_id} not found")
 
     result = await db.execute(
-        select(MatchPhase.phase_name, MatchPhase.phase_group, func.avg(MatchPhase.pct).label("avg_pct"))
+        select(
+            MatchPhase.phase_name,
+            MatchPhase.phase_group,
+            func.avg(MatchPhase.pct).label("avg_pct"),
+        )
         .where(MatchPhase.team_id == team_id, MatchPhase.scope == "match")
         .group_by(MatchPhase.phase_name, MatchPhase.phase_group)
         .order_by(MatchPhase.phase_group, func.avg(MatchPhase.pct).desc())
     )
     rows = result.all()
     return [
-        {"phase_name": r.phase_name, "phase_group": r.phase_group, "pct": round(float(r.avg_pct), 1)}
+        {
+            "phase_name": r.phase_name,
+            "phase_group": r.phase_group,
+            "pct": round(float(r.avg_pct), 1),
+        }
         for r in rows
     ]
 
@@ -120,8 +144,11 @@ async def get_team_avg_stats(team_id: int, db: AsyncSession = Depends(get_db)):
     if not match_ids:
         return {"match_count": 0, "totals": {}, "averages": {}}
 
-    def _f(v, d=2): return round(float(v), d) if v is not None else None
-    def _i(v): return int(v) if v is not None else None
+    def _f(v, d=2):
+        return round(float(v), d) if v is not None else None
+
+    def _i(v):
+        return int(v) if v is not None else None
 
     totals: dict = {}
     counts: dict = {}
@@ -133,47 +160,87 @@ async def get_team_avg_stats(team_id: int, db: AsyncSession = Depends(get_db)):
         counts[key] = counts.get(key, 0) + 1
 
     for mid in match_ids:
-        ms = (await db.execute(
-            select(MatchStats).where(MatchStats.match_id == mid, MatchStats.team_id == team_id, MatchStats.scope == "match")
-        )).scalar_one_or_none()
-
-        lb_rows = (await db.execute(
-            select(LineBreak).where(LineBreak.match_id == mid, LineBreak.team_id == team_id, LineBreak.scope == "match")
-        )).scalars().all()
-
-        da = (await db.execute(
-            select(DefensiveAction).where(DefensiveAction.match_id == mid, DefensiveAction.team_id == team_id, DefensiveAction.scope == "match")
-        )).scalar_one_or_none()
-
-        pl = (await db.execute(
-            select(
-                func.sum(PlayerStat.passes_attempted).label("passes_att"),
-                func.sum(PlayerStat.passes_completed).label("passes_comp"),
-                func.sum(PlayerStat.crosses_completed).label("crosses"),
-                func.sum(PlayerStat.ball_progressions).label("ball_prog"),
-                func.sum(PlayerStat.take_ons).label("take_ons"),
-                func.sum(PlayerStat.tackles_made).label("tackles_made"),
-                func.sum(PlayerStat.tackles_won).label("tackles_won"),
-                func.sum(PlayerStat.interceptions).label("interceptions"),
-                func.sum(PlayerStat.blocks).label("blocks"),
-                func.sum(PlayerStat.clearances).label("clearances"),
-                func.sum(PlayerStat.possession_regains).label("regains"),
-                func.sum(PlayerStat.pressing_direct).label("pressing_direct"),
-                func.sum(PlayerStat.duels_won_aerial).label("duels_aerial"),
-                func.sum(PlayerStat.duels_won_physical).label("duels_physical"),
-                func.sum(PlayerStat.total_distance_m).label("distance_m"),
+        ms = (
+            await db.execute(
+                select(MatchStats).where(
+                    MatchStats.match_id == mid,
+                    MatchStats.team_id == team_id,
+                    MatchStats.scope == "match",
+                )
             )
-            .join(Player, Player.id == PlayerStat.player_id)
-            .where(PlayerStat.match_id == mid, Player.team_id == team_id, PlayerStat.scope == "match")
-        )).first()
+        ).scalar_one_or_none()
 
-        gk = (await db.execute(
-            select(MatchGkStat).where(MatchGkStat.match_id == mid, MatchGkStat.team_id == team_id, MatchGkStat.scope == "match")
-        )).scalar_one_or_none()
+        lb_rows = (
+            (
+                await db.execute(
+                    select(LineBreak).where(
+                        LineBreak.match_id == mid,
+                        LineBreak.team_id == team_id,
+                        LineBreak.scope == "match",
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
 
-        sp = (await db.execute(
-            select(MatchSetPlayStat).where(MatchSetPlayStat.match_id == mid, MatchSetPlayStat.team_id == team_id, MatchSetPlayStat.scope == "match")
-        )).scalar_one_or_none()
+        da = (
+            await db.execute(
+                select(DefensiveAction).where(
+                    DefensiveAction.match_id == mid,
+                    DefensiveAction.team_id == team_id,
+                    DefensiveAction.scope == "match",
+                )
+            )
+        ).scalar_one_or_none()
+
+        pl = (
+            await db.execute(
+                select(
+                    func.sum(PlayerStat.passes_attempted).label("passes_att"),
+                    func.sum(PlayerStat.passes_completed).label("passes_comp"),
+                    func.sum(PlayerStat.crosses_completed).label("crosses"),
+                    func.sum(PlayerStat.ball_progressions).label("ball_prog"),
+                    func.sum(PlayerStat.take_ons).label("take_ons"),
+                    func.sum(PlayerStat.tackles_made).label("tackles_made"),
+                    func.sum(PlayerStat.tackles_won).label("tackles_won"),
+                    func.sum(PlayerStat.interceptions).label("interceptions"),
+                    func.sum(PlayerStat.blocks).label("blocks"),
+                    func.sum(PlayerStat.clearances).label("clearances"),
+                    func.sum(PlayerStat.possession_regains).label("regains"),
+                    func.sum(PlayerStat.pressing_direct).label("pressing_direct"),
+                    func.sum(PlayerStat.duels_won_aerial).label("duels_aerial"),
+                    func.sum(PlayerStat.duels_won_physical).label("duels_physical"),
+                    func.sum(PlayerStat.total_distance_m).label("distance_m"),
+                )
+                .join(Player, Player.id == PlayerStat.player_id)
+                .where(
+                    PlayerStat.match_id == mid,
+                    Player.team_id == team_id,
+                    PlayerStat.scope == "match",
+                )
+            )
+        ).first()
+
+        gk = (
+            await db.execute(
+                select(MatchGkStat).where(
+                    MatchGkStat.match_id == mid,
+                    MatchGkStat.team_id == team_id,
+                    MatchGkStat.scope == "match",
+                )
+            )
+        ).scalar_one_or_none()
+
+        sp = (
+            await db.execute(
+                select(MatchSetPlayStat).where(
+                    MatchSetPlayStat.match_id == mid,
+                    MatchSetPlayStat.team_id == team_id,
+                    MatchSetPlayStat.scope == "match",
+                )
+            )
+        ).scalar_one_or_none()
 
         if ms:
             _add("xg", _f(ms.xg_a))
@@ -225,8 +292,7 @@ async def get_team_avg_stats(team_id: int, db: AsyncSession = Depends(get_db)):
             _add("free_kicks", _i(sp.free_kicks))
 
     averages = {
-        k: round(totals[k] / counts[k], 2) if counts.get(k, 0) > 0 else None
-        for k in totals
+        k: round(totals[k] / counts[k], 2) if counts.get(k, 0) > 0 else None for k in totals
     }
 
     return {"match_count": len(match_ids), "totals": totals, "averages": averages}
@@ -257,18 +323,23 @@ async def get_team_matches(team_id: int, db: AsyncSession = Depends(get_db)):
             )
         )
         stats = stats_result.scalar_one_or_none()
-        out.append({
-            "match": MatchMeta(
-                id=match.id, match_no=match.match_no,
-                score_a=match.score_a, score_b=match.score_b,
-                venue=match.venue or "", match_date=match.match_date.isoformat() if match.match_date else "",
-                group_letter=match.group_letter or "",
-                team_a=TeamSchema.model_validate(team_a),
-                team_b=TeamSchema.model_validate(team_b),
-                went_to_extra_time=match.went_to_extra_time,
-                penalty_score_a=match.penalty_score_a,
-                penalty_score_b=match.penalty_score_b,
-            ).model_dump(),
-            "stats": MatchStatsSchema.model_validate(stats).model_dump() if stats else None,
-        })
+        out.append(
+            {
+                "match": MatchMeta(
+                    id=match.id,
+                    match_no=match.match_no,
+                    score_a=match.score_a,
+                    score_b=match.score_b,
+                    venue=match.venue or "",
+                    match_date=match.match_date.isoformat() if match.match_date else "",
+                    group_letter=match.group_letter or "",
+                    team_a=TeamSchema.model_validate(team_a),
+                    team_b=TeamSchema.model_validate(team_b),
+                    went_to_extra_time=match.went_to_extra_time,
+                    penalty_score_a=match.penalty_score_a,
+                    penalty_score_b=match.penalty_score_b,
+                ).model_dump(),
+                "stats": (MatchStatsSchema.model_validate(stats).model_dump() if stats else None),
+            }
+        )
     return out

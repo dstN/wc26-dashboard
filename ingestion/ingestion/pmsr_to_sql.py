@@ -9,11 +9,10 @@ Usage:
                                            → moves processed PDFs to .claude/data/done/
 """
 
-import sys
+import argparse
 import os
 import re
-import json
-import argparse
+import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -21,54 +20,54 @@ from parse_pmsr import extract  # type: ignore
 
 # ── Team name (as it appears in PDF) → FIFA 3-letter short code ──────────────
 TEAM_NAME_TO_CODE: dict[str, str] = {
-    "Germany":                    "GER",
-    "Curaçao":                    "CUR",
-    "Argentina":                  "ARG",
-    "Algeria":                    "ALG",
-    "Australia":                  "AUS",
-    "Türkiye":                    "TUR",
-    "Austria":                    "AUT",
-    "Jordan":                     "JOR",
-    "Belgium":                    "BEL",
-    "Egypt":                      "EGY",
-    "Brazil":                     "BRA",
-    "Haiti":                      "HAI",
-    "Morocco":                    "MAR",
-    "Canada":                     "CAN",
-    "Bosnia and Herzegovina":     "BIH",
-    "Qatar":                      "QAT",
-    "Côte d'Ivoire":              "CIV",
-    "Ecuador":                    "ECU",
-    "Czechia":                    "CZE",
-    "South Africa":               "RSA",
-    "England":                    "ENG",
-    "Croatia":                    "CRO",
-    "France":                     "FRA",
-    "Senegal":                    "SEN",
-    "Ghana":                      "GHA",
-    "Panama":                     "PAN",
-    "Scotland":                   "SCO",
-    "IR Iran":                    "IRN",
-    "New Zealand":                "NZL",
-    "Iraq":                       "IRQ",
-    "Norway":                     "NOR",
-    "Mexico":                     "MEX",
-    "Korea Republic":             "KOR",
-    "Netherlands":                "NED",
-    "Japan":                      "JPN",
-    "Sweden":                     "SWE",
-    "Portugal":                   "POR",
-    "Congo DR":                   "COD",
-    "Switzerland":                "SUI",
-    "Saudi Arabia":               "KSA",
-    "Uruguay":                    "URU",
-    "Spain":                      "ESP",
-    "Cabo Verde":                 "CPV",
-    "Tunisia":                    "TUN",
-    "Paraguay":                   "PAR",
-    "USA":                        "USA",
-    "Uzbekistan":                 "UZB",
-    "Colombia":                   "COL",
+    "Germany": "GER",
+    "Curaçao": "CUR",
+    "Argentina": "ARG",
+    "Algeria": "ALG",
+    "Australia": "AUS",
+    "Türkiye": "TUR",
+    "Austria": "AUT",
+    "Jordan": "JOR",
+    "Belgium": "BEL",
+    "Egypt": "EGY",
+    "Brazil": "BRA",
+    "Haiti": "HAI",
+    "Morocco": "MAR",
+    "Canada": "CAN",
+    "Bosnia and Herzegovina": "BIH",
+    "Qatar": "QAT",
+    "Côte d'Ivoire": "CIV",
+    "Ecuador": "ECU",
+    "Czechia": "CZE",
+    "South Africa": "RSA",
+    "England": "ENG",
+    "Croatia": "CRO",
+    "France": "FRA",
+    "Senegal": "SEN",
+    "Ghana": "GHA",
+    "Panama": "PAN",
+    "Scotland": "SCO",
+    "IR Iran": "IRN",
+    "New Zealand": "NZL",
+    "Iraq": "IRQ",
+    "Norway": "NOR",
+    "Mexico": "MEX",
+    "Korea Republic": "KOR",
+    "Netherlands": "NED",
+    "Japan": "JPN",
+    "Sweden": "SWE",
+    "Portugal": "POR",
+    "Congo DR": "COD",
+    "Switzerland": "SUI",
+    "Saudi Arabia": "KSA",
+    "Uruguay": "URU",
+    "Spain": "ESP",
+    "Cabo Verde": "CPV",
+    "Tunisia": "TUN",
+    "Paraguay": "PAR",
+    "USA": "USA",
+    "Uzbekistan": "UZB",
+    "Colombia": "COL",
 }
 
 
@@ -124,14 +123,14 @@ def _aggregate_line_breaks(by_units: dict) -> dict[str, tuple[int, int]]:
     """
     totals: dict[str, list[int]] = {
         "defensive": [0, 0],
-        "midfield":  [0, 0],
+        "midfield": [0, 0],
         "attacking": [0, 0],
     }
     for unit_data in by_units.values():
         for line_info in unit_data.get("lines", []):
             line = line_info.get("line", "")
-            att  = int(line_info.get("attempted",  0) or 0)
-            comp = int(line_info.get("completed",  0) or 0)
+            att = int(line_info.get("attempted", 0) or 0)
+            comp = int(line_info.get("completed", 0) or 0)
             if line == "defensive":
                 totals["defensive"][0] += att
                 totals["defensive"][1] += comp
@@ -146,12 +145,13 @@ def _aggregate_line_breaks(by_units: dict) -> dict[str, tuple[int, int]]:
 
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def pdf_to_sql(pdf_path: str) -> str:
     """Parse a FIFA PMSR PDF and return the corresponding SQL INSERT statements."""
     data = extract(pdf_path)
 
-    match  = data["match"]
-    pages  = data["pages"]
+    match = data["match"]
+    pages = data["pages"]
 
     # ── Sentinel: page 29 must be 'Defensive Pressure' ───────────────────────
     # If _count_extra_shot_log_pages() misfires, all pages after p17 shift and
@@ -164,15 +164,15 @@ def pdf_to_sql(pdf_path: str) -> str:
             "Verify _count_extra_shot_log_pages() handles this PDF correctly."
         )
 
-    match_no   = match["match_number"]
-    home_name  = match["home_team_name"]
-    away_name  = match["away_team_name"]
-    home_code  = _code(home_name)
-    away_code  = _code(away_name)
+    match_no = match["match_number"]
+    home_name = match["home_team_name"]
+    away_name = match["away_team_name"]
+    home_code = _code(home_name)
+    away_code = _code(away_name)
     score_home = match["score"]["home"]
     score_away = match["score"]["away"]
-    venue      = match["venue"]
-    date       = match["date"]
+    venue = match["venue"]
+    date = match["date"]
 
     stage = match.get("stage", "")
     group_m = re.search(r"Group\s+([A-Z])", stage)
@@ -197,8 +197,10 @@ def pdf_to_sql(pdf_path: str) -> str:
     out: list[str] = []
     L = out.append
 
-    L(f"-- ── {home_name} {score_home}–{score_away} {away_name}  "
-      f"· Match {match_no} · {date} ────────────────────────────────────────")
+    L(
+        f"-- ── {home_name} {score_home}–{score_away} {away_name}  "
+        f"· Match {match_no} · {date} ────────────────────────────────────────"
+    )
     L(f"-- Generated from {Path(pdf_path).name}")
     L("")
 
@@ -210,10 +212,14 @@ def pdf_to_sql(pdf_path: str) -> str:
     pens = match.get("penalty_shootout")
     pens_a = _n(pens["home_pens"]) if pens else "NULL"
     pens_b = _n(pens["away_pens"]) if pens else "NULL"
-    L("INSERT INTO matches (match_no, team_a_id, team_b_id, score_a, score_b, venue, match_date, group_letter, formation_a, formation_b, went_to_extra_time, penalty_score_a, penalty_score_b)")
-    L(f"VALUES ({match_no}, {_team(home_code)}, {_team(away_code)}, "
-      f"{score_home}, {score_away}, {_q(venue)}, {_q(date)}, "
-      f"{_q(group_letter)}, {form_a}, {form_b}, {went_to_et}, {pens_a}, {pens_b})")
+    L(
+        "INSERT INTO matches (match_no, team_a_id, team_b_id, score_a, score_b, venue, match_date, group_letter, formation_a, formation_b, went_to_extra_time, penalty_score_a, penalty_score_b)"
+    )
+    L(
+        f"VALUES ({match_no}, {_team(home_code)}, {_team(away_code)}, "
+        f"{score_home}, {score_away}, {_q(venue)}, {_q(date)}, "
+        f"{_q(group_letter)}, {form_a}, {form_b}, {went_to_et}, {pens_a}, {pens_b})"
+    )
     L("ON DUPLICATE KEY UPDATE")
     L("  score_a=VALUES(score_a), score_b=VALUES(score_b),")
     L("  venue=VALUES(venue), match_date=VALUES(match_date),")
@@ -223,8 +229,8 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Match Stats ───────────────────────────────────────────────────────────
-    p3    = pages.get("3", {}).get("data", {})
-    poss  = p3.get("possession_pct", {})
+    p3 = pages.get("3", {}).get("data", {})
+    poss = p3.get("possession_pct", {})
     stats = p3.get("statistics", [])
 
     home_xg = away_xg = None
@@ -244,12 +250,32 @@ def pdf_to_sql(pdf_path: str) -> str:
     poss_away = poss.get("away_team")
     poss_cont = poss.get("contested")
 
-    for (code, pa, pb, xa, xb, ga, gb, rec) in [
-        (home_code, poss_home, poss_away, home_xg, away_xg, score_home, score_away, home_recovery),
-        (away_code, poss_away, poss_home, away_xg, home_xg, score_away, score_home, away_recovery),
+    for code, pa, pb, xa, xb, ga, gb, rec in [
+        (
+            home_code,
+            poss_home,
+            poss_away,
+            home_xg,
+            away_xg,
+            score_home,
+            score_away,
+            home_recovery,
+        ),
+        (
+            away_code,
+            poss_away,
+            poss_home,
+            away_xg,
+            home_xg,
+            score_away,
+            score_home,
+            away_recovery,
+        ),
     ]:
+
         def n(v: object) -> str:
             return "NULL" if v is None else str(v)
+
         L("INSERT INTO match_stats")
         L("  (team_id, match_id, scope, possession_team_a, possession_team_b,")
         L("   possession_in_contest, ball_recovery_time_avg, xg_a, xg_b, goals_a, goals_b)")
@@ -265,11 +291,11 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Match Phases ──────────────────────────────────────────────────────────
-    p4       = pages.get("4", {}).get("data", {})
-    in_ph    = p4.get("in_possession", [])
-    out_ph   = p4.get("out_of_possession", [])
+    p4 = pages.get("4", {}).get("data", {})
+    in_ph = p4.get("in_possession", [])
+    out_ph = p4.get("out_of_possession", [])
 
-    for (code, pct_key) in [(home_code, "home_team_pct"), (away_code, "away_team_pct")]:
+    for code, pct_key in [(home_code, "home_team_pct"), (away_code, "away_team_pct")]:
         rows: list[str] = []
         for ph in in_ph:
             rows.append(
@@ -290,18 +316,18 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Spatial Stats (Defensive) ─────────────────────────────────────────────
-    for (code, pg) in [(home_code, "27"), (away_code, "28")]:
+    for code, pg in [(home_code, "27"), (away_code, "28")]:
         spat = pages.get(pg, {}).get("data", {})
         block_map = {
             "high": spat.get("high_block_press", {}),
-            "mid":  spat.get("mid_block",        {}),
-            "low":  spat.get("low_block",         {}),
+            "mid": spat.get("mid_block", {}),
+            "low": spat.get("low_block", {}),
         }
         rows = []
         for btype, bd in block_map.items():
             dist = bd.get("distance_to_goal_m")
             leng = bd.get("length_m")
-            wid  = bd.get("width_m")
+            wid = bd.get("width_m")
             if dist is not None:
                 rows.append(
                     f"  ({_team(code)}, {_match(match_no)}, 'match', "
@@ -309,7 +335,9 @@ def pdf_to_sql(pdf_path: str) -> str:
                 )
         if rows:
             L("INSERT INTO team_spatial_stats")
-            L("  (team_id, match_id, scope, block_type, defensive_line_height, team_length, width_m)")
+            L(
+                "  (team_id, match_id, scope, block_type, defensive_line_height, team_length, width_m)"
+            )
             L("VALUES")
             L(",\n".join(rows))
             L("ON DUPLICATE KEY UPDATE")
@@ -320,18 +348,18 @@ def pdf_to_sql(pdf_path: str) -> str:
 
     # ── Spatial Stats (In Possession, pages 6/7) ──────────────────────────────
     section_map = {
-        "build_up_low":       "build_up_low",
-        "build_up_mid":       "build_up_mid",
-        "final_third_phase":  "final_third_phase",
+        "build_up_low": "build_up_low",
+        "build_up_mid": "build_up_mid",
+        "final_third_phase": "final_third_phase",
     }
-    for (code, pg) in [(home_code, "6"), (away_code, "7")]:
+    for code, pg in [(home_code, "6"), (away_code, "7")]:
         spat = pages.get(pg, {}).get("data", {})
         rows = []
         for sec_key, block_val in section_map.items():
             bd = spat.get(sec_key, {})
             dist = bd.get("distance_to_goal_m")
             leng = bd.get("length_m")
-            wid  = bd.get("width_m")
+            wid = bd.get("width_m")
             if dist is not None:
                 rows.append(
                     f"  ({_team(code)}, {_match(match_no)}, 'match', "
@@ -339,7 +367,9 @@ def pdf_to_sql(pdf_path: str) -> str:
                 )
         if rows:
             L("INSERT INTO team_spatial_stats")
-            L("  (team_id, match_id, scope, block_type, defensive_line_height, team_length, width_m)")
+            L(
+                "  (team_id, match_id, scope, block_type, defensive_line_height, team_length, width_m)"
+            )
             L("VALUES")
             L(",\n".join(rows))
             L("ON DUPLICATE KEY UPDATE")
@@ -351,7 +381,7 @@ def pdf_to_sql(pdf_path: str) -> str:
     # ── Line Breaks (per-line aggregated across unit groups) ─────────────────
     # We aggregate by which specific line was broken (defensive/midfield/attacking)
     # across all unit-count contexts (4u/3u/2u). "advanced midfield" → "midfield".
-    for (code, pg) in [(home_code, "8"), (away_code, "9")]:
+    for code, pg in [(home_code, "8"), (away_code, "9")]:
         by_units = pages.get(pg, {}).get("data", {}).get("by_units", {})
         agg = _aggregate_line_breaks(by_units)
         rows = [
@@ -368,16 +398,18 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Defensive Actions (pages 25/26) ──────────────────────────────────────
-    for (code, pg) in [(home_code, "25"), (away_code, "26")]:
-        da  = pages.get(pg, {}).get("data", {})
-        ft  = da.get("forced_turnovers", 0)
+    for code, pg in [(home_code, "25"), (away_code, "26")]:
+        da = pages.get(pg, {}).get("data", {})
+        ft = da.get("forced_turnovers", 0)
         avg_dur = None
         for s in p29_stats:
             if "Avg Pressure Duration" in s.get("stat", ""):
                 avg_dur = s["home_team"] if code == home_code else s["away_team"]
         pressure = _pressure(avg_dur)
+
         def n(v):
             return "NULL" if v is None else str(v)
+
         blk = da.get("blocks") or {}
         con = da.get("possession_contests") or {}
         mrg = da.get("most_possession_regains") or {}
@@ -410,19 +442,21 @@ def pdf_to_sql(pdf_path: str) -> str:
 
     # ── Players + per-match player stats ─────────────────────────────────────
     p2 = pages.get("2", {}).get("data", {})
-    for (code, team_key) in [(home_code, "home_team"), (away_code, "away_team")]:
-        team_data  = p2.get(team_key, {})
-        starting   = list(team_data.get("starting",    []))
-        subs       = list(team_data.get("substitutes", []))
+    for code, team_key in [(home_code, "home_team"), (away_code, "away_team")]:
+        team_data = p2.get(team_key, {})
+        starting = list(team_data.get("starting", []))
+        subs = list(team_data.get("substitutes", []))
         for pl in starting + subs:
             name = (pl.get("name") or "").strip()
-            pos  = pl.get("position") or ""
-            num  = pl.get("number")
+            pos = pl.get("position") or ""
+            num = pl.get("number")
             if not name:
                 continue
             L("INSERT INTO players (team_id, name, position, jersey_number)")
-            L(f"VALUES ({_team(code)}, {_q(name)}, {_q(pos)}, "
-              f"{'NULL' if num is None else num})")
+            L(
+                f"VALUES ({_team(code)}, {_q(name)}, {_q(pos)}, "
+                f"{'NULL' if num is None else num})"
+            )
             L("ON DUPLICATE KEY UPDATE name=VALUES(name), position=VALUES(position);")
 
         # Per-match player stats (goals, cards, minutes, started)
@@ -430,15 +464,15 @@ def pdf_to_sql(pdf_path: str) -> str:
         for is_starter, group in [(1, starting), (0, subs)]:
             for pl in group:
                 name = (pl.get("name") or "").strip()
-                num  = pl.get("number")
+                num = pl.get("number")
                 if not name:
                     continue
-                goals_count  = len(pl.get("goals", []) or [])
-                cards        = pl.get("cards", []) or []
+                goals_count = len(pl.get("goals", []) or [])
+                cards = pl.get("cards", []) or []
                 yellow = sum(1 for c in cards if c.get("type") == "yellow")
-                red    = sum(1 for c in cards if c.get("type") in ("red", "second_yellow"))
-                sub_on   = pl.get("subbed_on")
-                sub_off  = pl.get("subbed_off")
+                red = sum(1 for c in cards if c.get("type") in ("red", "second_yellow"))
+                sub_on = pl.get("subbed_on")
+                sub_off = pl.get("subbed_off")
                 # Final whistle is 90' unless the match went to extra time —
                 # a starter/sub who plays to the end of an AET match without
                 # being subbed off would otherwise be undercounted at 90'.
@@ -451,8 +485,8 @@ def pdf_to_sql(pdf_path: str) -> str:
                 player_ref = (
                     f"(SELECT id FROM players WHERE team_id={_team(code)} "
                     f"AND jersey_number={num})"
-                    if num is not None else
-                    f"(SELECT id FROM players WHERE team_id={_team(code)} "
+                    if num is not None
+                    else f"(SELECT id FROM players WHERE team_id={_team(code)} "
                     f"AND name={_q(name)} LIMIT 1)"
                 )
                 stats_rows.append(
@@ -460,24 +494,30 @@ def pdf_to_sql(pdf_path: str) -> str:
                     f"{goals_count}, {yellow}, {red}, {is_starter}, {mins})"
                 )
         if stats_rows:
-            L("INSERT INTO player_stats "
-              "(player_id, match_id, scope, goals, yellow_cards, red_cards, started, minutes_played)")
+            L(
+                "INSERT INTO player_stats "
+                "(player_id, match_id, scope, goals, yellow_cards, red_cards, started, minutes_played)"
+            )
             L("VALUES")
             L(",\n".join(stats_rows))
-            L("ON DUPLICATE KEY UPDATE "
-              "goals=VALUES(goals), yellow_cards=VALUES(yellow_cards), "
-              "red_cards=VALUES(red_cards), started=VALUES(started), "
-              "minutes_played=VALUES(minutes_played);")
+            L(
+                "ON DUPLICATE KEY UPDATE "
+                "goals=VALUES(goals), yellow_cards=VALUES(yellow_cards), "
+                "red_cards=VALUES(red_cards), started=VALUES(started), "
+                "minutes_played=VALUES(minutes_played);"
+            )
     L("")
 
     # ── Shot summary (pages 14/16) ────────────────────────────────────────────
-    for (code, pg) in [(home_code, "14"), (away_code, "16")]:
+    for code, pg in [(home_code, "14"), (away_code, "16")]:
         shots = pages.get(pg, {}).get("data", {})
         total = shots.get("total_shots")
         on_tgt = (shots.get("outcomes") or {}).get("on_target")
         if total is not None:
+
             def n(v):
                 return "NULL" if v is None else str(v)
+
             L("UPDATE match_stats")
             L(f"SET shots_total={n(total)}, shots_on_target={n(on_tgt)}")
             L(f"WHERE team_id={_team(code)} AND match_id={_match(match_no)}")
@@ -485,10 +525,12 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Shot Events (pages 15/17) ─────────────────────────────────────────────
-    for (code, pg) in [(home_code, "15"), (away_code, "17")]:
+    for code, pg in [(home_code, "15"), (away_code, "17")]:
         shots = pages.get(pg, {}).get("data", {}).get("shots", [])
         if shots:
-            L(f"DELETE FROM shot_events WHERE team_id={_team(code)} AND match_id={_match(match_no)};")
+            L(
+                f"DELETE FROM shot_events WHERE team_id={_team(code)} AND match_id={_match(match_no)};"
+            )
             rows = []
             for s in shots:
                 rows.append(
@@ -505,24 +547,25 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Passing Connections (pages 12/13) ─────────────────────────────────────
-    for (code, pg) in [(home_code, "12"), (away_code, "13")]:
+    for code, pg in [(home_code, "12"), (away_code, "13")]:
         top5 = pages.get(pg, {}).get("data", {}).get("top5_player_to_player_passers", [])
         rows = []
         rank = 1
         for entry in top5:
             frm = entry.get("from", "")
-            to  = entry.get("to", "")
+            to = entry.get("to", "")
             pct = entry.get("pct_of_team_passes")
             # Skip header rows parsed as data (from="% of Total")
             if not frm or "%" in frm or len(frm) < 3:
                 continue
             rows.append(
-                f"  ({_team(code)}, {_match(match_no)}, {rank}, "
-                f"{_q(frm)}, {_q(to)}, {_n(pct)})"
+                f"  ({_team(code)}, {_match(match_no)}, {rank}, " f"{_q(frm)}, {_q(to)}, {_n(pct)})"
             )
             rank += 1
         if rows:
-            L("INSERT INTO passing_connections (team_id, match_id, rank_no, from_name, to_name, pct_of_team_passes)")
+            L(
+                "INSERT INTO passing_connections (team_id, match_id, rank_no, from_name, to_name, pct_of_team_passes)"
+            )
             L("VALUES")
             L(",\n".join(rows))
             L("ON DUPLICATE KEY UPDATE from_name=VALUES(from_name), to_name=VALUES(to_name),")
@@ -530,14 +573,16 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Cross Stats (pages 18/19) ─────────────────────────────────────────────
-    for (code, pg) in [(home_code, "18"), (away_code, "19")]:
+    for code, pg in [(home_code, "18"), (away_code, "19")]:
         cr = pages.get(pg, {}).get("data", {})
         if not cr:
             continue
+
         def n(v):
             return "NULL" if v is None else str(v)
-        dt  = cr.get("delivery_type_totals") or {}
-        cz  = cr.get("cross_zones") or {}
+
+        dt = cr.get("delivery_type_totals") or {}
+        cz = cr.get("cross_zones") or {}
         most = cr.get("most_attempted") or {}
         L("INSERT INTO cross_stats")
         L("  (team_id, match_id, scope, attempted, completed,")
@@ -546,9 +591,15 @@ def pdf_to_sql(pdf_path: str) -> str:
         L("   type_cutback, type_push_cross, most_player, most_count)")
         L(f"VALUES ({_team(code)}, {_match(match_no)}, 'match',")
         L(f"  {n(cr.get('attempted'))}, {n(cr.get('completed'))},")
-        L(f"  {n(cz.get('left'))}, {n(cz.get('center_left'))}, {n(cz.get('center_right'))}, {n(cz.get('right'))},")
-        L(f"  {n(dt.get('inswing'))}, {n(dt.get('outswing'))}, {n(dt.get('driven'))}, {n(dt.get('lofted'))},")
-        L(f"  {n(dt.get('cutback'))}, {n(dt.get('push_cross'))}, {_q(most.get('player',''))}, {n(most.get('count'))})")
+        L(
+            f"  {n(cz.get('left'))}, {n(cz.get('center_left'))}, {n(cz.get('center_right'))}, {n(cz.get('right'))},"
+        )
+        L(
+            f"  {n(dt.get('inswing'))}, {n(dt.get('outswing'))}, {n(dt.get('driven'))}, {n(dt.get('lofted'))},"
+        )
+        L(
+            f"  {n(dt.get('cutback'))}, {n(dt.get('push_cross'))}, {_q(most.get('player',''))}, {n(most.get('count'))})"
+        )
         L("ON DUPLICATE KEY UPDATE")
         L("  attempted=VALUES(attempted), completed=VALUES(completed),")
         L("  zone_left=VALUES(zone_left), zone_center_left=VALUES(zone_center_left),")
@@ -560,14 +611,16 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Offering Stats (pages 20/21) ──────────────────────────────────────────
-    for (code, pg) in [(home_code, "20"), (away_code, "21")]:
+    for code, pg in [(home_code, "20"), (away_code, "21")]:
         of = pages.get(pg, {}).get("data", {})
         if not of:
             continue
+
         def n(v):
             return "NULL" if v is None else str(v)
-        byt  = of.get("offers_made_by_third") or {}
-        shp  = of.get("offers_made_shape") or {}
+
+        byt = of.get("offers_made_by_third") or {}
+        shp = of.get("offers_made_shape") or {}
         most = of.get("most_offers") or {}
         L("INSERT INTO match_offering_stats")
         L("  (team_id, match_id, scope, total_offers_made, total_offers_received,")
@@ -589,18 +642,20 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Movement Stats (pages 22/23) ──────────────────────────────────────────
-    for (code, pg) in [(home_code, "22"), (away_code, "23")]:
+    for code, pg in [(home_code, "22"), (away_code, "23")]:
         mv = pages.get(pg, {}).get("data", {})
         if not mv:
             continue
+
         def n(v):
             return "NULL" if v is None else str(v)
+
         amt = mv.get("all_movement_types") or {}
         bph = mv.get("by_phase_totals") or {}
         bpt = mv.get("by_pitch_third") or {}
-        ft  = bpt.get("final_third") or {}
+        ft = bpt.get("final_third") or {}
         mid = bpt.get("middle_third") or {}
-        df  = bpt.get("defensive_third") or {}
+        df = bpt.get("defensive_third") or {}
         L("INSERT INTO match_movement_stats")
         L("  (team_id, match_id, scope, total_movements,")
         L("   phase_final_third, phase_progression, phase_build_up,")
@@ -613,9 +668,15 @@ def pdf_to_sql(pdf_path: str) -> str:
         L(f"  {n(bph.get('progression_phase'))}, {n(bph.get('build_up_phase'))},")
         L(f"  {n(amt.get('in_front'))}, {n(amt.get('in_between'))},")
         L(f"  {n(amt.get('out_to_in'))}, {n(amt.get('in_to_out'))}, {n(amt.get('in_behind'))},")
-        L(f"  {n(ft.get('in_front'))}, {n(ft.get('in_between'))}, {n(ft.get('out_to_in'))}, {n(ft.get('in_to_out'))}, {n(ft.get('in_behind'))},")
-        L(f"  {n(mid.get('in_front'))}, {n(mid.get('in_between'))}, {n(mid.get('out_to_in'))}, {n(mid.get('in_to_out'))}, {n(mid.get('in_behind'))},")
-        L(f"  {n(df.get('in_front'))}, {n(df.get('in_between'))}, {n(df.get('out_to_in'))}, {n(df.get('in_to_out'))}, {n(df.get('in_behind'))})")
+        L(
+            f"  {n(ft.get('in_front'))}, {n(ft.get('in_between'))}, {n(ft.get('out_to_in'))}, {n(ft.get('in_to_out'))}, {n(ft.get('in_behind'))},"
+        )
+        L(
+            f"  {n(mid.get('in_front'))}, {n(mid.get('in_between'))}, {n(mid.get('out_to_in'))}, {n(mid.get('in_to_out'))}, {n(mid.get('in_behind'))},"
+        )
+        L(
+            f"  {n(df.get('in_front'))}, {n(df.get('in_between'))}, {n(df.get('out_to_in'))}, {n(df.get('in_to_out'))}, {n(df.get('in_behind'))})"
+        )
         L("ON DUPLICATE KEY UPDATE")
         L("  total_movements=VALUES(total_movements),")
         L("  phase_final_third=VALUES(phase_final_third),")
@@ -625,11 +686,17 @@ def pdf_to_sql(pdf_path: str) -> str:
         L("  type_out_to_in=VALUES(type_out_to_in), type_in_to_out=VALUES(type_in_to_out),")
         L("  type_in_behind=VALUES(type_in_behind),")
         L("  ft_in_front=VALUES(ft_in_front), ft_in_between=VALUES(ft_in_between),")
-        L("  ft_out_to_in=VALUES(ft_out_to_in), ft_in_to_out=VALUES(ft_in_to_out), ft_in_behind=VALUES(ft_in_behind),")
+        L(
+            "  ft_out_to_in=VALUES(ft_out_to_in), ft_in_to_out=VALUES(ft_in_to_out), ft_in_behind=VALUES(ft_in_behind),"
+        )
         L("  mid_in_front=VALUES(mid_in_front), mid_in_between=VALUES(mid_in_between),")
-        L("  mid_out_to_in=VALUES(mid_out_to_in), mid_in_to_out=VALUES(mid_in_to_out), mid_in_behind=VALUES(mid_in_behind),")
+        L(
+            "  mid_out_to_in=VALUES(mid_out_to_in), mid_in_to_out=VALUES(mid_in_to_out), mid_in_behind=VALUES(mid_in_behind),"
+        )
         L("  def_in_front=VALUES(def_in_front), def_in_between=VALUES(def_in_between),")
-        L("  def_out_to_in=VALUES(def_out_to_in), def_in_to_out=VALUES(def_in_to_out), def_in_behind=VALUES(def_in_behind);")
+        L(
+            "  def_out_to_in=VALUES(def_out_to_in), def_in_to_out=VALUES(def_in_to_out), def_in_behind=VALUES(def_in_behind);"
+        )
     L("")
 
     # ── Pressure Stats (page 29) ──────────────────────────────────────────────
@@ -642,9 +709,11 @@ def pdf_to_sql(pdf_path: str) -> str:
                 return s.get(team_key)
         return None
 
-    for (code, tk) in [(home_code, "home_team"), (away_code, "away_team")]:
+    for code, tk in [(home_code, "home_team"), (away_code, "away_team")]:
+
         def n(v):
             return "NULL" if v is None else str(v)
+
         most_pl = (p29_most.get(tk) or {}).get("player", "")
         most_ct = (p29_most.get(tk) or {}).get("count")
         L("INSERT INTO match_pressure_stats")
@@ -669,53 +738,57 @@ def pdf_to_sql(pdf_path: str) -> str:
         L("  ball_recovery_time_s=VALUES(ball_recovery_time_s),")
         L("  pushing_on_into_pressing=VALUES(pushing_on_into_pressing),")
         L("  pushing_on=VALUES(pushing_on),")
-        L("  direction_inside=VALUES(direction_inside), direction_outside=VALUES(direction_outside),")
-        L("  most_direct_player=VALUES(most_direct_player), most_direct_count=VALUES(most_direct_count);")
+        L(
+            "  direction_inside=VALUES(direction_inside), direction_outside=VALUES(direction_outside),"
+        )
+        L(
+            "  most_direct_player=VALUES(most_direct_player), most_direct_count=VALUES(most_direct_count);"
+        )
     L("")
 
     # ── GK stats (pages 31-37) ────────────────────────────────────────────────
     p31 = pages.get("31", {}).get("data", {})
-    for (code, pg_inv, pg_dist, pg_prev, pg_aerial) in [
+    for code, pg_inv, pg_dist, pg_prev, pg_aerial in [
         (home_code, "31", "32", "34", "36"),
         (away_code, "31", "33", "35", "37"),
     ]:
         team_key_inv = "home_team" if code == home_code else "away_team"
-        inv_data  = (p31.get(team_key_inv) or {})
-        dist_data = pages.get(pg_dist,   {}).get("data", {})
-        prev_data = pages.get(pg_prev,   {}).get("data", {})
-        aer_data  = pages.get(pg_aerial, {}).get("data", {})
+        inv_data = p31.get(team_key_inv) or {}
+        dist_data = pages.get(pg_dist, {}).get("data", {})
+        prev_data = pages.get(pg_prev, {}).get("data", {})
+        aer_data = pages.get(pg_aerial, {}).get("data", {})
 
         def n(v):
             return "NULL" if v is None else str(v)
 
-        total_inv  = inv_data.get("total_involvements")
+        total_inv = inv_data.get("total_involvements")
         total_dist = dist_data.get("total_distributions")
-        k_feet     = (dist_data.get("kick_from_feet") or {}).get("total")
-        k_hands    = (dist_data.get("kick_from_hands") or {}).get("total")
-        k_throw    = (dist_data.get("throw_distribution") or {}).get("total")
-        gk_lb      = dist_data.get("goalkeeper_line_breaks")
-        att_faced  = prev_data.get("total_attempts_faced")
-        save_pct   = prev_data.get("save_pct")
-        ib         = prev_data.get("intervention_breakdown") or {}
-        goal_int   = ib.get("total_goal_interventions")
-        save_ret   = ib.get("save_and_retain")
-        defl_ret   = ib.get("deflect_and_retain")
-        save_defl  = ib.get("save_and_deflect")
-        save_att   = ib.get("save_attempt")
-        no_save    = ib.get("no_save_attempt")
-        aer_int    = aer_data.get("total_interventions")
-        cfd        = aer_data.get("crosses_faced_delivery_types") or {}
-        cr_faced   = cfd.get("total")
+        k_feet = (dist_data.get("kick_from_feet") or {}).get("total")
+        k_hands = (dist_data.get("kick_from_hands") or {}).get("total")
+        k_throw = (dist_data.get("throw_distribution") or {}).get("total")
+        gk_lb = dist_data.get("goalkeeper_line_breaks")
+        att_faced = prev_data.get("total_attempts_faced")
+        save_pct = prev_data.get("save_pct")
+        ib = prev_data.get("intervention_breakdown") or {}
+        goal_int = ib.get("total_goal_interventions")
+        save_ret = ib.get("save_and_retain")
+        defl_ret = ib.get("deflect_and_retain")
+        save_defl = ib.get("save_and_deflect")
+        save_att = ib.get("save_attempt")
+        no_save = ib.get("no_save_attempt")
+        aer_int = aer_data.get("total_interventions")
+        cfd = aer_data.get("crosses_faced_delivery_types") or {}
+        cr_faced = cfd.get("total")
         cr_inswing = cfd.get("in_swing")
-        cr_outswing= cfd.get("out_swing")
-        cr_driven  = cfd.get("driven")
-        cr_lofted  = cfd.get("lofted")
+        cr_outswing = cfd.get("out_swing")
+        cr_driven = cfd.get("driven")
+        cr_lofted = cfd.get("lofted")
         cr_cutback = cfd.get("cutback")
-        cr_push    = cfd.get("push")
-        gk_name    = dist_data.get("goalkeeper")
-        punches    = aer_data.get("punches") or {}
-        claims     = aer_data.get("claims") or {}
-        tipped     = aer_data.get("tipped_palmed") or {}
+        cr_push = cfd.get("push")
+        gk_name = dist_data.get("goalkeeper")
+        punches = aer_data.get("punches") or {}
+        claims = aer_data.get("claims") or {}
+        tipped = aer_data.get("tipped_palmed") or {}
 
         def _qs(v):
             # Delegate to _q so backslash + single-quote escaping stay identical.
@@ -726,7 +799,9 @@ def pdf_to_sql(pdf_path: str) -> str:
             L("  (team_id, match_id, scope, total_involvements, total_distributions,")
             L("   kick_from_feet, kick_from_hands, throw_distribution, gk_line_breaks,")
             L("   total_attempts_faced, save_pct, total_goal_interventions,")
-            L("   save_and_retain, deflect_and_retain, save_and_deflect, save_attempt, no_save_attempt,")
+            L(
+                "   save_and_retain, deflect_and_retain, save_and_deflect, save_attempt, no_save_attempt,"
+            )
             L("   total_aerial_interventions, crosses_faced,")
             L("   crosses_faced_inswing, crosses_faced_outswing, crosses_faced_driven,")
             L("   crosses_faced_lofted, crosses_faced_cutback, crosses_faced_push,")
@@ -756,43 +831,55 @@ def pdf_to_sql(pdf_path: str) -> str:
             L("  total_attempts_faced=VALUES(total_attempts_faced),")
             L("  save_pct=VALUES(save_pct),")
             L("  total_goal_interventions=VALUES(total_goal_interventions),")
-            L("  save_and_retain=VALUES(save_and_retain), deflect_and_retain=VALUES(deflect_and_retain),")
+            L(
+                "  save_and_retain=VALUES(save_and_retain), deflect_and_retain=VALUES(deflect_and_retain),"
+            )
             L("  save_and_deflect=VALUES(save_and_deflect), save_attempt=VALUES(save_attempt),")
             L("  no_save_attempt=VALUES(no_save_attempt),")
             L("  total_aerial_interventions=VALUES(total_aerial_interventions),")
             L("  crosses_faced=VALUES(crosses_faced),")
-            L("  crosses_faced_inswing=VALUES(crosses_faced_inswing), crosses_faced_outswing=VALUES(crosses_faced_outswing),")
-            L("  crosses_faced_driven=VALUES(crosses_faced_driven), crosses_faced_lofted=VALUES(crosses_faced_lofted),")
-            L("  crosses_faced_cutback=VALUES(crosses_faced_cutback), crosses_faced_push=VALUES(crosses_faced_push),")
+            L(
+                "  crosses_faced_inswing=VALUES(crosses_faced_inswing), crosses_faced_outswing=VALUES(crosses_faced_outswing),"
+            )
+            L(
+                "  crosses_faced_driven=VALUES(crosses_faced_driven), crosses_faced_lofted=VALUES(crosses_faced_lofted),"
+            )
+            L(
+                "  crosses_faced_cutback=VALUES(crosses_faced_cutback), crosses_faced_push=VALUES(crosses_faced_push),"
+            )
             L("  gk_name=VALUES(gk_name),")
-            L("  punches_complete=VALUES(punches_complete), punches_incomplete=VALUES(punches_incomplete),")
-            L("  claims_complete=VALUES(claims_complete), claims_incomplete=VALUES(claims_incomplete),")
+            L(
+                "  punches_complete=VALUES(punches_complete), punches_incomplete=VALUES(punches_incomplete),"
+            )
+            L(
+                "  claims_complete=VALUES(claims_complete), claims_incomplete=VALUES(claims_incomplete),"
+            )
             L("  tipped_palmed_complete=VALUES(tipped_palmed_complete),")
             L("  tipped_palmed_incomplete=VALUES(tipped_palmed_incomplete);")
     L("")
 
     # ── Set plays (pages 39/40) ───────────────────────────────────────────────
-    for (code, pg) in [(home_code, "39"), (away_code, "40")]:
+    for code, pg in [(home_code, "39"), (away_code, "40")]:
         sp = pages.get(pg, {}).get("data", {})
         totals = sp.get("totals") or {}
-        fk     = sp.get("free_kicks") or {}
+        fk = sp.get("free_kicks") or {}
 
         def n(v):
             return "NULL" if v is None else str(v)
 
-        set_pl  = totals.get("set_plays")
-        fk_tot  = totals.get("free_kicks")
-        pens    = totals.get("penalties")
-        cors    = totals.get("corners")
-        throws  = totals.get("throw_ins")
-        fk_dir  = fk.get("direct")
-        fk_ind  = fk.get("indirect")
+        set_pl = totals.get("set_plays")
+        fk_tot = totals.get("free_kicks")
+        pens = totals.get("penalties")
+        cors = totals.get("corners")
+        throws = totals.get("throw_ins")
+        fk_dir = fk.get("direct")
+        fk_ind = fk.get("indirect")
 
-        corners_type  = sp.get("corners_by_delivery_type") or {}
+        corners_type = sp.get("corners_by_delivery_type") or {}
         corners_style = sp.get("corners_by_delivery_style") or {}
         c_direct = corners_type.get("direct_to_area") or {}
-        c_short  = corners_type.get("short") or {}
-        c_edge   = corners_type.get("edge_of_penalty_area") or {}
+        c_short = corners_type.get("short") or {}
+        c_edge = corners_type.get("edge_of_penalty_area") or {}
 
         if set_pl is not None:
             L("INSERT INTO match_set_play_stats")
@@ -805,9 +892,15 @@ def pdf_to_sql(pdf_path: str) -> str:
             L(f"VALUES ({_team(code)}, {_match(match_no)}, 'match',")
             L(f"  {n(set_pl)}, {n(fk_tot)}, {n(fk_dir)}, {n(fk_ind)},")
             L(f"  {n(pens)}, {n(cors)}, {n(throws)},")
-            L(f"  {n(c_direct.get('from_left'))}, {n(c_direct.get('from_right'))}, {n(c_direct.get('total'))},")
-            L(f"  {n(c_short.get('from_left'))}, {n(c_short.get('from_right'))}, {n(c_short.get('total'))},")
-            L(f"  {n(c_edge.get('from_left'))}, {n(c_edge.get('from_right'))}, {n(c_edge.get('total'))},")
+            L(
+                f"  {n(c_direct.get('from_left'))}, {n(c_direct.get('from_right'))}, {n(c_direct.get('total'))},"
+            )
+            L(
+                f"  {n(c_short.get('from_left'))}, {n(c_short.get('from_right'))}, {n(c_short.get('total'))},"
+            )
+            L(
+                f"  {n(c_edge.get('from_left'))}, {n(c_edge.get('from_right'))}, {n(c_edge.get('total'))},"
+            )
             L(f"  {n(corners_style.get('inswing'))}, {n(corners_style.get('outswing'))},")
             L(f"  {n(corners_style.get('driven'))}, {n(corners_style.get('lofted'))})")
             L("ON DUPLICATE KEY UPDATE")
@@ -830,16 +923,16 @@ def pdf_to_sql(pdf_path: str) -> str:
     L("")
 
     # ── Per-player: Cross breakdown (pages 18/19) ─────────────────────────────
-    for (code, pg) in [(home_code, "18"), (away_code, "19")]:
+    for code, pg in [(home_code, "18"), (away_code, "19")]:
         cr = pages.get(pg, {}).get("data", {})
         if not cr:
             continue
         for pl in cr.get("players", []):
-            num  = pl.get("num")
+            num = pl.get("num")
             name = pl.get("name", "")
             if num is None and not name:
                 continue
-            L(f"UPDATE player_stats SET")
+            L("UPDATE player_stats SET")
             L(f"  crosses_inswing={_n(pl.get('inswing'))},")
             L(f"  crosses_outswing={_n(pl.get('outswing'))},")
             L(f"  crosses_driven={_n(pl.get('driven'))},")
@@ -847,24 +940,30 @@ def pdf_to_sql(pdf_path: str) -> str:
             L(f"  crosses_cutback={_n(pl.get('cutback'))},")
             L(f"  crosses_push_cross={_n(pl.get('push_cross'))}")
             if num is not None:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                )
             else:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)"
+                )
             L(f"  AND match_id={_match(match_no)} AND scope='match';")
     L("")
 
     # ── Per-player: Line breaks (pages 10/11) ────────────────────────────────
-    for (code, pg) in [(home_code, "10"), (away_code, "11")]:
+    for code, pg in [(home_code, "10"), (away_code, "11")]:
         lb_data = pages.get(pg, {}).get("data", {})
         if not lb_data:
             continue
         for pl in lb_data.get("players", []):
-            num  = pl.get("num")
+            num = pl.get("num")
             name = pl.get("name", "")
             if num is None and not name:
                 continue
             if num is not None:
-                player_id_expr = f"(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                player_id_expr = (
+                    f"(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                )
             else:
                 player_id_expr = f"(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)"
             L("INSERT INTO player_line_breaks")
@@ -876,41 +975,65 @@ def pdf_to_sql(pdf_path: str) -> str:
             L("   unit_2u_midfield, unit_2u_defensive)")
             L(f"VALUES ({player_id_expr}, {_match(match_no)}, 'match',")
             L(f"  {_n(pl.get('attempted'))}, {_n(pl.get('completed'))},")
-            L(f"  {_n(pl.get('dir_through'))}, {_n(pl.get('dir_around'))}, {_n(pl.get('dir_over'))},")
-            L(f"  {_n(pl.get('dist_type_pass'))}, {_n(pl.get('dist_type_cross'))}, {_n(pl.get('dist_type_ball_progression'))},")
-            L(f"  {_n(pl.get('4u_attacking'))}, {_n(pl.get('4u_attacking_mid'))}, {_n(pl.get('4u_midfield'))}, {_n(pl.get('4u_defensive'))},")
-            L(f"  {_n(pl.get('3u_attacking'))}, {_n(pl.get('3u_midfield'))}, {_n(pl.get('3u_defensive'))},")
+            L(
+                f"  {_n(pl.get('dir_through'))}, {_n(pl.get('dir_around'))}, {_n(pl.get('dir_over'))},"
+            )
+            L(
+                f"  {_n(pl.get('dist_type_pass'))}, {_n(pl.get('dist_type_cross'))}, {_n(pl.get('dist_type_ball_progression'))},"
+            )
+            L(
+                f"  {_n(pl.get('4u_attacking'))}, {_n(pl.get('4u_attacking_mid'))}, {_n(pl.get('4u_midfield'))}, {_n(pl.get('4u_defensive'))},"
+            )
+            L(
+                f"  {_n(pl.get('3u_attacking'))}, {_n(pl.get('3u_midfield'))}, {_n(pl.get('3u_defensive'))},"
+            )
             L(f"  {_n(pl.get('2u_midfield'))}, {_n(pl.get('2u_defensive'))})")
             L("ON DUPLICATE KEY UPDATE")
             L("  attempted=VALUES(attempted), completed=VALUES(completed),")
-            L("  dir_through=VALUES(dir_through), dir_around=VALUES(dir_around), dir_over=VALUES(dir_over),")
-            L("  dist_pass=VALUES(dist_pass), dist_cross=VALUES(dist_cross), dist_ball_prog=VALUES(dist_ball_prog),")
-            L("  unit_4u_attacking=VALUES(unit_4u_attacking), unit_4u_attacking_mid=VALUES(unit_4u_attacking_mid),")
-            L("  unit_4u_midfield=VALUES(unit_4u_midfield), unit_4u_defensive=VALUES(unit_4u_defensive),")
-            L("  unit_3u_attacking=VALUES(unit_3u_attacking), unit_3u_midfield=VALUES(unit_3u_midfield),")
+            L(
+                "  dir_through=VALUES(dir_through), dir_around=VALUES(dir_around), dir_over=VALUES(dir_over),"
+            )
+            L(
+                "  dist_pass=VALUES(dist_pass), dist_cross=VALUES(dist_cross), dist_ball_prog=VALUES(dist_ball_prog),"
+            )
+            L(
+                "  unit_4u_attacking=VALUES(unit_4u_attacking), unit_4u_attacking_mid=VALUES(unit_4u_attacking_mid),"
+            )
+            L(
+                "  unit_4u_midfield=VALUES(unit_4u_midfield), unit_4u_defensive=VALUES(unit_4u_defensive),"
+            )
+            L(
+                "  unit_3u_attacking=VALUES(unit_3u_attacking), unit_3u_midfield=VALUES(unit_3u_midfield),"
+            )
             L("  unit_3u_defensive=VALUES(unit_3u_defensive),")
-            L("  unit_2u_midfield=VALUES(unit_2u_midfield), unit_2u_defensive=VALUES(unit_2u_defensive);")
+            L(
+                "  unit_2u_midfield=VALUES(unit_2u_midfield), unit_2u_defensive=VALUES(unit_2u_defensive);"
+            )
     L("")
 
     # ── Per-player stats: helper to emit UPDATE ───────────────────────────────
     def _player_ref(code: str, num, name: str) -> str:
         if num is not None:
-            return (f"(SELECT ps.id FROM player_stats ps "
-                    f"JOIN players pl ON pl.id=ps.player_id "
-                    f"WHERE pl.team_id={_team(code)} AND pl.jersey_number={num} "
-                    f"AND ps.match_id={_match(match_no)} AND ps.scope='match')")
-        return (f"(SELECT ps.id FROM player_stats ps "
+            return (
+                f"(SELECT ps.id FROM player_stats ps "
                 f"JOIN players pl ON pl.id=ps.player_id "
-                f"WHERE pl.team_id={_team(code)} AND pl.name={_q(name)} "
-                f"AND ps.match_id={_match(match_no)} AND ps.scope='match' LIMIT 1)")
+                f"WHERE pl.team_id={_team(code)} AND pl.jersey_number={num} "
+                f"AND ps.match_id={_match(match_no)} AND ps.scope='match')"
+            )
+        return (
+            f"(SELECT ps.id FROM player_stats ps "
+            f"JOIN players pl ON pl.id=ps.player_id "
+            f"WHERE pl.team_id={_team(code)} AND pl.name={_q(name)} "
+            f"AND ps.match_id={_match(match_no)} AND ps.scope='match' LIMIT 1)"
+        )
 
     # ── Per-player: Distributions (pages 42/44) ───────────────────────────────
-    for (code, pg) in [(home_code, "42"), (away_code, "44")]:
+    for code, pg in [(home_code, "42"), (away_code, "44")]:
         dist_players = pages.get(pg, {}).get("data", {}).get("players", [])
         for pl in dist_players:
-            num  = pl.get("num")
+            num = pl.get("num")
             name = pl.get("name", "")
-            L(f"UPDATE player_stats SET")
+            L("UPDATE player_stats SET")
             L(f"  passes_attempted={_n(pl.get('passes_attempted'))},")
             L(f"  passes_completed={_n(pl.get('passes_completed'))},")
             L(f"  pass_completion_pct={_n(pl.get('pass_completion_pct'))},")
@@ -924,19 +1047,23 @@ def pdf_to_sql(pdf_path: str) -> str:
             L(f"  step_ins={_n(pl.get('step_ins'))},")
             L(f"  attempts_at_goal={_n(pl.get('attempts_at_goal'))}")
             if num is not None:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                )
             else:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)"
+                )
             L(f"  AND match_id={_match(match_no)} AND scope='match';")
     L("")
 
     # ── Per-player: Offers & Receptions (pages 43/45) ─────────────────────────
-    for (code, pg) in [(home_code, "43"), (away_code, "45")]:
+    for code, pg in [(home_code, "43"), (away_code, "45")]:
         off_players = pages.get(pg, {}).get("data", {}).get("players", [])
         for pl in off_players:
-            num  = pl.get("num")
+            num = pl.get("num")
             name = pl.get("name", "")
-            L(f"UPDATE player_stats SET")
+            L("UPDATE player_stats SET")
             L(f"  total_offers={_n(pl.get('total_offers'))},")
             L(f"  offers_received={_n(pl.get('offers_received'))},")
             L(f"  offers_in_front={_n(pl.get('in_front'))},")
@@ -946,19 +1073,23 @@ def pdf_to_sql(pdf_path: str) -> str:
             L(f"  offers_in_behind={_n(pl.get('in_behind'))},")
             L(f"  offers_no_movement={_n(pl.get('no_movement'))}")
             if num is not None:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                )
             else:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)"
+                )
             L(f"  AND match_id={_match(match_no)} AND scope='match';")
     L("")
 
     # ── Per-player: Out of Possession (pages 47/48) ───────────────────────────
-    for (code, pg) in [(home_code, "47"), (away_code, "48")]:
+    for code, pg in [(home_code, "47"), (away_code, "48")]:
         oop_players = pages.get(pg, {}).get("data", {}).get("players", [])
         for pl in oop_players:
-            num  = pl.get("num")
+            num = pl.get("num")
             name = pl.get("name", "")
-            L(f"UPDATE player_stats SET")
+            L("UPDATE player_stats SET")
             L(f"  tackles_made={_n(pl.get('tackles_made'))},")
             L(f"  tackles_won={_n(pl.get('tackles_won'))},")
             L(f"  blocks={_n(pl.get('blocks'))},")
@@ -975,19 +1106,23 @@ def pdf_to_sql(pdf_path: str) -> str:
             L(f"  pushing_on_into_pressing={_n(pl.get('pushing_on_into_pressing'))},")
             L(f"  possession_interrupted={_n(pl.get('possession_interrupted'))}")
             if num is not None:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                )
             else:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)"
+                )
             L(f"  AND match_id={_match(match_no)} AND scope='match';")
     L("")
 
     # ── Per-player: Physical (pages 50/51) ────────────────────────────────────
-    for (code, pg) in [(home_code, "50"), (away_code, "51")]:
+    for code, pg in [(home_code, "50"), (away_code, "51")]:
         phys_players = pages.get(pg, {}).get("data", {}).get("players", [])
         for pl in phys_players:
-            num  = pl.get("num")
+            num = pl.get("num")
             name = pl.get("name", "")
-            L(f"UPDATE player_stats SET")
+            L("UPDATE player_stats SET")
             L(f"  total_distance_m={_n(pl.get('total_distance_m'))},")
             L(f"  dist_zone1_m={_n(pl.get('zone1_0_7_m'))},")
             L(f"  dist_zone2_m={_n(pl.get('zone2_7_15_m'))},")
@@ -998,9 +1133,13 @@ def pdf_to_sql(pdf_path: str) -> str:
             L(f"  sprints={_n(pl.get('sprints_zone4_5'))},")
             L(f"  top_speed_kmh={_n(pl.get('top_speed_kmh'))}")
             if num is not None:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND jersey_number={num})"
+                )
             else:
-                L(f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)")
+                L(
+                    f"WHERE player_id=(SELECT id FROM players WHERE team_id={_team(code)} AND name={_q(name)} LIMIT 1)"
+                )
             L(f"  AND match_id={_match(match_no)} AND scope='match';")
     L("")
 
@@ -1009,11 +1148,12 @@ def pdf_to_sql(pdf_path: str) -> str:
 
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def process_all(
-    data_dir:  str = ".claude/data",
+    data_dir: str = ".claude/data",
     seeds_dir: str = "db/seeds",
-    done_dir:  str = ".claude/data/done",
-    out_file:  str = "db/seeds/04_all_matches.sql",
+    done_dir: str = ".claude/data/done",
+    out_file: str = "db/seeds/04_all_matches.sql",
 ) -> None:
     """Process every PDF in data_dir, write combined SQL to out_file,
     then move each successfully processed PDF to done_dir."""
@@ -1047,7 +1187,10 @@ def process_all(
             errors.append(f"{pdf.name}: {exc}")
 
     if processed == 0:
-        print(f"\nAll {len(pdfs)} PDF(s) failed — leaving {out_file} untouched", file=sys.stderr)
+        print(
+            f"\nAll {len(pdfs)} PDF(s) failed — leaving {out_file} untouched",
+            file=sys.stderr,
+        )
     else:
         Path(out_file).write_text("\n".join(all_sql), encoding="utf-8")
         print(f"\nWrote {out_file} ({processed}/{len(pdfs)} matches)")
@@ -1060,14 +1203,15 @@ def process_all(
 
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Convert FIFA PMSR PDFs to SQL")
-    ap.add_argument("pdf", nargs="?",       help="Path to a single PDF")
+    ap.add_argument("pdf", nargs="?", help="Path to a single PDF")
     ap.add_argument("--batch", action="store_true", help="Process all PDFs in .claude/data/")
-    ap.add_argument("--data-dir",  default=".claude/data",        help="PDF input directory")
-    ap.add_argument("--seeds-dir", default="db/seeds",            help="SQL output directory")
-    ap.add_argument("--done-dir",  default=".claude/data/done",   help="Processed PDF destination")
-    ap.add_argument("--out",       default="db/seeds/04_all_matches.sql", help="Output SQL file (batch)")
+    ap.add_argument("--data-dir", default=".claude/data", help="PDF input directory")
+    ap.add_argument("--seeds-dir", default="db/seeds", help="SQL output directory")
+    ap.add_argument("--done-dir", default=".claude/data/done", help="Processed PDF destination")
+    ap.add_argument("--out", default="db/seeds/04_all_matches.sql", help="Output SQL file (batch)")
     args = ap.parse_args()
 
     if args.batch:

@@ -1,19 +1,29 @@
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.models import Match, Team, MatchStats, MatchPhase, TeamSpatialStat, LineBreak
-from app.models import FinalThirdEntry, DefensiveAction
-from sqlalchemy import func
-from app.schemas.dashboard import (
-    DashboardResponse, MatchMeta, KpiCard, TournamentOverviewSchema,
+from app.models import (
+    DefensiveAction,
+    FinalThirdEntry,
+    LineBreak,
+    Match,
+    MatchPhase,
+    MatchStats,
+    Team,
+    TeamSpatialStat,
 )
-from app.schemas.team import TeamSchema
+from app.schemas.dashboard import (
+    DashboardResponse,
+    KpiCard,
+    MatchMeta,
+    TournamentOverviewSchema,
+)
+from app.schemas.defensive import DefensiveActionSchema
+from app.schemas.final_third import FinalThirdEntrySchema
+from app.schemas.line_break import LineBreakSchema
 from app.schemas.match_stats import MatchStatsSchema
 from app.schemas.phase import PhaseSchema
-from app.schemas.spatial import TeamSpatialSchema, DEFENSIVE_BLOCKS, POSSESSION_BLOCKS
-from app.schemas.line_break import LineBreakSchema
-from app.schemas.final_third import FinalThirdEntrySchema
-from app.schemas.defensive import DefensiveActionSchema
+from app.schemas.spatial import DEFENSIVE_BLOCKS, POSSESSION_BLOCKS, TeamSpatialSchema
+from app.schemas.team import TeamSchema
 
 
 def _split_spatial(rows):
@@ -28,9 +38,7 @@ async def get_latest_match_id(db: AsyncSession) -> int:
     # The home hero is labelled "Latest Match" — always return the most recent
     # match by date (insertion order/id is NOT chronological after batch ingests).
     result = await db.execute(
-        select(Match.id)
-        .order_by(Match.match_date.desc(), Match.match_no.desc())
-        .limit(1)
+        select(Match.id).order_by(Match.match_date.desc(), Match.match_no.desc()).limit(1)
     )
     row = result.scalar_one_or_none()
     if row is None:
@@ -40,9 +48,7 @@ async def get_latest_match_id(db: AsyncSession) -> int:
 
 async def get_match_dashboard(db: AsyncSession, match_id: int) -> DashboardResponse:
     # Fetch match + teams
-    match_result = await db.execute(
-        select(Match).where(Match.id == match_id)
-    )
+    match_result = await db.execute(select(Match).where(Match.id == match_id))
     match = match_result.scalar_one_or_none()
     if match is None:
         raise ValueError(f"Match {match_id} not found")
@@ -145,18 +151,25 @@ async def get_match_dashboard(db: AsyncSession, match_id: int) -> DashboardRespo
     )
 
     # Tournament overview — computed dynamically (not from stale cache table)
-    matches_played = (await db.execute(
-        select(func.count()).where(Match.score_a.is_not(None))
-    )).scalar_one() or 0
-    goals_total = (await db.execute(
-        select(func.sum(Match.score_a + Match.score_b)).where(Match.score_a.is_not(None))
-    )).scalar_one() or 0
-    avg_in_contest = float((await db.execute(
-        select(func.avg(MatchStats.possession_in_contest)).where(
-            MatchStats.scope == "match",
-            MatchStats.possession_in_contest.is_not(None),
+    matches_played = (
+        await db.execute(select(func.count()).where(Match.score_a.is_not(None)))
+    ).scalar_one() or 0
+    goals_total = (
+        await db.execute(
+            select(func.sum(Match.score_a + Match.score_b)).where(Match.score_a.is_not(None))
         )
-    )).scalar_one() or 0)
+    ).scalar_one() or 0
+    avg_in_contest = float(
+        (
+            await db.execute(
+                select(func.avg(MatchStats.possession_in_contest)).where(
+                    MatchStats.scope == "match",
+                    MatchStats.possession_in_contest.is_not(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
 
     team_a_schema = TeamSchema.model_validate(team_a)
     team_b_schema = TeamSchema.model_validate(team_b)
@@ -198,8 +211,12 @@ async def get_match_dashboard(db: AsyncSession, match_id: int) -> DashboardRespo
             "team_b": [LineBreakSchema.model_validate(lb) for lb in lb_b_result.scalars().all()],
         },
         final_third={
-            "team_a": [FinalThirdEntrySchema.model_validate(ft) for ft in ft_a_result.scalars().all()],
-            "team_b": [FinalThirdEntrySchema.model_validate(ft) for ft in ft_b_result.scalars().all()],
+            "team_a": [
+                FinalThirdEntrySchema.model_validate(ft) for ft in ft_a_result.scalars().all()
+            ],
+            "team_b": [
+                FinalThirdEntrySchema.model_validate(ft) for ft in ft_b_result.scalars().all()
+            ],
         },
         defensive={
             "team_a": DefensiveActionSchema.model_validate(da_a_result.scalar_one()),

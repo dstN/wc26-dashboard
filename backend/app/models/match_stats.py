@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Numeric, ForeignKey, Enum, Computed
+from sqlalchemy import Column, Computed, Enum, ForeignKey, Integer, Numeric
+
 from app.models.base import Base
 
 

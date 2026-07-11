@@ -24,7 +24,7 @@ import secrets
 import subprocess
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import settings
@@ -113,8 +113,14 @@ async def upload_pdf(
     # Re-process only the uploaded file (not the whole drop dir)
     python = settings.ingestion_python or "python3"
     cmd = [
-        python, "-m", "ingestion.watch_pdfs",
-        "--dir", str(watch_dir), "--force", "--file", str(dest),
+        python,
+        "-m",
+        "ingestion.watch_pdfs",
+        "--dir",
+        str(watch_dir),
+        "--force",
+        "--file",
+        str(dest),
     ]
 
     cwd = settings.ingestion_module_dir or None

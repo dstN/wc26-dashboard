@@ -1,12 +1,12 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy import create_engine, text
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.models import Base
-from app.main import app
 from app.deps import get_db
+from app.main import app
+from app.models import Base
 
 
 def pytest_configure(config):
@@ -16,6 +16,7 @@ def pytest_configure(config):
 @pytest.fixture(scope="session")
 def db_url():
     import os
+
     host = os.getenv("MYSQL_HOST", "localhost")
     port = os.getenv("MYSQL_PORT", "3306")
     user = os.getenv("MYSQL_USER", "wc26user")
@@ -27,6 +28,7 @@ def db_url():
 @pytest.fixture(scope="session")
 def sync_db_url():
     import os
+
     host = os.getenv("MYSQL_HOST", "localhost")
     port = os.getenv("MYSQL_PORT", "3306")
     user = os.getenv("MYSQL_USER", "wc26user")

@@ -1,5 +1,5 @@
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
 from app.models import Match, MatchStats
 
@@ -11,9 +11,7 @@ GROUP_STAGE_SIZE = 72
 
 async def get_overview(db: AsyncSession) -> dict:
     # Count matches with a score (fully processed)
-    match_count_row = await db.execute(
-        select(func.count()).where(Match.score_a.is_not(None))
-    )
+    match_count_row = await db.execute(select(func.count()).where(Match.score_a.is_not(None)))
     matches_played = match_count_row.scalar_one() or 0
 
     # Played-count per stage, so the frontend can show real group-stage vs.
@@ -28,7 +26,8 @@ async def get_overview(db: AsyncSession) -> dict:
     played_by_letter: dict[str | None, int] = dict(stage_rows.all())
     stage_counts = {
         "group": sum(
-            n for letter, n in played_by_letter.items()
+            n
+            for letter, n in played_by_letter.items()
             if letter is not None and letter not in KNOCKOUT_STAGE_SIZES
         ),
         **{k: played_by_letter.get(k, 0) for k in KNOCKOUT_STAGE_SIZES},

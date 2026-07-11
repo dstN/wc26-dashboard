@@ -58,6 +58,7 @@ logger = logging.getLogger("efi.watch")
 # Config helpers
 # ---------------------------------------------------------------------------
 
+
 def _watch_dir() -> Path:
     raw = os.environ.get("PDF_WATCH_DIR", "./pdfs")
     p = Path(raw).expanduser().resolve()
@@ -66,10 +67,10 @@ def _watch_dir() -> Path:
 
 def _db_dsn() -> str:
     user = os.environ.get("MYSQL_USER", "wc26user")
-    pw   = os.environ.get("MYSQL_PASSWORD", "wc26pass")
+    pw = os.environ.get("MYSQL_PASSWORD", "wc26pass")
     host = os.environ.get("MYSQL_HOST", "localhost")
     port = os.environ.get("MYSQL_PORT", "3306")
-    db   = os.environ.get("MYSQL_DATABASE", "wc26")
+    db = os.environ.get("MYSQL_DATABASE", "wc26")
     return f"mysql+pymysql://{user}:{pw}@{host}:{port}/{db}"
 
 
@@ -97,6 +98,7 @@ def _mark_processed(watch_dir: Path, pdf_path: Path) -> None:
 # PDF discovery
 # ---------------------------------------------------------------------------
 
+
 def _find_pdfs(watch_dir: Path) -> list[Path]:
     if not watch_dir.exists():
         logger.warning("Watch directory does not exist: %s", watch_dir)
@@ -107,6 +109,7 @@ def _find_pdfs(watch_dir: Path) -> list[Path]:
 # ---------------------------------------------------------------------------
 # Ingestion
 # ---------------------------------------------------------------------------
+
 
 def _ingest_pdf(pdf_path: Path, dry_run: bool) -> bool:
     """
@@ -151,7 +154,9 @@ def _execute_sql(sql: str, label: str) -> bool:
             for fragment in re.split(r";\s*\n", sql):
                 # Drop comment-only / empty fragments.
                 body = "\n".join(
-                    l for l in fragment.splitlines() if l.strip() and not l.lstrip().startswith("--")
+                    l
+                    for l in fragment.splitlines()
+                    if l.strip() and not l.lstrip().startswith("--")
                 )
                 if body.strip():
                     # exec_driver_sql passes the literal statement straight to the
@@ -172,10 +177,12 @@ def _execute_sql(sql: str, label: str) -> bool:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main(argv: list[str] | None = None) -> int:
     # Load .env if python-dotenv is available
     try:
         from dotenv import load_dotenv  # type: ignore
+
         # ingestion/.env takes precedence, project-root .env is the fallback
         # (the quickstart only creates the root one).
         for env_file in (
@@ -192,20 +199,28 @@ def main(argv: list[str] | None = None) -> int:
         description="Scan PDF_WATCH_DIR for new EFI match reports and ingest them"
     )
     parser.add_argument(
-        "--dir", dest="watch_dir", type=Path, default=None,
-        help="Override PDF_WATCH_DIR environment variable"
+        "--dir",
+        dest="watch_dir",
+        type=Path,
+        default=None,
+        help="Override PDF_WATCH_DIR environment variable",
     )
     parser.add_argument(
-        "--dry-run", action="store_true",
-        help="Parse PDFs but do not write to the database"
+        "--dry-run",
+        action="store_true",
+        help="Parse PDFs but do not write to the database",
     )
     parser.add_argument(
-        "--force", action="store_true",
-        help="Re-process all PDFs, ignoring the processed log"
+        "--force",
+        action="store_true",
+        help="Re-process all PDFs, ignoring the processed log",
     )
     parser.add_argument(
-        "--file", dest="only_file", type=Path, default=None,
-        help="Process only this single PDF (must live inside the watch dir)"
+        "--file",
+        dest="only_file",
+        type=Path,
+        default=None,
+        help="Process only this single PDF (must live inside the watch dir)",
     )
     args = parser.parse_args(argv)
 
@@ -246,7 +261,9 @@ def main(argv: list[str] | None = None) -> int:
 
     logger.info(
         "Done — %d ingested, %d failed, %d already processed",
-        success_count, fail_count, len(all_pdfs) - len(new_pdfs),
+        success_count,
+        fail_count,
+        len(all_pdfs) - len(new_pdfs),
     )
     return 0 if fail_count == 0 else 1
 

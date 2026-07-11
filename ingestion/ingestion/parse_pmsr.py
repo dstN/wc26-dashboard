@@ -16,7 +16,6 @@ from pathlib import Path
 
 import fitz  # PyMuPDF
 
-
 # ─── Constants ────────────────────────────────────────────────────────────────
 
 # PMSR page-1 dates are always English ("13 June 2026"). Parse the month name
@@ -24,8 +23,17 @@ import fitz  # PyMuPDF
 # process LC_TIME locale and would fail on a non-English host (e.g. a German
 # cron/Passenger box) — the exact environment the watcher runs in.
 _MONTHS = {
-    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
-    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
     "december": 12,
 }
 
@@ -41,12 +49,13 @@ SKIP_PAGES_1IDX = {5, 24, 30, 38, 41, 46, 49, 52}
 PROCESSED_PAGES = sorted(set(range(1, 53)) - SKIP_PAGES_1IDX)
 
 # Minute-marker colors on lineup page (fitz encodes color as packed RGB int)
-COLOR_SUB_OFF = 14427686   # red/crimson  → player coming off
-COLOR_SUB_ON  = 366185     # green        → player coming on
-COLOR_EVENT   = 3034623    # teal/orange  → goal OR yellow card
+COLOR_SUB_OFF = 14427686  # red/crimson  → player coming off
+COLOR_SUB_ON = 366185  # green        → player coming on
+COLOR_EVENT = 3034623  # teal/orange  → goal OR yellow card
 
 
 # ─── Low-level helpers ────────────────────────────────────────────────────────
+
 
 def page_words(page, x_min=0, x_max=9999, y_min=0, y_max=9999):
     """Return [(x0, y0, text), ...] filtered by region, sorted by y then x."""
@@ -80,7 +89,7 @@ def row_texts(row):
 
 def to_num(text):
     """Parse int or float from text, stripping %, km, s suffixes."""
-    t = re.sub(r'[%a-zA-Z]', '', text.strip())
+    t = re.sub(r"[%a-zA-Z]", "", text.strip())
     try:
         return int(t)
     except ValueError:
@@ -92,7 +101,7 @@ def to_num(text):
 
 def pct_int(text):
     """Return percentage as integer (strip %)."""
-    return int(re.sub(r'[^0-9]', '', text))
+    return int(re.sub(r"[^0-9]", "", text))
 
 
 def closest(x, col_map, tol=35):
@@ -108,7 +117,7 @@ def closest(x, col_map, tol=35):
 def parse_pair(tokens):
     """Parse '12 (5)' → {'total': 12, 'on_target': 5}, or plain number."""
     joined = " ".join(tokens)
-    m = re.match(r'^(\d+\.?\d*)\s*\((\d+\.?\d*)\)$', joined.strip())
+    m = re.match(r"^(\d+\.?\d*)\s*\((\d+\.?\d*)\)$", joined.strip())
     if m:
         a, b = to_num(m.group(1)), to_num(m.group(2))
         return a, b
@@ -117,17 +126,18 @@ def parse_pair(tokens):
 
 # ─── Page 1: Cover ────────────────────────────────────────────────────────────
 
+
 def parse_page1(page):
     text = page.get_text("text")
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     # "Brazil 1 - 1 Morocco"
-    m = re.match(r'^(.+?)\s+(\d+)\s*-\s*(\d+)\s+(.+)$', lines[0])
+    m = re.match(r"^(.+?)\s+(\d+)\s*-\s*(\d+)\s+(.+)$", lines[0])
     home_team = m.group(1).strip()
     home_score = int(m.group(2))
     away_score = int(m.group(3))
     away_team = m.group(4).strip()
     # "Group C - Match 7"
-    m2 = re.match(r'^(.+?)\s*-\s*Match\s+(\d+)$', lines[1])
+    m2 = re.match(r"^(.+?)\s*-\s*Match\s+(\d+)$", lines[1])
     stage = m2.group(1).strip()
     match_num = int(m2.group(2))
     # "13 June 2026"
@@ -145,7 +155,11 @@ def parse_page1(page):
     # shootouts in the R32 dataset.
     penalty_shootout = None
     for line in lines:
-        pm = re.match(r'^\((.+?)\s+win\s+(\d+)\s*-\s*(\d+)\s+on\s+Penalties\)$', line, re.IGNORECASE)
+        pm = re.match(
+            r"^\((.+?)\s+win\s+(\d+)\s*-\s*(\d+)\s+on\s+Penalties\)$",
+            line,
+            re.IGNORECASE,
+        )
         if pm:
             home_pens, away_pens = int(pm.group(2)), int(pm.group(3))
             penalty_shootout = {
@@ -173,6 +187,7 @@ def parse_page1(page):
 # ─── Shot-log helper (pages 15 & 17) ─────────────────────────────────────────
 # Parsed early to help identify goal minutes on the lineup page.
 
+
 def _parse_shot_log(page):
     """
     Return list of {minute, jersey_num, player, outcome, body_part, delivery_type}.
@@ -192,29 +207,30 @@ def _parse_shot_log(page):
         except ValueError:
             continue
         # Skip header and footer rows (footer has only jersey numbers)
-        player_words = [w[2] for w in row if 130 <= w[0] < 430 and
-                        re.match(r'^[A-Za-z]', w[2])]
+        player_words = [w[2] for w in row if 130 <= w[0] < 430 and re.match(r"^[A-Za-z]", w[2])]
         if not player_words:
             continue
-        jersey_words = [w[2] for w in row if 100 <= w[0] < 135 and
-                        re.match(r'^\d+$', w[2])]
+        jersey_words = [w[2] for w in row if 100 <= w[0] < 135 and re.match(r"^\d+$", w[2])]
         jersey_num = int(jersey_words[0]) if jersey_words else None
         player = " ".join(player_words)
         outcome_words = [w[2] for w in row if 430 <= w[0] < 660]
         body_words = [w[2] for w in row if 660 <= w[0] < 805]
         delivery_words = [w[2] for w in row if w[0] >= 805]
-        shots.append({
-            "minute": minute,
-            "number": jersey_num,
-            "player": player,
-            "outcome": " ".join(outcome_words),
-            "body_part": " ".join(body_words),
-            "delivery_type": " ".join(delivery_words),
-        })
+        shots.append(
+            {
+                "minute": minute,
+                "number": jersey_num,
+                "player": player,
+                "outcome": " ".join(outcome_words),
+                "body_part": " ".join(body_words),
+                "delivery_type": " ".join(delivery_words),
+            }
+        )
     return shots
 
 
 # ─── Page 2: Lineups ──────────────────────────────────────────────────────────
+
 
 def _lineup_minutes_with_color(page):
     """Return {(x,y): (text, color)} for minute markers on the lineup page."""
@@ -269,7 +285,7 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
     mid_words = page_words(page, x_min=300, x_max=700, y_min=100)
     formations = {"home_team": "Unknown", "away_team": "Unknown"}
     for x, y, text in mid_words:
-        if re.match(r'^\d+-\d+', text):
+        if re.match(r"^\d+-\d+", text):
             # Two formations appear: home left, away right of center
             if x < 500:
                 formations["home_team"] = text
@@ -279,7 +295,7 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
     def build_players(rows, is_home):
         """Parse player rows for one team side."""
         nonlocal went_to_extra_time
-        section = None   # "starting" or "substitutes"
+        section = None  # "starting" or "substitutes"
         players = {"starting": [], "substitutes": []}
         for row in rows:
             texts = row_texts(row)
@@ -321,7 +337,7 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
             pending_sub_off = []
             for mx, mtext, mcolor in sorted(minute_tokens, key=lambda t: t[0]):
                 # Parse "90+3'" as 93, not just 90
-                m_base = re.match(r'^(\d+)(?:\+(\d+))?', mtext)
+                m_base = re.match(r"^(\d+)(?:\+(\d+))?", mtext)
                 if m_base:
                     minute_val = int(m_base.group(1)) + int(m_base.group(2) or 0)
                     if minute_val >= 105:
@@ -365,7 +381,8 @@ def _parse_team_lineups(page, home_team, away_team, goal_minutes_by_player):
     def reclassify_red_cards(players_dict):
         """Reclassify sub-off markers with no matching sub-on as red or second-yellow cards.
         If a yellow card exists at the same minute, it's a second yellow (reclassified in-place).
-        Otherwise a direct red is appended. Keeps subbed_off so minutes_played is correct."""
+        Otherwise a direct red is appended. Keeps subbed_off so minutes_played is correct.
+        """
         all_players = players_dict["starting"] + players_dict["substitutes"]
         sub_on_mins = [p["subbed_on"] for p in all_players if "subbed_on" in p]
         for p in all_players:
@@ -403,8 +420,9 @@ def _parse_player_identity(other_tokens, is_home):
         return None, None, None
 
     # Check if the row contains a position keyword
-    pos_indices = [i for i, t in enumerate(texts) if t.upper() in POSITIONS or
-                   re.match(r'^[A-Z]{2}\d+$', t)]
+    pos_indices = [
+        i for i, t in enumerate(texts) if t.upper() in POSITIONS or re.match(r"^[A-Z]{2}\d+$", t)
+    ]
     if not pos_indices:
         # Might be a number-only row (pitch diagram) — skip
         return None, None, None
@@ -417,15 +435,15 @@ def _parse_player_identity(other_tokens, is_home):
             return None, None, None
         pos = texts[1].upper() if len(texts) > 1 else ""
         # handle "FW10" attached
-        if re.match(r'^[A-Z]{2}\d+$', pos):
-            num = int(re.sub(r'[^0-9]', '', pos)) if num == int(texts[0]) else num
+        if re.match(r"^[A-Z]{2}\d+$", pos):
+            num = int(re.sub(r"[^0-9]", "", pos)) if num == int(texts[0]) else num
             pos = pos[:2]
-        name_tokens = [t for t in texts[2:] if not re.match(r'^\d+$', t)]
+        name_tokens = [t for t in texts[2:] if not re.match(r"^\d+$", t)]
         name = " ".join(name_tokens) if name_tokens else ""
     else:
         # Format: name... pos num  (Morocco — right to left)
         # Last token is jersey number (int) or combined "FW10"
-        m_combined = re.match(r'^([A-Z]{2})(\d+)$', texts[-1])
+        m_combined = re.match(r"^([A-Z]{2})(\d+)$", texts[-1])
         if m_combined:
             # e.g. "FW10" — pos and num combined
             pos = m_combined.group(1)
@@ -440,7 +458,7 @@ def _parse_player_identity(other_tokens, is_home):
 
         # Second-to-last token is position
         pos_tok = texts[-2].upper() if len(texts) >= 2 else ""
-        if re.match(r'^[A-Z]{2}$', pos_tok):
+        if re.match(r"^[A-Z]{2}$", pos_tok):
             pos = pos_tok
             name = " ".join(texts[:-2])
         else:
@@ -481,6 +499,7 @@ def parse_page2(doc, home_team, away_team, home_shot_log, away_shot_log, score):
 
 
 # ─── Page 3: Key Statistics ───────────────────────────────────────────────────
+
 
 def parse_page3(page):
     words = page_words(page, y_min=100)
@@ -526,7 +545,7 @@ def parse_page3(page):
         def parse_side(vals):
             toks = [v[2] for v in sorted(vals, key=lambda t: t[0])]
             joined = " ".join(toks)
-            m = re.match(r'^(\d+\.?\d*)\s*\((\d+\.?\d*)\)$', joined.strip())
+            m = re.match(r"^(\d+\.?\d*)\s*\((\d+\.?\d*)\)$", joined.strip())
             if m:
                 a, b = to_num(m.group(1)), to_num(m.group(2))
                 # Determine inner key from stat name
@@ -539,7 +558,7 @@ def parse_page3(page):
                 return {"total": a, "value2": b}
             t = joined.strip()
             # strip km suffix
-            t = re.sub(r'\s*km$', '', t)
+            t = re.sub(r"\s*km$", "", t)
             # "Pass Completion %" → integer
             if "%" in t:
                 return pct_int(t)
@@ -549,10 +568,10 @@ def parse_page3(page):
         away_val = parse_side(right_vals)
 
         # Normalise stat name
-        stat_name = re.sub(r'\s+', ' ', stat_name).strip()
+        stat_name = re.sub(r"\s+", " ", stat_name).strip()
         # Replace em dash with hyphen, remove trailing colons from tokens
-        stat_name = stat_name.replace('–', '-').replace(':', '')
-        stat_name = re.sub(r'\s+', ' ', stat_name).strip()
+        stat_name = stat_name.replace("–", "-").replace(":", "")
+        stat_name = re.sub(r"\s+", " ", stat_name).strip()
         # Add km to distance stats
         if "Distance" in stat_name and "km" not in stat_name:
             stat_name += " (km)"
@@ -562,16 +581,19 @@ def parse_page3(page):
         if stat_name.endswith("km/h (km)") and "Zone 4" not in stat_name:
             stat_name = stat_name[:-5].rstrip()
 
-        data["statistics"].append({
-            "stat": stat_name,
-            "home_team": home_val,
-            "away_team": away_val,
-        })
+        data["statistics"].append(
+            {
+                "stat": stat_name,
+                "home_team": home_val,
+                "away_team": away_val,
+            }
+        )
 
     return data
 
 
 # ─── Page 4: Phases of Play ───────────────────────────────────────────────────
+
 
 def parse_page4(page):
     text = page.get_text("text")
@@ -589,13 +611,18 @@ def parse_page4(page):
             section = "out"
             i += 1
             continue
-        if section and re.match(r'^\d+%$', l):
+        if section and re.match(r"^\d+%$", l):
             home_pct = pct_int(l)
             i += 1
-            phase_name = lines[i]; i += 1
-            away_pct = pct_int(lines[i]); i += 1
-            entry = {"phase": phase_name, "home_team_pct": home_pct,
-                     "away_team_pct": away_pct}
+            phase_name = lines[i]
+            i += 1
+            away_pct = pct_int(lines[i])
+            i += 1
+            entry = {
+                "phase": phase_name,
+                "home_team_pct": home_pct,
+                "away_team_pct": away_pct,
+            }
             if section == "in":
                 in_poss.append(entry)
             else:
@@ -607,6 +634,7 @@ def parse_page4(page):
 
 # ─── Pages 6/7: In Possession Line Height ─────────────────────────────────────
 
+
 def _parse_pitch_diagram_3blocks(page, sections):
     """
     Parse 3 pitch diagrams each showing 3 measurements (width, length, dist_to_goal).
@@ -616,7 +644,7 @@ def _parse_pitch_diagram_3blocks(page, sections):
     text = page.get_text("text")
     # Find all integers following "DIRECTION"
     # Each "DIRECTION" block has 3 measurements
-    blocks = re.findall(r'DIRECTION\s+([\d.]+)m\s+([\d.]+)m\s+([\d.]+)m', text)
+    blocks = re.findall(r"DIRECTION\s+([\d.]+)m\s+([\d.]+)m\s+([\d.]+)m", text)
     result = {}
     for i, sec in enumerate(sections):
         if i < len(blocks):
@@ -640,6 +668,7 @@ def parse_pages_6_7(doc, home_team, away_team):
 
 # ─── Pages 8/9: Line Breaks (team) ───────────────────────────────────────────
 
+
 def _parse_linebreaks_team(page, team):
     """
     Parse line breaks team summary page using text extraction.
@@ -658,7 +687,7 @@ def _parse_linebreaks_team(page, team):
     # ── Total attempted ──
     total = None
     for l in lines:
-        if re.match(r'^\d+$', l) and int(l) > 50:
+        if re.match(r"^\d+$", l) and int(l) > 50:
             total = int(l)
             break
 
@@ -671,22 +700,28 @@ def _parse_linebreaks_team(page, team):
             found_total = True
             continue
         if found_total:
-            if re.match(r'^\d+$', l):
+            if re.match(r"^\d+$", l):
                 direction_nums.append(int(l))
                 if len(direction_nums) == 6:
                     break
             elif l in ("Attempted", "Complete", "Attempted Line Breaks"):
                 continue
-            elif re.match(r'^[0-9A-Z]', l):
+            elif re.match(r"^[0-9A-Z]", l):
                 pass  # allow other text between numbers
 
     by_direction = {
-        "through": {"attempted": direction_nums[0] if len(direction_nums) > 0 else 0,
-                    "completed": direction_nums[1] if len(direction_nums) > 1 else 0},
-        "around":  {"attempted": direction_nums[2] if len(direction_nums) > 2 else 0,
-                    "completed": direction_nums[3] if len(direction_nums) > 3 else 0},
-        "over":    {"attempted": direction_nums[4] if len(direction_nums) > 4 else 0,
-                    "completed": direction_nums[5] if len(direction_nums) > 5 else 0},
+        "through": {
+            "attempted": direction_nums[0] if len(direction_nums) > 0 else 0,
+            "completed": direction_nums[1] if len(direction_nums) > 1 else 0,
+        },
+        "around": {
+            "attempted": direction_nums[2] if len(direction_nums) > 2 else 0,
+            "completed": direction_nums[3] if len(direction_nums) > 3 else 0,
+        },
+        "over": {
+            "attempted": direction_nums[4] if len(direction_nums) > 4 else 0,
+            "completed": direction_nums[5] if len(direction_nums) > 5 else 0,
+        },
     }
 
     # ── Units ──
@@ -700,17 +735,16 @@ def _parse_linebreaks_team(page, team):
 
     # Chart blocks appear in the text AFTER all unit headers, in order: 4, 3, 2
     # Each block: "Attempted\nComplete\n<N×2 numbers>\nDIRECTION OF PLAY\n..."
-    chart_blocks = re.findall(
-        r'Attempted\s+Complete\s+((?:\d+\s*)+?)DIRECTION', text, re.S
-    )
+    chart_blocks = re.findall(r"Attempted\s+Complete\s+((?:\d+\s*)+?)DIRECTION", text, re.S)
 
     units_data = {}
     for idx, n_units in enumerate([4, 3, 2]):
         key = f"{n_units}_units"
         # Extract header totals
         m = re.search(
-            rf'{n_units}\s+Units\s+Attempted Line Breaks\s+(\d+)\s+Inside Shape\s+(\d+)\s+Outside Shape\s+(\d+)',
-            text, re.S
+            rf"{n_units}\s+Units\s+Attempted Line Breaks\s+(\d+)\s+Inside Shape\s+(\d+)\s+Outside Shape\s+(\d+)",
+            text,
+            re.S,
         )
         if m:
             att, ins, outs = int(m.group(1)), int(m.group(2)), int(m.group(3))
@@ -720,7 +754,7 @@ def _parse_linebreaks_team(page, team):
         expected_labels = LINE_LABELS_MAP[n_units]
         lines_list = []
         if idx < len(chart_blocks):
-            nums = [int(x) for x in re.findall(r'\d+', chart_blocks[idx])]
+            nums = [int(x) for x in re.findall(r"\d+", chart_blocks[idx])]
             # nums: [att_line0, comp_line0, att_line1, comp_line1, ...]
             for i, lname in enumerate(expected_labels):
                 a = nums[i * 2] if i * 2 < len(nums) else 0
@@ -755,22 +789,47 @@ def parse_pages_8_9(doc, home_team, away_team):
 # ─── Pages 10/11: Line Breaks per player ──────────────────────────────────────
 
 _LB_COLS = [
-    "num", "name", "attempted", "completed", "completion_pct",
-    "4u_attacking", "4u_attacking_mid", "4u_midfield", "4u_defensive",
-    "3u_attacking", "3u_midfield", "3u_defensive",
-    "2u_midfield", "2u_defensive",
-    "dir_through", "dir_around", "dir_over",
-    "dist_type_pass", "dist_type_cross", "dist_type_ball_progression",
+    "num",
+    "name",
+    "attempted",
+    "completed",
+    "completion_pct",
+    "4u_attacking",
+    "4u_attacking_mid",
+    "4u_midfield",
+    "4u_defensive",
+    "3u_attacking",
+    "3u_midfield",
+    "3u_defensive",
+    "2u_midfield",
+    "2u_defensive",
+    "dir_through",
+    "dir_around",
+    "dir_over",
+    "dist_type_pass",
+    "dist_type_cross",
+    "dist_type_ball_progression",
 ]
 
 # x-centers for line breaks player table columns
 _LB_X = {
-    "attempted": 197, "completed": 241, "completion_pct": 279,
-    "4u_attacking": 330, "4u_attacking_mid": 372, "4u_midfield": 415,
-    "4u_defensive": 456, "3u_attacking": 498, "3u_midfield": 540,
-    "3u_defensive": 583, "2u_midfield": 625, "2u_defensive": 666,
-    "dir_through": 709, "dir_around": 750, "dir_over": 792,
-    "dist_type_pass": 834, "dist_type_cross": 876,
+    "attempted": 197,
+    "completed": 241,
+    "completion_pct": 279,
+    "4u_attacking": 330,
+    "4u_attacking_mid": 372,
+    "4u_midfield": 415,
+    "4u_defensive": 456,
+    "3u_attacking": 498,
+    "3u_midfield": 540,
+    "3u_defensive": 583,
+    "2u_midfield": 625,
+    "2u_defensive": 666,
+    "dir_through": 709,
+    "dir_around": 750,
+    "dir_over": 792,
+    "dist_type_pass": 834,
+    "dist_type_cross": 876,
     "dist_type_ball_progression": 921,
 }
 
@@ -819,6 +878,7 @@ def parse_pages_10_11(doc, home_team, away_team):
 
 # ─── Pages 12/13: Passing Networks ───────────────────────────────────────────
 
+
 def _parse_passing_networks(page, team):
     text = page.get_text("text")
     lines = [l.strip() for l in text.splitlines() if l.strip()]
@@ -856,7 +916,7 @@ def _parse_passing_networks(page, team):
         name_parts = []
         nums_found = []
         for t in texts[1:]:
-            if re.match(r'^\d+$', t):
+            if re.match(r"^\d+$", t):
                 nums_found.append(int(t))
             else:
                 if not nums_found:
@@ -867,7 +927,7 @@ def _parse_passing_networks(page, team):
             known_names.append(pname)
     # Also add any single-word capitalized names from column headers
     for l in top5_buf:
-        if re.match(r'^[A-Z][a-z]', l) and l not in known_names and not re.match(r'^\d', l):
+        if re.match(r"^[A-Z][a-z]", l) and l not in known_names and not re.match(r"^\d", l):
             # Could be a name token; add as-is
             pass  # handled by greedy matching below
 
@@ -884,26 +944,29 @@ def _parse_passing_networks(page, team):
                     n2parts = n2.split()
                     if len(rest) >= 1 and rest[0] == n2:
                         return n, n2
-                    if len(rest) >= len(n2parts) and rest[:len(n2parts)] == n2parts:
+                    if len(rest) >= len(n2parts) and rest[: len(n2parts)] == n2parts:
                         return n, n2
                     if len(rest) >= 1 and " ".join(rest) == n2:
                         return n, n2
                 # No known name matched for to; join rest
                 return n, (" ".join(rest) if rest else None)
             # Case 2: first len(nparts) tokens join to n
-            if len(toks) >= len(nparts) and toks[:len(nparts)] == nparts:
-                rest = toks[len(nparts):]
+            if len(toks) >= len(nparts) and toks[: len(nparts)] == nparts:
+                rest = toks[len(nparts) :]
                 for n2 in sorted(knames, key=lambda x: -len(x.split())):
                     n2parts = n2.split()
                     if len(rest) >= 1 and rest[0] == n2:
                         return n, n2
-                    if len(rest) >= len(n2parts) and rest[:len(n2parts)] == n2parts:
+                    if len(rest) >= len(n2parts) and rest[: len(n2parts)] == n2parts:
                         return n, n2
                     if len(rest) >= 1 and " ".join(rest) == n2:
                         return n, n2
                 return n, (" ".join(rest) if rest else None)
         # Fallback: first token from, rest to
-        return (toks[0] if toks else None, " ".join(toks[1:]) if len(toks) > 1 else None)
+        return (
+            toks[0] if toks else None,
+            " ".join(toks[1:]) if len(toks) > 1 else None,
+        )
 
     # top5_buf: flat list of tokens. Find pct tokens, extract segment before each.
     i = 0
@@ -911,12 +974,12 @@ def _parse_passing_networks(page, team):
         # Find next pct token
         pct_idx = None
         for j in range(i, len(top5_buf)):
-            if re.match(r'^\d+\.?\d*%$', top5_buf[j]):
+            if re.match(r"^\d+\.?\d*%$", top5_buf[j]):
                 pct_idx = j
                 break
         if pct_idx is None:
             break
-        pct_clean = re.sub(r'[^0-9.]', '', top5_buf[pct_idx])
+        pct_clean = re.sub(r"[^0-9.]", "", top5_buf[pct_idx])
         pct_val_f = float(pct_clean) if pct_clean else 0.0
         pct_val = int(pct_val_f) if pct_val_f == int(pct_val_f) else pct_val_f
         segment = top5_buf[i:pct_idx]
@@ -924,11 +987,13 @@ def _parse_passing_networks(page, team):
         top5.append({"from": from_name, "to": to_name, "pct_of_team_passes": pct_val})
         i = pct_idx + 1
 
-    NOTE = ("Player-to-player matrix omitted as cell-level data: the source text export "
-            "collapses blank/zero cells so individual from->to assignments cannot be reliably "
-            "reconstructed. Per-'from' row totals are provided instead and reconcile with each "
-            "player's passes completed (distributions page); sparse rows (e.g. DOUGLAS SANTOS, "
-            "ROGER IBANEZ) under-count. Top-5 passers captured verbatim.")
+    NOTE = (
+        "Player-to-player matrix omitted as cell-level data: the source text export "
+        "collapses blank/zero cells so individual from->to assignments cannot be reliably "
+        "reconstructed. Per-'from' row totals are provided instead and reconcile with each "
+        "player's passes completed (distributions page); sparse rows (e.g. DOUGLAS SANTOS, "
+        "ROGER IBANEZ) under-count. Top-5 passers captured verbatim."
+    )
     return {
         "team": team,
         "top5_player_to_player_passers": top5,
@@ -944,12 +1009,24 @@ def parse_pages_12_13(doc, home_team, away_team):
 
 # ─── Pages 14/16: Shot Map Summary ───────────────────────────────────────────
 
+
 def _parse_shot_summary(page, team):
     text = page.get_text("text")
     lines = [l.strip() for l in text.splitlines() if l.strip()]
-    outcomes = {"goals": 0, "on_target": 0, "off_target": 0, "blocked": 0, "incomplete": 0}
-    key_map = {"Goals": "goals", "On Target": "on_target", "Off Target": "off_target",
-               "Blocked": "blocked", "Incomplete": "incomplete"}
+    outcomes = {
+        "goals": 0,
+        "on_target": 0,
+        "off_target": 0,
+        "blocked": 0,
+        "incomplete": 0,
+    }
+    key_map = {
+        "Goals": "goals",
+        "On Target": "on_target",
+        "Off Target": "off_target",
+        "Blocked": "blocked",
+        "Incomplete": "incomplete",
+    }
     # In the shot summary page, labels come BEFORE the number: "Goals\n1\nOn Target\n4..."
     # Find the "Shots" header, then parse label-number pairs after it.
     in_table = False
@@ -977,6 +1054,7 @@ def parse_pages_14_16(doc, home_team, away_team):
 
 # ─── Pages 15/17: Shot Logs ────────────────────────────────────────────────────
 
+
 def _parse_shot_log_full(page, team):
     """Full shot log using the same coordinate-based parser as _parse_shot_log."""
     shots = _parse_shot_log(page)
@@ -996,21 +1074,26 @@ def parse_pages_15_17(doc, home_team, away_team, extra=0):
 
 # ─── Pages 18/19: Crosses (Open Play) ─────────────────────────────────────────
 
+
 def _parse_crosses(page, team):
     words_all = page_words(page)
     text = page.get_text("text")
 
     # ── Overall stats ──
-    attempted = _extract_labeled_int(text, r'Attempted\s*\n(\d+)')
-    completed = _extract_labeled_int(text, r'Completed\s*\n(\d+)')
-    most_count = _extract_labeled_int(text, r'Most Crosses Attempted\s*\n(\d+)')
-    most_player = _extract_labeled_str(text, r'Most Crosses Attempted\s*\n\d+\s*\n(.+)')
+    attempted = _extract_labeled_int(text, r"Attempted\s*\n(\d+)")
+    completed = _extract_labeled_int(text, r"Completed\s*\n(\d+)")
+    most_count = _extract_labeled_int(text, r"Most Crosses Attempted\s*\n(\d+)")
+    most_player = _extract_labeled_str(text, r"Most Crosses Attempted\s*\n\d+\s*\n(.+)")
 
     # ── Delivery types (horizontal bar chart) ──
     # Labels are at x~300-340, values are at x>340 on the same y-row
     DELIVERY_LABELS = {
-        "Inswing": "inswing", "Outswing": "outswing", "Driven": "driven",
-        "Lofted": "lofted", "Cutback": "cutback", "Push": "push_cross",
+        "Inswing": "inswing",
+        "Outswing": "outswing",
+        "Driven": "driven",
+        "Lofted": "lofted",
+        "Cutback": "cutback",
+        "Push": "push_cross",
     }
     label_ys = {}
     total_y = None
@@ -1024,7 +1107,7 @@ def _parse_crosses(page, team):
     delivery = {v: 0 for v in DELIVERY_LABELS.values()}
     delivery_total = attempted or 0
     for x, y, t in words_all:
-        if 345 < x < 530 and re.match(r'^\d+$', t):
+        if 345 < x < 530 and re.match(r"^\d+$", t):
             # Skip y-axis labels: these are in a row at y~270 and form a descending sequence
             # They appear at the bottom of the chart as a horizontal strip
             # Identify by checking if y matches the axis row (>= 265 typically)
@@ -1046,9 +1129,8 @@ def _parse_crosses(page, team):
     # ── Cross zones (pitch diagram left side) ──
     # 4 values in x<280, y>300 sorted by x → left, center_left, center_right, right
     zone_vals = sorted(
-        [(x, int(t)) for x, y, t in words_all
-         if x < 280 and y > 300 and re.match(r'^\d+$', t)],
-        key=lambda t: t[0]
+        [(x, int(t)) for x, y, t in words_all if x < 280 and y > 300 and re.match(r"^\d+$", t)],
+        key=lambda t: t[0],
     )
     zone_names = ["left", "center_left", "center_right", "right"]
     cross_zones = dict(zip(zone_names, [v for _, v in zone_vals[:4]]))
@@ -1056,15 +1138,23 @@ def _parse_crosses(page, team):
     # ── Most attempted player and position ──
     # Use most_player from above; position appears below the player name if available
     most_player_name = most_player.strip() if most_player else ""
-    pos_m = re.search(r'Most Crosses Attempted\s*\n\d+\s*\n(.+?)\n([A-Z ]+)\s*\n', text)
+    pos_m = re.search(r"Most Crosses Attempted\s*\n\d+\s*\n(.+?)\n([A-Z ]+)\s*\n", text)
     if pos_m:
         most_position = pos_m.group(2).strip()
     else:
         # Word-based: ALL-CAPS words just below the player name's y
-        player_yw = [(x, y) for x, y, t in words_all if x < 550 and most_player_name and t in most_player_name.split()]
+        player_yw = [
+            (x, y)
+            for x, y, t in words_all
+            if x < 550 and most_player_name and t in most_player_name.split()
+        ]
         if player_yw:
             py = max(yy for _, yy in player_yw)
-            pos_words = [t for x, y, t in words_all if x < 550 and py + 5 < y < py + 30 and re.match(r'^[A-Z]+$', t)]
+            pos_words = [
+                t
+                for x, y, t in words_all
+                if x < 550 and py + 5 < y < py + 30 and re.match(r"^[A-Z]+$", t)
+            ]
             most_position = " ".join(pos_words) if pos_words else ""
         else:
             most_position = ""
@@ -1073,8 +1163,13 @@ def _parse_crosses(page, team):
     # Columns (x-centers): # ~590-600, player ~605, inswing~734, outswing~769,
     # driven~802, lofted~830, cutback~862, push_cross~892, total~926
     CROSS_PLAYER_X = {
-        "inswing": 734, "outswing": 769, "driven": 802,
-        "lofted": 830, "cutback": 862, "push_cross": 892, "total_attempted": 926,
+        "inswing": 734,
+        "outswing": 769,
+        "driven": 802,
+        "lofted": 830,
+        "cutback": 862,
+        "push_cross": 892,
+        "total_attempted": 926,
     }
     player_words = page_words(page, x_min=580, y_min=80)
     player_rows = group_rows(player_words, y_tol=5)
@@ -1102,13 +1197,28 @@ def _parse_crosses(page, team):
         for col in CROSS_PLAYER_X:
             p[col] = 0
         for x, y, t in row:
-            if x >= 720 and re.match(r'^\d+$', t):
+            if x >= 720 and re.match(r"^\d+$", t):
                 col = closest(x, CROSS_PLAYER_X, tol=20)
                 if col:
                     p[col] = int(t)
         players.append(p)
 
-    players = [p for p in players if any(v > 0 for v in [p.get('total_attempted', 0), p.get('inswing', 0), p.get('outswing', 0), p.get('driven', 0), p.get('lofted', 0), p.get('cutback', 0), p.get('push_cross', 0)])]
+    players = [
+        p
+        for p in players
+        if any(
+            v > 0
+            for v in [
+                p.get("total_attempted", 0),
+                p.get("inswing", 0),
+                p.get("outswing", 0),
+                p.get("driven", 0),
+                p.get("lofted", 0),
+                p.get("cutback", 0),
+                p.get("push_cross", 0),
+            ]
+        )
+    ]
 
     return {
         "team": team,
@@ -1143,35 +1253,42 @@ def parse_pages_18_19(doc, home_team, away_team, extra=0):
 
 # ─── Pages 20/21: Offering to Receive ────────────────────────────────────────
 
+
 def _parse_offering(page, team):
     text = page.get_text("text")
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     words = page_words(page)
 
-    total_made = _extract_labeled_int(text, r'(\d+)\s*\nTotal Offers Made')
-    total_recv = _extract_labeled_int(text, r'(\d+)\s*\nTotal Offers Received')
-    most_count = _extract_labeled_int(text, r'Most Offers\s*\n(\d+)')
+    total_made = _extract_labeled_int(text, r"(\d+)\s*\nTotal Offers Made")
+    total_recv = _extract_labeled_int(text, r"(\d+)\s*\nTotal Offers Received")
+    most_count = _extract_labeled_int(text, r"Most Offers\s*\n(\d+)")
     # Most player
-    mp_m = re.search(r'Most Offers\s*\n(\d+)\s*\n(.+)', text)
+    mp_m = re.search(r"Most Offers\s*\n(\d+)\s*\n(.+)", text)
     most_player = mp_m.group(2).strip() if mp_m else ""
     # Position: look in words widget area (left half, x<650), ALL-CAPS below player name
-    pos_m = re.search(r'Most Offers\s*\n\d+\s*\n(.+?)\n([A-Z ]+)\s*\n', text)
+    pos_m = re.search(r"Most Offers\s*\n\d+\s*\n(.+?)\n([A-Z ]+)\s*\n", text)
     if pos_m:
         most_position = pos_m.group(2).strip()
     else:
         # Try word-based extraction: find player name y then get ALL-CAPS words just below
-        player_yw = [(x, y) for x, y, t in words if x < 650 and most_player and t in most_player.split()]
+        player_yw = [
+            (x, y) for x, y, t in words if x < 650 and most_player and t in most_player.split()
+        ]
         if player_yw:
             py = max(yy for _, yy in player_yw)
-            pos_words = [t for x, y, t in words if x < 650 and py + 5 < y < py + 30 and re.match(r'^[A-Z]+$', t)]
+            pos_words = [
+                t
+                for x, y, t in words
+                if x < 650 and py + 5 < y < py + 30 and re.match(r"^[A-Z]+$", t)
+            ]
             most_position = " ".join(pos_words) if pos_words else ""
         else:
             most_position = ""
 
     # Thirds
-    final_m = re.search(r'(\d+)\s*\nOffers Made in Final Third', text)
-    mid_m = re.search(r'(\d+)\s*\nOffers Made in Middle Third', text)
-    def_m = re.search(r'(\d+)\s*\nOffers Made in Defensive', text)
+    final_m = re.search(r"(\d+)\s*\nOffers Made in Final Third", text)
+    mid_m = re.search(r"(\d+)\s*\nOffers Made in Middle Third", text)
+    def_m = re.search(r"(\d+)\s*\nOffers Made in Defensive", text)
     by_third = {
         "final": int(final_m.group(1)) if final_m else 0,
         "middle": int(mid_m.group(1)) if mid_m else 0,
@@ -1180,8 +1297,11 @@ def _parse_offering(page, team):
 
     # Shape: inside_shape (x~310-320, y~350) and outside_shape (x~530-540, y~440)
     # Both appear on the pitch diagram in the left half of the page (x<650)
-    shape_words = [(x, y, int(t)) for x, y, t in words
-                   if re.match(r'^\d+$', t) and 280 <= y <= 480 and 290 <= x < 570]
+    shape_words = [
+        (x, y, int(t))
+        for x, y, t in words
+        if re.match(r"^\d+$", t) and 280 <= y <= 480 and 290 <= x < 570
+    ]
     shape_sorted = sorted(shape_words, key=lambda t: t[0])
     inside = shape_sorted[0][2] if len(shape_sorted) >= 1 else 0
     outside = shape_sorted[1][2] if len(shape_sorted) >= 2 else 0
@@ -1210,7 +1330,7 @@ def _parse_offering(page, team):
         made, recv, pct = 0, 0, 0.0
         for x, y, t in row:
             if x >= 820:
-                v = to_num(re.sub('%', '', t))
+                v = to_num(re.sub("%", "", t))
                 if v is None:
                     continue
                 if 820 <= x < 870:
@@ -1221,16 +1341,25 @@ def _parse_offering(page, team):
                     pct = float(v)
                     if pct == int(pct):
                         pct = int(pct)
-        players.append({"num": num, "name": name,
-                         "offers_made": made, "offers_received": recv,
-                         "pct_made_received": pct})
+        players.append(
+            {
+                "num": num,
+                "name": name,
+                "offers_made": made,
+                "offers_received": recv,
+                "pct_made_received": pct,
+            }
+        )
 
     return {
         "team": team,
         "total_offers_made": total_made or 0,
         "total_offers_received": total_recv or 0,
-        "most_offers": {"count": most_count or 0, "player": most_player,
-                         "position": most_position},
+        "most_offers": {
+            "count": most_count or 0,
+            "player": most_player,
+            "position": most_position,
+        },
         "offers_made_by_third": by_third,
         "offers_made_shape": {"inside_shape": inside, "outside_shape": outside},
         "players": players,
@@ -1245,6 +1374,7 @@ def parse_pages_20_21(doc, home_team, away_team, extra=0):
 
 # ─── Pages 22/23: Movement to Receive ────────────────────────────────────────
 
+
 def _parse_movement(page, team):
     text = page.get_text("text")
     lines = [l.strip() for l in text.splitlines() if l.strip()]
@@ -1253,9 +1383,8 @@ def _parse_movement(page, team):
     # Phase totals (3 numbers for Final Third, Progression, Build Up)
     # Appear as 3 numbers in left section (x~100-140, y~185/316/447)
     phase_words = sorted(
-        [(y, int(t)) for x, y, t in words
-         if re.match(r'^\d+$', t) and 100 <= x <= 140 and y > 100],
-        key=lambda t: t[0]
+        [(y, int(t)) for x, y, t in words if re.match(r"^\d+$", t) and 100 <= x <= 140 and y > 100],
+        key=lambda t: t[0],
     )
     phase_vals = [v for _, v in phase_words[:3]]
     by_phase = {
@@ -1265,16 +1394,20 @@ def _parse_movement(page, team):
     }
 
     # Total (donut center, x~400-420, y>50 excludes page header year "2026")
-    total_words = [(y, int(t)) for x, y, t in words
-                   if re.match(r'^\d+$', t) and 390 <= x <= 430 and y > 50 and t != "0"]
+    total_words = [
+        (y, int(t))
+        for x, y, t in words
+        if re.match(r"^\d+$", t) and 390 <= x <= 430 and y > 50 and t != "0"
+    ]
     total = total_words[0][1] if total_words else 0
 
     # Top ranked players table
     # Labels: In Front, In Between, Out to In, In to Out, In Behind
     TYPE_LABELS = ["in_front", "in_between", "out_to_in", "in_to_out", "in_behind"]
     LABEL_TEXT_MAP = {
-        "Front": "in_front", "Between": "in_between",
-        "In": "out_to_in",   # "Out to In" → tricky
+        "Front": "in_front",
+        "Between": "in_between",
+        "In": "out_to_in",  # "Out to In" → tricky
         "Out": "in_to_out",  # "In to Out"
         "Behind": "in_behind",
     }
@@ -1294,10 +1427,13 @@ def _parse_movement(page, team):
     # buf: Type, Player, Movements interleaved
     # e.g. ["In Front", "BRUNO GUIMARAES", "24", "In Between", ...]
     type_map = {
-        "In Front": "in_front", "In Between": "in_between",
-        "Out to In": "out_to_in", "In to Out": "in_to_out", "In Behind": "in_behind",
+        "In Front": "in_front",
+        "In Between": "in_between",
+        "Out to In": "out_to_in",
+        "In to Out": "in_to_out",
+        "In Behind": "in_behind",
     }
-    multi = [" ".join(buf[i:i+2]) for i in range(0, len(buf) - 1)]
+    multi = [" ".join(buf[i : i + 2]) for i in range(0, len(buf) - 1)]
     type_map_keys = set(type_map.keys())
     # Also handle single-token type labels (e.g. "In Front" as one string)
     type_map_single = {" ".join(k.split()): v for k, v in type_map.items()}
@@ -1309,20 +1445,24 @@ def _parse_movement(page, team):
             n_skip = 0
             # Case 1: single token matching full label
             if buf[i] == tname:
-                hit = True; n_skip = 1
+                hit = True
+                n_skip = 1
             # Case 2: multi-word tokens
             if not hit:
                 parts = tname.split()
-                if buf[i:i + len(parts)] == parts:
-                    hit = True; n_skip = len(parts)
+                if buf[i : i + len(parts)] == parts:
+                    hit = True
+                    n_skip = len(parts)
             if hit:
                 label_end = i + n_skip
                 player_parts = []
                 j = label_end
-                while j < len(buf) and not re.match(r'^\d+$', buf[j]) and buf[j] not in type_map_keys:
+                while (
+                    j < len(buf) and not re.match(r"^\d+$", buf[j]) and buf[j] not in type_map_keys
+                ):
                     player_parts.append(buf[j])
                     j += 1
-                movements = int(buf[j]) if j < len(buf) and re.match(r'^\d+$', buf[j]) else 0
+                movements = int(buf[j]) if j < len(buf) and re.match(r"^\d+$", buf[j]) else 0
                 top_ranked[tkey] = {
                     "player": " ".join(player_parts),
                     "movements": movements,
@@ -1343,12 +1483,14 @@ def _parse_movement(page, team):
 
     def extract_third_values(y_min, y_max):
         """Get 5 values from a chart section on the right of the page."""
-        chart_words = [(x, y, t) for x, y, t in words
-                       if x > 730 and y_min <= y <= y_max and re.match(r'^\d+$', t)]
+        chart_words = [
+            (x, y, t)
+            for x, y, t in words
+            if x > 730 and y_min <= y <= y_max and re.match(r"^\d+$", t)
+        ]
         # These values appear at specific y-positions matching the label y's
         # Labels (In Front etc.) are at x~695-720
-        label_words = [(x, y, t) for x, y, t in words
-                       if 690 <= x <= 730 and y_min <= y <= y_max]
+        label_words = [(x, y, t) for x, y, t in words if 690 <= x <= 730 and y_min <= y <= y_max]
         # Build label-y mapping
         label_ys = {}
         for x, y, t in label_words:
@@ -1389,9 +1531,7 @@ def _parse_movement(page, team):
     # Derive all_movement_types from pitch third sums
     all_types = {"total": total}
     for ttype in MOVE_TYPES:
-        all_types[ttype] = sum(
-            by_pitch_third[third].get(ttype, 0) for third in by_pitch_third
-        )
+        all_types[ttype] = sum(by_pitch_third[third].get(ttype, 0) for third in by_pitch_third)
 
     return {
         "team": team,
@@ -1411,19 +1551,24 @@ def parse_pages_22_23(doc, home_team, away_team, extra=0):
 # ─── Pages 25/26: Defensive Actions ──────────────────────────────────────────
 
 # Donut-chart fill colors (RGB float tuples from fitz)
-_COLOR_BLUE       = (0.18039999902248383, 0.3019999861717224, 1.0)
-_COLOR_ORANGE     = (1.0, 0.23919999599456787, 0.0)
-_COLOR_PURPLE     = (0.7020000219345093, 0.53329998254776, 1.0)
+_COLOR_BLUE = (0.18039999902248383, 0.3019999861717224, 1.0)
+_COLOR_ORANGE = (1.0, 0.23919999599456787, 0.0)
+_COLOR_PURPLE = (0.7020000219345093, 0.53329998254776, 1.0)
 _COLOR_LIGHT_BLUE = (0.35690000653266907, 0.6078000068664551, 0.8353000283241272)
-_COLOR_YELLOW     = (0.9607999920845032, 0.7372000217437744, 0.0)
+_COLOR_YELLOW = (0.9607999920845032, 0.7372000217437744, 0.0)
+
 
 def _color_name(fill, tol=0.02):
     """Match fill RGB tuple to a named color string, or None."""
     if not fill:
         return None
-    for name, c in [('blue', _COLOR_BLUE), ('orange', _COLOR_ORANGE),
-                    ('purple', _COLOR_PURPLE), ('light_blue', _COLOR_LIGHT_BLUE),
-                    ('yellow', _COLOR_YELLOW)]:
+    for name, c in [
+        ("blue", _COLOR_BLUE),
+        ("orange", _COLOR_ORANGE),
+        ("purple", _COLOR_PURPLE),
+        ("light_blue", _COLOR_LIGHT_BLUE),
+        ("yellow", _COLOR_YELLOW),
+    ]:
         if all(abs(fill[i] - c[i]) < tol for i in range(3)):
             return name
     return None
@@ -1434,12 +1579,12 @@ def get_arc_span(items, cx, cy, outer_r, tol=6):
     pts = []
     for item in items:
         t = item[0]
-        if t == 'c':
+        if t == "c":
             for pt in [item[1], item[2], item[3]]:
                 d = math.sqrt((pt.x - cx) ** 2 + (pt.y - cy) ** 2)
                 if abs(d - outer_r) < tol:
                     pts.append((pt.x, pt.y))
-        elif t in ('l', 'm'):
+        elif t in ("l", "m"):
             pt = item[1]
             d = math.sqrt((pt.x - cx) ** 2 + (pt.y - cy) ** 2)
             if abs(d - outer_r) < tol:
@@ -1460,8 +1605,8 @@ def _decode_donut(page, cx, cy, outer_r, total, color_map, area_rect):
     if total == 0:
         return result
     for d in page.get_drawings():
-        rect = d.get('rect')
-        fill = d.get('fill')
+        rect = d.get("rect")
+        fill = d.get("fill")
         if not rect or not fill or fill == (1.0, 1.0, 1.0):
             continue
         x0, y0, x1, y1 = area_rect
@@ -1471,7 +1616,7 @@ def _decode_donut(page, cx, cy, outer_r, total, color_map, area_rect):
         if color not in color_map:
             continue
         cat = color_map[color]
-        span = get_arc_span(d['items'], cx, cy, outer_r)
+        span = get_arc_span(d["items"], cx, cy, outer_r)
         if span > 0:
             val = round(span / (2 * math.pi) * total)
             result[cat] = val
@@ -1479,16 +1624,16 @@ def _decode_donut(page, cx, cy, outer_r, total, color_map, area_rect):
 
 
 _BLOCKS_COLOR_MAP = {
-    'blue': 'passes',
-    'orange': 'attempts_at_goal',
-    'purple': 'crosses',
-    'light_blue': 'clearances',
+    "blue": "passes",
+    "orange": "attempts_at_goal",
+    "purple": "crosses",
+    "light_blue": "clearances",
 }
 
 _CONTESTS_COLOR_MAP = {
-    'blue': 'physical_duels',
-    'orange': 'aerial_duels',
-    'purple': 'duels',
+    "blue": "physical_duels",
+    "orange": "aerial_duels",
+    "purple": "duels",
 }
 
 
@@ -1496,10 +1641,10 @@ def _build_blocks(page, total):
     decoded = _decode_donut(page, 547.1, 156.5, 39, total, _BLOCKS_COLOR_MAP, (490, 115, 610, 195))
     return {
         "total": total,
-        "passes": decoded.get('passes', 0),
-        "attempts_at_goal": decoded.get('attempts_at_goal', 0),
-        "crosses": decoded.get('crosses', 0),
-        "clearances": decoded.get('clearances', 0),
+        "passes": decoded.get("passes", 0),
+        "attempts_at_goal": decoded.get("attempts_at_goal", 0),
+        "crosses": decoded.get("crosses", 0),
+        "clearances": decoded.get("clearances", 0),
     }
 
 
@@ -1507,9 +1652,9 @@ def _build_contests(page, total):
     decoded = _decode_donut(page, 551, 317.5, 43, total, _CONTESTS_COLOR_MAP, (500, 270, 610, 365))
     return {
         "total": total,
-        "physical_duels": decoded.get('physical_duels', 0),
-        "aerial_duels": decoded.get('aerial_duels', 0),
-        "duels": decoded.get('duels', 0),
+        "physical_duels": decoded.get("physical_duels", 0),
+        "aerial_duels": decoded.get("aerial_duels", 0),
+        "duels": decoded.get("duels", 0),
     }
 
 
@@ -1522,30 +1667,30 @@ def _parse_defensive_actions(page, team):
         m = re.search(pattern, text)
         return to_num(m.group(1)) if m else None
 
-    forced = grab(r'(\d+)\s*\nForced\s*\nTurnovers')
-    regained = grab(r'(\d+)\s*\nPossession\s*\nRegained')
-    interceptions = grab(r'(\d+)\s*\nInterceptions')
-    tackles = grab(r'(\d+)\s*\nTackles')
-    ratio_m = re.search(r'(\d+\.?\d*)\s*\nPossession\s*\nActions', text)
+    forced = grab(r"(\d+)\s*\nForced\s*\nTurnovers")
+    regained = grab(r"(\d+)\s*\nPossession\s*\nRegained")
+    interceptions = grab(r"(\d+)\s*\nInterceptions")
+    tackles = grab(r"(\d+)\s*\nTackles")
+    ratio_m = re.search(r"(\d+\.?\d*)\s*\nPossession\s*\nActions", text)
     ratio = float(ratio_m.group(1)) if ratio_m else None
 
     # blocks_total is at y~115-200, contests_total at y~275-360
     blocks_total = None
     for x, y, t in words:
-        if 480 <= x <= 620 and 115 <= y <= 200 and re.match(r'^\d+$', t):
+        if 480 <= x <= 620 and 115 <= y <= 200 and re.match(r"^\d+$", t):
             blocks_total = int(t)
             break
 
     contests_total = None
     for x, y, t in words:
-        if 480 <= x <= 620 and 275 <= y <= 360 and re.match(r'^\d+$', t):
+        if 480 <= x <= 620 and 275 <= y <= 360 and re.match(r"^\d+$", t):
             contests_total = int(t)
             break
 
     # Most possession regains
-    most_count_m = re.search(r'Most Possession Regains\s*\n(\d+)', text)
-    most_player_m = re.search(r'Most Possession Regains\s*\n\d+\s*\n(.+)', text)
-    most_pos_m = re.search(r'Most Possession Regains\s*\n\d+\s*\n.+?\n([A-Z ]+)\s*\n', text)
+    most_count_m = re.search(r"Most Possession Regains\s*\n(\d+)", text)
+    most_player_m = re.search(r"Most Possession Regains\s*\n\d+\s*\n(.+)", text)
+    most_pos_m = re.search(r"Most Possession Regains\s*\n\d+\s*\n.+?\n([A-Z ]+)\s*\n", text)
     # Position also in word layer just below player name
     if not most_pos_m and most_player_m:
         mp_name = most_player_m.group(1).strip()
@@ -1553,7 +1698,11 @@ def _parse_defensive_actions(page, team):
         player_yw = [(x, y) for x, y, t in mp_words_all if t in mp_name.split()]
         if player_yw:
             py = max(yy for _, yy in player_yw)
-            pos_words = [t for x, y, t in mp_words_all if py + 5 < y < py + 30 and re.match(r'^[A-Z]+$', t) and x < 700]
+            pos_words = [
+                t
+                for x, y, t in mp_words_all
+                if py + 5 < y < py + 30 and re.match(r"^[A-Z]+$", t) and x < 700
+            ]
             _most_position_possession = " ".join(pos_words) if pos_words else ""
         else:
             _most_position_possession = ""
@@ -1608,6 +1757,7 @@ def parse_pages_25_26(doc, home_team, away_team, extra=0):
 
 # ─── Pages 27/28: Defensive Line Height ──────────────────────────────────────
 
+
 def parse_pages_27_28(doc, home_team, away_team, extra=0):
     secs = ["high_block_press", "mid_block", "low_block"]
     p27 = _parse_pitch_diagram_3blocks(doc[26 + extra], secs)
@@ -1618,6 +1768,7 @@ def parse_pages_27_28(doc, home_team, away_team, extra=0):
 
 
 # ─── Page 29: Defensive Pressure ─────────────────────────────────────────────
+
 
 def parse_page29(page, home_team, away_team):
     words = page_words(page, y_min=100)
@@ -1643,8 +1794,8 @@ def parse_page29(page, home_team, away_team):
         if "DIRECTION" in stat_name or "Shown" in stat_name:
             continue
 
-        home_v = to_num(re.sub(r'\s*s$', '', lv.strip()))
-        away_v = to_num(re.sub(r'\s*s$', '', rv.strip()))
+        home_v = to_num(re.sub(r"\s*s$", "", lv.strip()))
+        away_v = to_num(re.sub(r"\s*s$", "", rv.strip()))
         if home_v is None:
             continue
         if "Duration" in stat_name and "(s)" not in stat_name:
@@ -1658,41 +1809,52 @@ def parse_page29(page, home_team, away_team):
     #         player name at y~Y+38, position words at y~Y+51..+65
     # Home widget at x<500, away widget at x>500
     all_words = page_words(page)
-    most_label_ys = [y for x, y, t in all_words if t == 'Most' and
-                     any(abs(y - y2) < 6 and t2 == 'Direct'
-                         for x2, y2, t2 in all_words)]
+    most_label_ys = [
+        y
+        for x, y, t in all_words
+        if t == "Most" and any(abs(y - y2) < 6 and t2 == "Direct" for x2, y2, t2 in all_words)
+    ]
     if not most_label_ys:
         # fallback: find 'Pressures' near 'Most Direct' region
-        most_label_ys = [y for x, y, t in all_words if t == 'Pressures' and x > 200 and x < 700]
+        most_label_ys = [y for x, y, t in all_words if t == "Pressures" and x > 200 and x < 700]
 
     if most_label_ys:
         ref_y = min(most_label_ys)
-        for side, x_min, x_max in [('home_team', 0, 500), ('away_team', 500, 950)]:
+        for side, x_min, x_max in [("home_team", 0, 500), ("away_team", 500, 950)]:
             # count: integer in y+20..y+40 in x_range
-            cnt_words = [(x, y, t) for x, y, t in all_words
-                         if x_min <= x < x_max and ref_y + 15 <= y <= ref_y + 45
-                         and re.match(r'^\d+$', t)]
+            cnt_words = [
+                (x, y, t)
+                for x, y, t in all_words
+                if x_min <= x < x_max and ref_y + 15 <= y <= ref_y + 45 and re.match(r"^\d+$", t)
+            ]
             if not cnt_words:
                 continue
             cnt_words.sort(key=lambda w: w[1])
             count = int(cnt_words[0][2])
             count_y = cnt_words[0][1]
             # player: first distinct y level roughly 30-55 units below count
-            candidate_words = [(x, y, t) for x, y, t in all_words
-                               if x_min <= x < x_max and count_y + 25 <= y <= count_y + 60]
+            candidate_words = [
+                (x, y, t)
+                for x, y, t in all_words
+                if x_min <= x < x_max and count_y + 25 <= y <= count_y + 60
+            ]
             if candidate_words:
                 first_y = min(w[1] for w in candidate_words)
                 player_words = [(x, y, t) for x, y, t in candidate_words if abs(y - first_y) < 5]
             else:
                 player_words = []
-            player = ' '.join(t for _, _, t in sorted(player_words, key=lambda w: w[0]))
+            player = " ".join(t for _, _, t in sorted(player_words, key=lambda w: w[0]))
             # position: words at y+50..y+80, letter-only tokens
             player_y = player_words[0][1] if player_words else count_y + 14
-            pos_words = [(x, y, t) for x, y, t in all_words
-                         if x_min <= x < x_max and player_y + 8 <= y <= player_y + 40
-                         and re.match(r'^[A-Za-z]', t)
-                         and t not in ('Shown', 'Outside', 'Inside', 'Neutral', 'From', 'Behind')]
-            position = ' '.join(t for _, _, t in sorted(pos_words, key=lambda w: (w[1], w[0])))
+            pos_words = [
+                (x, y, t)
+                for x, y, t in all_words
+                if x_min <= x < x_max
+                and player_y + 8 <= y <= player_y + 40
+                and re.match(r"^[A-Za-z]", t)
+                and t not in ("Shown", "Outside", "Inside", "Neutral", "From", "Behind")
+            ]
+            position = " ".join(t for _, _, t in sorted(pos_words, key=lambda w: (w[1], w[0])))
             most[side] = {"count": count, "player": player, "position": position}
 
     return {"statistics": stats, "most_direct_pressures": most}
@@ -1700,10 +1862,11 @@ def parse_page29(page, home_team, away_team):
 
 # ─── Page 31: Goalkeeping Involvement ────────────────────────────────────────
 
+
 def parse_page31(page):
     text = page.get_text("text")
-    h = re.search(r'(\d+)\s*\nTotal Involvements', text)
-    nums = re.findall(r'(\d+)\s*\nTotal Involvements', text)
+    h = re.search(r"(\d+)\s*\nTotal Involvements", text)
+    nums = re.findall(r"(\d+)\s*\nTotal Involvements", text)
     return {
         "home_team": {"total_involvements": int(nums[0]) if nums else 0},
         "away_team": {"total_involvements": int(nums[1]) if len(nums) > 1 else 0},
@@ -1712,14 +1875,16 @@ def parse_page31(page):
 
 # ─── Pages 32/33: Goalkeeping Distribution ───────────────────────────────────
 
+
 def _parse_gk_distribution(page, team, gk_name):
     text = page.get_text("text")
     words = page_words(page)
 
     # Total per category appears at y~477 at specific x-centers
     # kick_from_feet ≈ x=160, kick_from_hands ≈ x=406, throw ≈ x=643
-    cat_words = [(x, int(t)) for x, y, t in words
-                 if re.match(r'^\d+$', t) and 470 <= y <= 485 and x < 680]
+    cat_words = [
+        (x, int(t)) for x, y, t in words if re.match(r"^\d+$", t) and 470 <= y <= 485 and x < 680
+    ]
     cat_sorted = sorted(cat_words, key=lambda t: t[0])
     feet_total = cat_sorted[0][1] if len(cat_sorted) > 0 else 0
     hands_total = cat_sorted[1][1] if len(cat_sorted) > 1 else 0
@@ -1727,7 +1892,7 @@ def _parse_gk_distribution(page, team, gk_name):
     total_dist = feet_total + hands_total + throw_total
 
     # Goalkeeper line breaks
-    lb_m = re.search(r'(\d+)\s*\nGoalkeeper Line Breaks', text)
+    lb_m = re.search(r"(\d+)\s*\nGoalkeeper Line Breaks", text)
     gk_lb = int(lb_m.group(1)) if lb_m else 0
 
     return {
@@ -1749,12 +1914,13 @@ def parse_pages_32_33(doc, home_team, away_team, home_gk, away_gk, extra=0):
 
 # ─── Pages 34/35: Goal Prevention ────────────────────────────────────────────
 
+
 def _parse_goal_prevention(page, team, gk_name):
     text = page.get_text("text")
     words = page_words(page)
 
-    total_m = re.search(r'(\d+)\s*\nTotal Attempts on Goal Faced', text)
-    save_pct_m = re.search(r'(\d+)\s*\nSave %', text)
+    total_m = re.search(r"(\d+)\s*\nTotal Attempts on Goal Faced", text)
+    save_pct_m = re.search(r"(\d+)\s*\nSave %", text)
     total_faced = int(total_m.group(1)) if total_m else 0
     save_pct = int(save_pct_m.group(1)) if save_pct_m else 0
 
@@ -1762,13 +1928,17 @@ def _parse_goal_prevention(page, team, gk_name):
     # Cols: total_faced, total_goal_interventions, save_and_retain, deflect_and_retain,
     #       save_and_deflect, save_attempt, no_save_attempt
     TABLE_X = {
-        "total_faced": 506, "total_goal_interventions": 604,
-        "save_and_retain": 675, "deflect_and_retain": 733,
-        "save_and_deflect": 794, "save_attempt": 850, "no_save_attempt": 910,
+        "total_faced": 506,
+        "total_goal_interventions": 604,
+        "save_and_retain": 675,
+        "deflect_and_retain": 733,
+        "save_and_deflect": 794,
+        "save_attempt": 850,
+        "no_save_attempt": 910,
     }
     breakdown = {k: 0 for k in TABLE_X}
     for x, y, t in words:
-        if re.match(r'^\d+$', t) and 500 <= y <= 520:
+        if re.match(r"^\d+$", t) and 500 <= y <= 520:
             col = closest(x, TABLE_X, tol=25)
             if col:
                 breakdown[col] = int(t)
@@ -1787,8 +1957,11 @@ def _parse_goal_prevention(page, team, gk_name):
             "no_save_attempt": breakdown["no_save_attempt"],
         },
         "intervention_body_type": {
-            "head": None, "hands": None, "upper_body": None,
-            "lower_body": None, "feet": None,
+            "head": None,
+            "hands": None,
+            "upper_body": None,
+            "lower_body": None,
+            "feet": None,
         },
     }
 
@@ -1801,17 +1974,18 @@ def parse_pages_34_35(doc, home_team, away_team, home_gk, away_gk, extra=0):
 
 # ─── Pages 36/37: Aerial Control ─────────────────────────────────────────────
 
+
 def _parse_aerial_control(page, team, gk_name):
     text = page.get_text("text")
     words = page_words(page)
 
-    total_m = re.search(r'(\d+)\s*\nTotal Interventions', text)
+    total_m = re.search(r"(\d+)\s*\nTotal Interventions", text)
     total_int = int(total_m.group(1)) if total_m else 0
 
     def parse_intervention(label):
         # e.g. "Punches" → complete / incomplete
         # Pattern: "(complete) (total) (label) (incomplete)" from word positions
-        c_m = re.search(rf'(\d+)\s*\nComplete\s*\n(\d+)\s*\n{label}\s*\n(\d+)\s*\nIncomplete', text)
+        c_m = re.search(rf"(\d+)\s*\nComplete\s*\n(\d+)\s*\n{label}\s*\n(\d+)\s*\nIncomplete", text)
         if c_m:
             return {"complete": int(c_m.group(1)), "incomplete": int(c_m.group(3))}
         # Fallback from word positions: three numbers appear near label text
@@ -1823,12 +1997,17 @@ def _parse_aerial_control(page, team, gk_name):
 
     # Delivery types table (explicit row at y~512)
     TABLE_X = {
-        "total": 524, "in_swing": 586, "out_swing": 647,
-        "driven": 708, "lofted": 770, "cutback": 829, "push": 891,
+        "total": 524,
+        "in_swing": 586,
+        "out_swing": 647,
+        "driven": 708,
+        "lofted": 770,
+        "cutback": 829,
+        "push": 891,
     }
     delivery = {k: 0 for k in TABLE_X}
     for x, y, t in words:
-        if re.match(r'^\d+$', t) and 505 <= y <= 520:
+        if re.match(r"^\d+$", t) and 505 <= y <= 520:
             col = closest(x, TABLE_X, tol=25)
             if col:
                 delivery[col] = int(t)
@@ -1852,6 +2031,7 @@ def parse_pages_36_37(doc, home_team, away_team, home_gk, away_gk, extra=0):
 
 # ─── Pages 39/40: Set Plays ───────────────────────────────────────────────────
 
+
 def _parse_set_plays(page, team):
     text = page.get_text("text")
 
@@ -1860,14 +2040,14 @@ def _parse_set_plays(page, team):
         return cast(m.group(1)) if m else 0
 
     totals = {
-        "set_plays": g(r'(\d+)\s*\nTotal Set Plays'),
-        "free_kicks": g(r'(\d+)\s*\nTotal Free Kicks'),
-        "penalties": g(r'(\d+)\s*\nTotal Penalties'),
-        "corners": g(r'(\d+)\s*\nTotal Corners'),
-        "throw_ins": g(r'(\d+)\s*\nTotal Throw Ins'),
+        "set_plays": g(r"(\d+)\s*\nTotal Set Plays"),
+        "free_kicks": g(r"(\d+)\s*\nTotal Free Kicks"),
+        "penalties": g(r"(\d+)\s*\nTotal Penalties"),
+        "corners": g(r"(\d+)\s*\nTotal Corners"),
+        "throw_ins": g(r"(\d+)\s*\nTotal Throw Ins"),
     }
-    direct_m = re.search(r'Direct\s*\n(\d+)\s*\n', text)
-    indirect_m = re.search(r'Indirect\s*\n(\d+)', text)
+    direct_m = re.search(r"Direct\s*\n(\d+)\s*\n", text)
+    indirect_m = re.search(r"Indirect\s*\n(\d+)", text)
     fk_direct = int(direct_m.group(1)) if direct_m else 0
     fk_indirect = int(indirect_m.group(1)) if indirect_m else 0
     # direct_on_target and direct_off_target are sub-fields only accessible visually
@@ -1887,7 +2067,7 @@ def _parse_set_plays(page, team):
         rows_candidate = group_rows(_all_words, y_tol=4)
         for row in rows_candidate:
             row_texts_list = [t for _, _, t in row]
-            if row_texts_list[:len(label_words)] == label_words:
+            if row_texts_list[: len(label_words)] == label_words:
                 LABEL_ROWS[label] = min(y for _, y, _ in row)
                 break
 
@@ -1895,8 +2075,9 @@ def _parse_set_plays(page, team):
         label_y = LABEL_ROWS.get(label)
         if label_y is None:
             return {"from_left": 0, "from_right": 0, "total": 0}
-        row_words = [(x, y, t) for x, y, t in _all_words
-                     if abs(y - label_y) < 8 and re.match(r'^\d+$', t)]
+        row_words = [
+            (x, y, t) for x, y, t in _all_words if abs(y - label_y) < 8 and re.match(r"^\d+$", t)
+        ]
         fl = fr = tot = 0
         for x, y, t in row_words:
             v = int(t)
@@ -1918,7 +2099,7 @@ def _parse_set_plays(page, team):
     def style_val(label):
         # Require the number to be on its own line (followed by \n or end-of-string)
         # to avoid matching "13" from "13 June 2026" footer
-        m = re.search(rf'{label}\s*\n(\d+)\s*\n', text)
+        m = re.search(rf"{label}\s*\n(\d+)\s*\n", text)
         return int(m.group(1)) if m else 0
 
     c_style = {
@@ -1946,11 +2127,20 @@ def parse_pages_39_40(doc, home_team, away_team, extra=0):
 # ─── Pages 42/44: Distributions per player ───────────────────────────────────
 
 _DIST_X = {
-    "passes_attempted": 213, "passes_completed": 267, "pass_completion_pct": 319,
-    "switches_of_play": 378, "crosses_attempted": 432, "crosses_completed": 486,
-    "line_breaks_attempted": 539, "line_breaks_completed": 593,
-    "line_break_completion_pct": 641, "ball_progressions": 703,
-    "take_ons": 757, "step_ins": 811, "attempts_at_goal": 865, "goals": 919,
+    "passes_attempted": 213,
+    "passes_completed": 267,
+    "pass_completion_pct": 319,
+    "switches_of_play": 378,
+    "crosses_attempted": 432,
+    "crosses_completed": 486,
+    "line_breaks_attempted": 539,
+    "line_breaks_completed": 593,
+    "line_break_completion_pct": 641,
+    "ball_progressions": 703,
+    "take_ons": 757,
+    "step_ins": 811,
+    "attempts_at_goal": 865,
+    "goals": 919,
 }
 
 
@@ -1996,9 +2186,14 @@ def parse_pages_42_44(doc, home_team, away_team, extra=0):
 # ─── Pages 43/45: Offers & Receptions per player ─────────────────────────────
 
 _OFF_X = {
-    "total_offers": 220, "in_front": 318, "in_between": 410,
-    "out_to_in": 515, "in_to_out": 610, "in_behind": 703,
-    "no_movement": 793, "offers_received": 895,
+    "total_offers": 220,
+    "in_front": 318,
+    "in_between": 410,
+    "out_to_in": 515,
+    "in_to_out": 610,
+    "in_behind": 703,
+    "no_movement": 793,
+    "offers_received": 895,
 }
 
 
@@ -2040,7 +2235,7 @@ def parse_pages_43_45(doc, home_team, away_team, extra=0):
 # ─── Pages 47/48: Out of Possession per player ───────────────────────────────
 
 _OOP_X = {
-    "tackles": 213,           # "X / Y" format parsed separately
+    "tackles": 213,  # "X / Y" format parsed separately
     "blocks": 267,
     "interceptions": 316,
     "pressing_direct": 381,
@@ -2076,8 +2271,7 @@ def _parse_oop(page, team):
         if not name:
             continue
 
-        p = {"num": num, "name": name,
-             "tackles_made": 0, "tackles_won": 0}
+        p = {"num": num, "name": name, "tackles_made": 0, "tackles_won": 0}
         for col in _OOP_X:
             if col != "tackles":
                 p[col] = 0
@@ -2090,13 +2284,13 @@ def _parse_oop(page, team):
             if t == "/" and i > 0 and i < len(data_words) - 1:
                 # data_words[i-1] = made, data_words[i+1] = won
                 try:
-                    p["tackles_made"] = int(data_words[i-1][2])
-                    p["tackles_won"] = int(data_words[i+1][2])
+                    p["tackles_made"] = int(data_words[i - 1][2])
+                    p["tackles_won"] = int(data_words[i + 1][2])
                 except (ValueError, IndexError):
                     pass
                 i += 2
                 continue
-            if re.match(r'^\d+$', t):
+            if re.match(r"^\d+$", t):
                 col = closest(x, _OOP_X, tol=30)
                 if col and col != "tackles":
                     p[col] = int(t)
@@ -2116,10 +2310,14 @@ def parse_pages_47_48(doc, home_team, away_team, extra=0):
 # ─── Pages 50/51: Physical Data ───────────────────────────────────────────────
 
 _PHYS_X = {
-    "total_distance_m": 285, "zone1_0_7_m": 362,
-    "zone2_7_15_m": 442,    "zone3_15_20_m": 525,
-    "zone4_20_25_m": 615,   "zone5_25plus_m": 690,
-    "high_speed_runs_zone3": 770, "sprints_zone4_5": 845,
+    "total_distance_m": 285,
+    "zone1_0_7_m": 362,
+    "zone2_7_15_m": 442,
+    "zone3_15_20_m": 525,
+    "zone4_20_25_m": 615,
+    "zone5_25plus_m": 690,
+    "high_speed_runs_zone3": 770,
+    "sprints_zone4_5": 845,
     "top_speed_kmh": 920,
 }
 
@@ -2150,8 +2348,11 @@ def _parse_physical(page, team):
             if col:
                 v = to_num(t) or 0
                 # Count columns (runs, sprints) should be int, not float
-                if isinstance(v, float) and v == int(v) and col in (
-                        'high_speed_runs_zone3', 'sprints_zone4_5'):
+                if (
+                    isinstance(v, float)
+                    and v == int(v)
+                    and col in ("high_speed_runs_zone3", "sprints_zone4_5")
+                ):
                     v = int(v)
                 p[col] = v
         players.append(p)
@@ -2166,6 +2367,7 @@ def parse_pages_50_51(doc, home_team, away_team, extra=0):
 
 # ─── GK name helper ───────────────────────────────────────────────────────────
 
+
 def find_gk(players_dict):
     """Find the starting goalkeeper name from a team's player dict."""
     for p in players_dict.get("starting", []):
@@ -2175,6 +2377,7 @@ def find_gk(players_dict):
 
 
 # ─── Main assembler ───────────────────────────────────────────────────────────
+
 
 def _count_extra_shot_log_pages(doc):
     """Return number of extra shot-log pages beyond the standard 52-page layout."""
@@ -2253,48 +2456,188 @@ def extract(pdf_path: str, output_path: str | None = None):
 
     # ── Assemble pages dict ──
     pages = {
-        "1":  {"title": "Cover / Metadata", "type": "title_page", "data": dict(match)},
-        "2":  {"title": "Match Summary - Teams", "type": "lineups", "data": p2_data},
-        "3":  {"title": "Match Summary - Key Statistics", "type": "team_comparison_table", "data": p3},
-        "4":  {"title": "Phases of Play", "type": "team_comparison_table", "data": p4},
-        "6":  {"title": "In Possession Line Height & Team Length - Home", "type": "pitch_diagram", "data": p6},
-        "7":  {"title": "In Possession Line Height & Team Length - Away", "type": "pitch_diagram", "data": p7},
-        "8":  {"title": "Line Breaks - Home", "type": "diagram_widgets", "data": p8},
-        "9":  {"title": "Line Breaks - Away", "type": "diagram_widgets", "data": p9},
-        "10": {"title": "Line Breaks (per player) - Home", "type": "player_table", "data": p10},
-        "11": {"title": "Line Breaks (per player) - Away", "type": "player_table", "data": p11},
-        "12": {"title": "Passing Networks - Home", "type": "matrix_plus_table", "data": p12},
-        "13": {"title": "Passing Networks - Away", "type": "matrix_plus_table", "data": p13},
-        "14": {"title": "Attempts at Goal (summary) - Home", "type": "shot_map_summary", "data": p14},
-        "15": {"title": "Attempts at Goal (shot log) - Home", "type": "event_table", "data": p15_full},
-        "16": {"title": "Attempts at Goal (summary) - Away", "type": "shot_map_summary", "data": p16},
-        "17": {"title": "Attempts at Goal (shot log) - Away", "type": "event_table", "data": p17_full},
-        "18": {"title": "Crosses (Open Play) - Home", "type": "diagram_plus_table", "data": p18},
-        "19": {"title": "Crosses (Open Play) - Away", "type": "diagram_plus_table", "data": p19},
-        "20": {"title": "Offering to Receive - Home", "type": "widgets_plus_table", "data": p20},
-        "21": {"title": "Offering to Receive - Away", "type": "widgets_plus_table", "data": p21},
-        "22": {"title": "Movement to Receive - Home", "type": "widgets_plus_charts", "data": p22},
-        "23": {"title": "Movement to Receive - Away", "type": "widgets_plus_charts", "data": p23},
-        "25": {"title": "Defensive Actions - Home", "type": "widgets_plus_table", "data": p25},
-        "26": {"title": "Defensive Actions - Away", "type": "widgets_plus_table", "data": p26},
-        "27": {"title": "Defensive Line Height & Team Length - Home", "type": "pitch_diagram", "data": p27},
-        "28": {"title": "Defensive Line Height & Team Length - Away", "type": "pitch_diagram", "data": p28},
-        "29": {"title": "Defensive Pressure", "type": "team_comparison_table", "data": p29},
-        "31": {"title": "Goalkeeping Involvement", "type": "timeline_charts", "data": p31},
-        "32": {"title": "Goalkeeping Distribution - Home", "type": "diagram_widgets", "data": p32},
-        "33": {"title": "Goalkeeping Distribution - Away", "type": "diagram_widgets", "data": p33},
-        "34": {"title": "Goal Prevention - Home", "type": "diagram_widgets", "data": p34},
-        "35": {"title": "Goal Prevention - Away", "type": "diagram_widgets", "data": p35},
-        "36": {"title": "Aerial Control - Home", "type": "diagram_widgets", "data": p36},
-        "37": {"title": "Aerial Control - Away", "type": "diagram_widgets", "data": p37},
+        "1": {"title": "Cover / Metadata", "type": "title_page", "data": dict(match)},
+        "2": {"title": "Match Summary - Teams", "type": "lineups", "data": p2_data},
+        "3": {
+            "title": "Match Summary - Key Statistics",
+            "type": "team_comparison_table",
+            "data": p3,
+        },
+        "4": {"title": "Phases of Play", "type": "team_comparison_table", "data": p4},
+        "6": {
+            "title": "In Possession Line Height & Team Length - Home",
+            "type": "pitch_diagram",
+            "data": p6,
+        },
+        "7": {
+            "title": "In Possession Line Height & Team Length - Away",
+            "type": "pitch_diagram",
+            "data": p7,
+        },
+        "8": {"title": "Line Breaks - Home", "type": "diagram_widgets", "data": p8},
+        "9": {"title": "Line Breaks - Away", "type": "diagram_widgets", "data": p9},
+        "10": {
+            "title": "Line Breaks (per player) - Home",
+            "type": "player_table",
+            "data": p10,
+        },
+        "11": {
+            "title": "Line Breaks (per player) - Away",
+            "type": "player_table",
+            "data": p11,
+        },
+        "12": {
+            "title": "Passing Networks - Home",
+            "type": "matrix_plus_table",
+            "data": p12,
+        },
+        "13": {
+            "title": "Passing Networks - Away",
+            "type": "matrix_plus_table",
+            "data": p13,
+        },
+        "14": {
+            "title": "Attempts at Goal (summary) - Home",
+            "type": "shot_map_summary",
+            "data": p14,
+        },
+        "15": {
+            "title": "Attempts at Goal (shot log) - Home",
+            "type": "event_table",
+            "data": p15_full,
+        },
+        "16": {
+            "title": "Attempts at Goal (summary) - Away",
+            "type": "shot_map_summary",
+            "data": p16,
+        },
+        "17": {
+            "title": "Attempts at Goal (shot log) - Away",
+            "type": "event_table",
+            "data": p17_full,
+        },
+        "18": {
+            "title": "Crosses (Open Play) - Home",
+            "type": "diagram_plus_table",
+            "data": p18,
+        },
+        "19": {
+            "title": "Crosses (Open Play) - Away",
+            "type": "diagram_plus_table",
+            "data": p19,
+        },
+        "20": {
+            "title": "Offering to Receive - Home",
+            "type": "widgets_plus_table",
+            "data": p20,
+        },
+        "21": {
+            "title": "Offering to Receive - Away",
+            "type": "widgets_plus_table",
+            "data": p21,
+        },
+        "22": {
+            "title": "Movement to Receive - Home",
+            "type": "widgets_plus_charts",
+            "data": p22,
+        },
+        "23": {
+            "title": "Movement to Receive - Away",
+            "type": "widgets_plus_charts",
+            "data": p23,
+        },
+        "25": {
+            "title": "Defensive Actions - Home",
+            "type": "widgets_plus_table",
+            "data": p25,
+        },
+        "26": {
+            "title": "Defensive Actions - Away",
+            "type": "widgets_plus_table",
+            "data": p26,
+        },
+        "27": {
+            "title": "Defensive Line Height & Team Length - Home",
+            "type": "pitch_diagram",
+            "data": p27,
+        },
+        "28": {
+            "title": "Defensive Line Height & Team Length - Away",
+            "type": "pitch_diagram",
+            "data": p28,
+        },
+        "29": {
+            "title": "Defensive Pressure",
+            "type": "team_comparison_table",
+            "data": p29,
+        },
+        "31": {
+            "title": "Goalkeeping Involvement",
+            "type": "timeline_charts",
+            "data": p31,
+        },
+        "32": {
+            "title": "Goalkeeping Distribution - Home",
+            "type": "diagram_widgets",
+            "data": p32,
+        },
+        "33": {
+            "title": "Goalkeeping Distribution - Away",
+            "type": "diagram_widgets",
+            "data": p33,
+        },
+        "34": {
+            "title": "Goal Prevention - Home",
+            "type": "diagram_widgets",
+            "data": p34,
+        },
+        "35": {
+            "title": "Goal Prevention - Away",
+            "type": "diagram_widgets",
+            "data": p35,
+        },
+        "36": {
+            "title": "Aerial Control - Home",
+            "type": "diagram_widgets",
+            "data": p36,
+        },
+        "37": {
+            "title": "Aerial Control - Away",
+            "type": "diagram_widgets",
+            "data": p37,
+        },
         "39": {"title": "Set Plays - Home", "type": "widgets_plus_tables", "data": p39},
         "40": {"title": "Set Plays - Away", "type": "widgets_plus_tables", "data": p40},
-        "42": {"title": "In Possession - Distributions - Home", "type": "player_table", "data": p42},
-        "43": {"title": "In Possession - Offers & Receptions - Home", "type": "player_table", "data": p43},
-        "44": {"title": "In Possession - Distributions - Away", "type": "player_table", "data": p44},
-        "45": {"title": "In Possession - Offers & Receptions - Away", "type": "player_table", "data": p45},
-        "47": {"title": "Out of Possession - Home", "type": "player_table", "data": p47},
-        "48": {"title": "Out of Possession - Away", "type": "player_table", "data": p48},
+        "42": {
+            "title": "In Possession - Distributions - Home",
+            "type": "player_table",
+            "data": p42,
+        },
+        "43": {
+            "title": "In Possession - Offers & Receptions - Home",
+            "type": "player_table",
+            "data": p43,
+        },
+        "44": {
+            "title": "In Possession - Distributions - Away",
+            "type": "player_table",
+            "data": p44,
+        },
+        "45": {
+            "title": "In Possession - Offers & Receptions - Away",
+            "type": "player_table",
+            "data": p45,
+        },
+        "47": {
+            "title": "Out of Possession - Home",
+            "type": "player_table",
+            "data": p47,
+        },
+        "48": {
+            "title": "Out of Possession - Away",
+            "type": "player_table",
+            "data": p48,
+        },
         "50": {"title": "Physical Data - Home", "type": "player_table", "data": p50},
         "51": {"title": "Physical Data - Away", "type": "player_table", "data": p51},
     }

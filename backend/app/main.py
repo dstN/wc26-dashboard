@@ -2,7 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import health, dashboard, matches, teams, players, overview, stats, contact, ingest
+from app.routers import (
+    contact,
+    dashboard,
+    health,
+    ingest,
+    matches,
+    overview,
+    players,
+    stats,
+    teams,
+)
 
 app = FastAPI(
     title="EFI WC26 Data Engine",

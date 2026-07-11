@@ -1,13 +1,14 @@
-from pydantic import BaseModel
 from typing import Optional
 
-from app.schemas.team import TeamSchema
+from pydantic import BaseModel
+
+from app.schemas.defensive import DefensiveActionSchema
+from app.schemas.final_third import FinalThirdEntrySchema
+from app.schemas.line_break import LineBreakSchema
 from app.schemas.match_stats import MatchStatsSchema
 from app.schemas.phase import PhaseSchema
 from app.schemas.spatial import TeamSpatialSchema
-from app.schemas.line_break import LineBreakSchema
-from app.schemas.final_third import FinalThirdEntrySchema
-from app.schemas.defensive import DefensiveActionSchema
+from app.schemas.team import TeamSchema
 
 
 class KpiCard(BaseModel):

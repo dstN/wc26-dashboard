@@ -58,11 +58,7 @@ def _send_email(payload: ContactPayload) -> None:
     msg["From"] = settings.smtp_user
     msg["To"] = settings.contact_to_email
     msg["Reply-To"] = payload.email
-    msg.set_content(
-        f"Name: {payload.name}\n"
-        f"Email: {payload.email}\n"
-        f"\n{payload.message}"
-    )
+    msg.set_content(f"Name: {payload.name}\n" f"Email: {payload.email}\n" f"\n{payload.message}")
 
     # timeout so a black-holed SMTP host can't hang the worker thread forever
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15) as s:

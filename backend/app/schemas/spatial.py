@@ -1,6 +1,6 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
 
+from pydantic import BaseModel, ConfigDict, Field
 
 DEFENSIVE_BLOCKS = {"high", "mid", "low"}
 POSSESSION_BLOCKS = {"build_up_low", "build_up_mid", "final_third_phase"}

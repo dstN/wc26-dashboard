@@ -1,7 +1,7 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
-from app.models import Team, Match, MatchStats
+from app.models import Match, MatchStats, Team
 
 
 class TeamFactory(SQLAlchemyModelFactory):

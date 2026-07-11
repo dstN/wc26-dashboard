@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.deps import get_db
 from app.schemas.dashboard import DashboardResponse
-from app.services.match_service import get_match_dashboard, get_latest_match_id
+from app.services.match_service import get_latest_match_id, get_match_dashboard
 
 router = APIRouter(prefix="/api/v1", tags=["dashboard"])
 

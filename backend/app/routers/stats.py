@@ -1,10 +1,11 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, case
 
 from app.deps import get_db
-from app.models import Team, Match, MatchStats, Player, PlayerStat, MatchGkStat
+from app.models import Match, MatchGkStat, MatchStats, Player, PlayerStat, Team
 from app.stage_filter import Stage, stage_condition
 
 router = APIRouter(prefix="/api/v1/stats", tags=["stats"])
@@ -102,14 +103,19 @@ async def get_player_stats_summary(
 
 
 @router.get("/leaderboards")
-async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[Stage] = Query(None)):
+async def get_leaderboards(
+    db: AsyncSession = Depends(get_db), stage: Optional[Stage] = Query(None)
+):
     """Return top scorers, most carded players, and team rankings. Optionally filter by tournament stage."""
     cond = stage_condition(stage)
 
     # ── Top scorers ───────────────────────────────────────────────────────────
     scorers_query = (
         select(
-            Player.id, Player.name, Player.position, Player.jersey_number,
+            Player.id,
+            Player.name,
+            Player.position,
+            Player.jersey_number,
             Player.team_id,
             func.sum(PlayerStat.goals).label("total_goals"),
             func.sum(PlayerStat.yellow_cards).label("total_yellows"),
@@ -119,7 +125,13 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
         )
         .join(PlayerStat, PlayerStat.player_id == Player.id)
         .where(PlayerStat.scope == "match")
-        .group_by(Player.id, Player.name, Player.position, Player.jersey_number, Player.team_id)
+        .group_by(
+            Player.id,
+            Player.name,
+            Player.position,
+            Player.jersey_number,
+            Player.team_id,
+        )
         .having(func.sum(PlayerStat.goals) > 0)
         .order_by(func.sum(PlayerStat.goals).desc(), Player.name)
         .limit(50)
@@ -135,12 +147,20 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
     if scorer_team_ids:
         t_result = await db.execute(select(Team).where(Team.id.in_(scorer_team_ids)))
         for t in t_result.scalars().all():
-            teams_map[t.id] = {"id": t.id, "name": t.name, "short_code": t.short_code, "color": t.color}
+            teams_map[t.id] = {
+                "id": t.id,
+                "name": t.name,
+                "short_code": t.short_code,
+                "color": t.color,
+            }
 
     top_scorers = [
         {
-            "player_id": r.id, "name": r.name, "position": r.position,
-            "jersey_number": r.jersey_number, "team": teams_map.get(r.team_id),
+            "player_id": r.id,
+            "name": r.name,
+            "position": r.position,
+            "jersey_number": r.jersey_number,
+            "team": teams_map.get(r.team_id),
             "goals": int(r.total_goals or 0),
             "yellow_cards": int(r.total_yellows or 0),
             "red_cards": int(r.total_reds or 0),
@@ -153,7 +173,10 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
     # ── Most carded players ───────────────────────────────────────────────────
     cards_query = (
         select(
-            Player.id, Player.name, Player.position, Player.jersey_number,
+            Player.id,
+            Player.name,
+            Player.position,
+            Player.jersey_number,
             Player.team_id,
             func.sum(PlayerStat.yellow_cards).label("total_yellows"),
             func.sum(PlayerStat.red_cards).label("total_reds"),
@@ -161,7 +184,13 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
         )
         .join(PlayerStat, PlayerStat.player_id == Player.id)
         .where(PlayerStat.scope == "match")
-        .group_by(Player.id, Player.name, Player.position, Player.jersey_number, Player.team_id)
+        .group_by(
+            Player.id,
+            Player.name,
+            Player.position,
+            Player.jersey_number,
+            Player.team_id,
+        )
         .having(func.sum(PlayerStat.yellow_cards) + func.sum(PlayerStat.red_cards) > 0)
         .order_by((func.sum(PlayerStat.yellow_cards) + func.sum(PlayerStat.red_cards) * 2).desc())
         .limit(30)
@@ -175,12 +204,20 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
     if card_team_ids:
         t_result2 = await db.execute(select(Team).where(Team.id.in_(card_team_ids)))
         for t in t_result2.scalars().all():
-            teams_map[t.id] = {"id": t.id, "name": t.name, "short_code": t.short_code, "color": t.color}
+            teams_map[t.id] = {
+                "id": t.id,
+                "name": t.name,
+                "short_code": t.short_code,
+                "color": t.color,
+            }
 
     most_carded = [
         {
-            "player_id": r.id, "name": r.name, "position": r.position,
-            "jersey_number": r.jersey_number, "team": teams_map.get(r.team_id),
+            "player_id": r.id,
+            "name": r.name,
+            "position": r.position,
+            "jersey_number": r.jersey_number,
+            "team": teams_map.get(r.team_id),
             "yellow_cards": int(r.total_yellows or 0),
             "red_cards": int(r.total_reds or 0),
             "appearances": int(r.appearances or 0),
@@ -199,30 +236,32 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
             team_match_conds.append(cond)
 
         goals_result = await db.execute(
-            select(func.sum(
-                case(
-                    (Match.team_a_id == team.id, Match.score_a),
-                    (Match.team_b_id == team.id, Match.score_b),
-                    else_=0,
+            select(
+                func.sum(
+                    case(
+                        (Match.team_a_id == team.id, Match.score_a),
+                        (Match.team_b_id == team.id, Match.score_b),
+                        else_=0,
+                    )
                 )
-            )).where(*team_match_conds)
+            ).where(*team_match_conds)
         )
         goals = int(goals_result.scalar_one_or_none() or 0)
 
         conceded_result = await db.execute(
-            select(func.sum(
-                case(
-                    (Match.team_a_id == team.id, Match.score_b),
-                    (Match.team_b_id == team.id, Match.score_a),
-                    else_=0,
+            select(
+                func.sum(
+                    case(
+                        (Match.team_a_id == team.id, Match.score_b),
+                        (Match.team_b_id == team.id, Match.score_a),
+                        else_=0,
+                    )
                 )
-            )).where(*team_match_conds)
+            ).where(*team_match_conds)
         )
         conceded = int(conceded_result.scalar_one_or_none() or 0)
 
-        matches_result = await db.execute(
-            select(func.count(Match.id)).where(*team_match_conds)
-        )
+        matches_result = await db.execute(select(func.count(Match.id)).where(*team_match_conds))
         played = int(matches_result.scalar_one_or_none() or 0)
 
         # Avg possession, xG and in-contest from per-match rows (team_aggregate has no xG)
@@ -235,20 +274,34 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
             MatchStats.scope == "match",
         )
         if cond is not None:
-            match_avgs_query = match_avgs_query.join(Match, Match.id == MatchStats.match_id).where(cond)
+            match_avgs_query = match_avgs_query.join(Match, Match.id == MatchStats.match_id).where(
+                cond
+            )
         match_avgs = await db.execute(match_avgs_query)
         avgs = match_avgs.one()
 
-        team_rankings.append({
-            "team": {"id": team.id, "name": team.name, "short_code": team.short_code, "color": team.color, "slug": team.slug},
-            "played": played,
-            "goals_scored": goals,
-            "goals_conceded": conceded,
-            "goal_diff": goals - conceded,
-            "avg_possession": round(float(avgs.avg_poss), 1) if avgs.avg_poss is not None else None,
-            "avg_xg": round(float(avgs.avg_xg), 2) if avgs.avg_xg is not None else None,
-            "avg_in_contest": round(float(avgs.avg_ic), 1) if avgs.avg_ic is not None else None,
-        })
+        team_rankings.append(
+            {
+                "team": {
+                    "id": team.id,
+                    "name": team.name,
+                    "short_code": team.short_code,
+                    "color": team.color,
+                    "slug": team.slug,
+                },
+                "played": played,
+                "goals_scored": goals,
+                "goals_conceded": conceded,
+                "goal_diff": goals - conceded,
+                "avg_possession": (
+                    round(float(avgs.avg_poss), 1) if avgs.avg_poss is not None else None
+                ),
+                "avg_xg": (round(float(avgs.avg_xg), 2) if avgs.avg_xg is not None else None),
+                "avg_in_contest": (
+                    round(float(avgs.avg_ic), 1) if avgs.avg_ic is not None else None
+                ),
+            }
+        )
 
     return {
         "top_scorers": top_scorers,
@@ -258,7 +311,9 @@ async def get_leaderboards(db: AsyncSession = Depends(get_db), stage: Optional[S
 
 
 @router.get("/goalkeeper-rankings")
-async def get_goalkeeper_rankings(db: AsyncSession = Depends(get_db), stage: Optional[Stage] = Query(None)):
+async def get_goalkeeper_rankings(
+    db: AsyncSession = Depends(get_db), stage: Optional[Stage] = Query(None)
+):
     """Return aggregated stats per goalkeeper across all matches. Optionally filter by tournament stage."""
     query = (
         select(
@@ -288,7 +343,13 @@ async def get_goalkeeper_rankings(db: AsyncSession = Depends(get_db), stage: Opt
     if team_ids:
         t_result = await db.execute(select(Team).where(Team.id.in_(team_ids)))
         for t in t_result.scalars().all():
-            teams_map[t.id] = {"id": t.id, "name": t.name, "short_code": t.short_code, "color": t.color, "slug": t.slug}
+            teams_map[t.id] = {
+                "id": t.id,
+                "name": t.name,
+                "short_code": t.short_code,
+                "color": t.color,
+                "slug": t.slug,
+            }
 
     # Resolve gk_name + team_id -> player_id so the ranking can link to /players/{id}
     gk_names = {r.gk_name for r in rows}

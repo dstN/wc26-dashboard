@@ -1,10 +1,11 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
 from app.deps import get_db
-from app.models import Player, PlayerStat, Team, Match, PlayerLineBreak
+from app.models import Match, Player, PlayerLineBreak, PlayerStat, Team
 
 router = APIRouter(prefix="/api/v1/players", tags=["players"])
 
@@ -77,83 +78,92 @@ async def get_player(player_id: int, db: AsyncSession = Depends(get_db)):
     if opp_ids:
         opp_result = await db.execute(select(Team).where(Team.id.in_(opp_ids)))
         for t in opp_result.scalars().all():
-            opp_map[t.id] = {"id": t.id, "name": t.name, "short_code": t.short_code, "color": t.color}
+            opp_map[t.id] = {
+                "id": t.id,
+                "name": t.name,
+                "short_code": t.short_code,
+                "color": t.color,
+            }
 
     per_match = []
     for stat, match in match_rows:
         opp_id = None
         if match:
             opp_id = match.team_b_id if match.team_a_id == team.id else match.team_a_id
-        per_match.append({
-            "match_id": match.id if match else None,
-            "match_no": match.match_no if match else None,
-            "match_date": match.match_date.isoformat() if match and match.match_date else None,
-            "group_letter": match.group_letter if match else None,
-            "opponent": opp_map.get(opp_id),
-            "started": stat.started,
-            "minutes_played": stat.minutes_played,
-            # Match summary
-            "goals": _i(stat.goals),
-            "yellow_cards": _i(stat.yellow_cards),
-            "red_cards": _i(stat.red_cards),
-            # Possession
-            "passes_attempted": _i(stat.passes_attempted),
-            "passes_completed": _i(stat.passes_completed),
-            "pass_completion_pct": _i(stat.pass_completion_pct),
-            "crosses_attempted": _i(stat.crosses_attempted),
-            "crosses_completed": _i(stat.crosses_completed),
-            "take_ons": _i(stat.take_ons),
-            "ball_progressions": _i(stat.ball_progressions),
-            "attempts_at_goal": _i(stat.attempts_at_goal),
-            "total_offers": _i(stat.total_offers),
-            "offers_received": _i(stat.offers_received),
-            # Defensive
-            "tackles_made": _i(stat.tackles_made),
-            "tackles_won": _i(stat.tackles_won),
-            "blocks": _i(stat.blocks),
-            "interceptions": _i(stat.interceptions),
-            "pressing_direct": _i(stat.pressing_direct),
-            "pressing_indirect": _i(stat.pressing_indirect),
-            "duels_won_aerial": _i(stat.duels_won_aerial),
-            "duels_won_physical": _i(stat.duels_won_physical),
-            "possession_contests_won": _i(stat.possession_contests_won),
-            "clearances": _i(stat.clearances),
-            "possession_regains": _i(stat.possession_regains),
-            # Passing detail
-            "switches_of_play": _i(stat.switches_of_play),
-            "step_ins": _i(stat.step_ins),
-            "lb_attempted": _i(stat.lb_attempted),
-            "lb_completed": _i(stat.lb_completed),
-            # Offer breakdown
-            "offers_in_front": _i(stat.offers_in_front),
-            "offers_in_between": _i(stat.offers_in_between),
-            "offers_out_to_in": _i(stat.offers_out_to_in),
-            "offers_in_to_out": _i(stat.offers_in_to_out),
-            "offers_in_behind": _i(stat.offers_in_behind),
-            "offers_no_movement": _i(stat.offers_no_movement),
-            # OOP detail
-            "loose_ball_receptions": _i(stat.loose_ball_receptions),
-            "pushing_on": _i(stat.pushing_on),
-            "pushing_on_into_pressing": _i(stat.pushing_on_into_pressing),
-            "possession_interrupted": _i(stat.possession_interrupted),
-            # Physical
-            "total_distance_m": _f(stat.total_distance_m, 1),
-            "high_speed_runs": _i(stat.high_speed_runs),
-            "sprints": _i(stat.sprints),
-            "top_speed_kmh": _f(stat.top_speed_kmh, 1),
-            "dist_zone1_m": _f(stat.dist_zone1_m, 1),
-            "dist_zone2_m": _f(stat.dist_zone2_m, 1),
-            "dist_zone3_m": _f(stat.dist_zone3_m, 1),
-            "dist_zone4_m": _f(stat.dist_zone4_m, 1),
-            "dist_zone5_m": _f(stat.dist_zone5_m, 1),
-            # Cross breakdown
-            "crosses_inswing": _i(stat.crosses_inswing),
-            "crosses_outswing": _i(stat.crosses_outswing),
-            "crosses_driven": _i(stat.crosses_driven),
-            "crosses_lofted": _i(stat.crosses_lofted),
-            "crosses_cutback": _i(stat.crosses_cutback),
-            "crosses_push_cross": _i(stat.crosses_push_cross),
-        })
+        per_match.append(
+            {
+                "match_id": match.id if match else None,
+                "match_no": match.match_no if match else None,
+                "match_date": (
+                    match.match_date.isoformat() if match and match.match_date else None
+                ),
+                "group_letter": match.group_letter if match else None,
+                "opponent": opp_map.get(opp_id),
+                "started": stat.started,
+                "minutes_played": stat.minutes_played,
+                # Match summary
+                "goals": _i(stat.goals),
+                "yellow_cards": _i(stat.yellow_cards),
+                "red_cards": _i(stat.red_cards),
+                # Possession
+                "passes_attempted": _i(stat.passes_attempted),
+                "passes_completed": _i(stat.passes_completed),
+                "pass_completion_pct": _i(stat.pass_completion_pct),
+                "crosses_attempted": _i(stat.crosses_attempted),
+                "crosses_completed": _i(stat.crosses_completed),
+                "take_ons": _i(stat.take_ons),
+                "ball_progressions": _i(stat.ball_progressions),
+                "attempts_at_goal": _i(stat.attempts_at_goal),
+                "total_offers": _i(stat.total_offers),
+                "offers_received": _i(stat.offers_received),
+                # Defensive
+                "tackles_made": _i(stat.tackles_made),
+                "tackles_won": _i(stat.tackles_won),
+                "blocks": _i(stat.blocks),
+                "interceptions": _i(stat.interceptions),
+                "pressing_direct": _i(stat.pressing_direct),
+                "pressing_indirect": _i(stat.pressing_indirect),
+                "duels_won_aerial": _i(stat.duels_won_aerial),
+                "duels_won_physical": _i(stat.duels_won_physical),
+                "possession_contests_won": _i(stat.possession_contests_won),
+                "clearances": _i(stat.clearances),
+                "possession_regains": _i(stat.possession_regains),
+                # Passing detail
+                "switches_of_play": _i(stat.switches_of_play),
+                "step_ins": _i(stat.step_ins),
+                "lb_attempted": _i(stat.lb_attempted),
+                "lb_completed": _i(stat.lb_completed),
+                # Offer breakdown
+                "offers_in_front": _i(stat.offers_in_front),
+                "offers_in_between": _i(stat.offers_in_between),
+                "offers_out_to_in": _i(stat.offers_out_to_in),
+                "offers_in_to_out": _i(stat.offers_in_to_out),
+                "offers_in_behind": _i(stat.offers_in_behind),
+                "offers_no_movement": _i(stat.offers_no_movement),
+                # OOP detail
+                "loose_ball_receptions": _i(stat.loose_ball_receptions),
+                "pushing_on": _i(stat.pushing_on),
+                "pushing_on_into_pressing": _i(stat.pushing_on_into_pressing),
+                "possession_interrupted": _i(stat.possession_interrupted),
+                # Physical
+                "total_distance_m": _f(stat.total_distance_m, 1),
+                "high_speed_runs": _i(stat.high_speed_runs),
+                "sprints": _i(stat.sprints),
+                "top_speed_kmh": _f(stat.top_speed_kmh, 1),
+                "dist_zone1_m": _f(stat.dist_zone1_m, 1),
+                "dist_zone2_m": _f(stat.dist_zone2_m, 1),
+                "dist_zone3_m": _f(stat.dist_zone3_m, 1),
+                "dist_zone4_m": _f(stat.dist_zone4_m, 1),
+                "dist_zone5_m": _f(stat.dist_zone5_m, 1),
+                # Cross breakdown
+                "crosses_inswing": _i(stat.crosses_inswing),
+                "crosses_outswing": _i(stat.crosses_outswing),
+                "crosses_driven": _i(stat.crosses_driven),
+                "crosses_lofted": _i(stat.crosses_lofted),
+                "crosses_cutback": _i(stat.crosses_cutback),
+                "crosses_push_cross": _i(stat.crosses_push_cross),
+            }
+        )
 
     # Career totals
     totals_result = await db.execute(
@@ -212,8 +222,7 @@ async def get_player(player_id: int, db: AsyncSession = Depends(get_db)):
             func.sum(PlayerStat.crosses_lofted).label("crosses_lofted"),
             func.sum(PlayerStat.crosses_cutback).label("crosses_cutback"),
             func.sum(PlayerStat.crosses_push_cross).label("crosses_push_cross"),
-        )
-        .where(PlayerStat.player_id == player_id, PlayerStat.scope == "match")
+        ).where(PlayerStat.player_id == player_id, PlayerStat.scope == "match")
     )
     t = totals_result.first()
 
@@ -317,10 +326,15 @@ async def get_player_stats(player_id: int, db: AsyncSession = Depends(get_db)):
         "player": {"id": player.id, "name": player.name, "position": player.position},
         "stats": [
             {
-                "goals": s.goals, "yellow_cards": s.yellow_cards, "red_cards": s.red_cards,
-                "minutes_played": s.minutes_played, "started": s.started,
-                "passes_attempted": s.passes_attempted, "passes_completed": s.passes_completed,
-                "tackles_made": s.tackles_made, "interceptions": s.interceptions,
+                "goals": s.goals,
+                "yellow_cards": s.yellow_cards,
+                "red_cards": s.red_cards,
+                "minutes_played": s.minutes_played,
+                "started": s.started,
+                "passes_attempted": s.passes_attempted,
+                "passes_completed": s.passes_completed,
+                "tackles_made": s.tackles_made,
+                "interceptions": s.interceptions,
                 "total_distance_m": float(s.total_distance_m or 0),
                 "top_speed_kmh": float(s.top_speed_kmh or 0),
             }
@@ -348,7 +362,7 @@ async def get_player_line_breaks(player_id: int, db: AsyncSession = Depends(get_
         return {
             "match_id": match.id if match else None,
             "match_no": match.match_no if match else None,
-            "match_date": match.match_date.isoformat() if match and match.match_date else None,
+            "match_date": (match.match_date.isoformat() if match and match.match_date else None),
             "group_letter": match.group_letter if match else None,
             "attempted": lb.attempted,
             "completed": lb.completed,

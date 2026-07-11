@@ -1,0 +1,23 @@
+# Root tooling config — applies to the ingestion/ package (backend/ has its own
+# pyproject.toml with matching settings). Keeps black + ruff consistent repo-wide
+# so the CI lint-backend job (black --check + ruff check on backend/ and
+# ingestion/) is reproducible.
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+# E501 (line length) is owned by the formatter; the residual hits are
+# unsplittable SQL/URL string literals. E741 ('l' loop vars) is pervasive in the
+# coordinate-parsing heuristics and low-value to rename.
+ignore = ["E501", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+# parse_pmsr.py carries several intentional intermediate/never-read locals in
+# its coordinate heuristics (tracked as known minor debt in AUDIT.md B-D17).
+# Not removed on release day to avoid touching the 2400-line parser piecemeal.
+"ingestion/ingestion/parse_pmsr.py" = ["F841"]

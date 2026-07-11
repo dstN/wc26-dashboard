@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Numeric, ForeignKey, Enum, Computed
+from sqlalchemy import Column, Computed, Enum, ForeignKey, Integer, Numeric
+
 from app.models.base import Base
 
 
@@ -12,7 +13,8 @@ class TeamSpatialStat(Base):
     match_key = Column(Integer, Computed("IFNULL(match_id,0)"), nullable=False)
     block_type = Column(
         Enum("high", "mid", "low", "build_up_low", "build_up_mid", "final_third_phase"),
-        nullable=False, default="mid"
+        nullable=False,
+        default="mid",
     )
     defensive_line_height = Column(Numeric(5, 2))
     team_length = Column(Numeric(5, 2))
