@@ -5,7 +5,9 @@
 Five-track audit (Security · Backend/Ingestion correctness · Frontend
 best-practice · Accessibility BFSG/WCAG 2.1 AA · Dependency currency). Full
 record in [`AUDIT.md`](AUDIT.md). Verification: svelte-check 0/0 · build green ·
-lint green · backend pytest 10/10 · ingestion pytest 14/14 · live smoke test green.
+eslint green · vitest 10/10 · backend black/ruff green · backend pytest 10/10 ·
+ingestion pytest 14/14 · fresh-volume seed boot clean · live smoke test green.
+(Known gap: Playwright visual baselines need regeneration after the markup changes.)
 
 **Fixed:**
 
@@ -43,6 +45,11 @@ lint green · backend pytest 10/10 · ingestion pytest 14/14 · live smoke test 
 - [x] UI: filter active-state specificity, mobile scoreline stacking, header
   right-alignment, players search moved above rankings
 - [x] DEPLOY.md rewritten (DAU step-by-step) + shared deployment artifact synced
+- [x] vitest suite: `npm run test` was `--project logic` (no such project → 0
+  files, exit 1) → `vitest run`; StatTable/PossessionBar tests updated for the
+  new a11y markup — **10/10 green**
+- [x] Fresh-volume boot verified (`down -v && up`, seeds 01→05 clean) — proves
+  the corrected pressure-directions/minutes data shipped in the regenerated seed
 
 **Still deferred (tracked in `AUDIT.md` §7):**
 
@@ -66,8 +73,8 @@ BFSG certification needs an external audit of the long tail. See `AUDIT.md` §7.
   correctly, `GET /overview` `stage_counts.R16` = 8
 - [x] `db/seeds/04_all_matches.sql` regenerated (96 matches); 8 PDFs moved to
   `.claude/data/done/` (now 96)
-- [ ] Not yet done: bump the `≥ 88 Matches` deploy-doc floors (DEPLOY.md, artifact) to
-  `≥ 96` — low priority since they're already documented as floors that grow with ingests
+- [x] Deploy-doc floors bumped `≥ 88` → `≥ 96` in DEPLOY.md **and** the shared
+  artifact (done 2026-07-11, 1.0.0 wave 2)
 
 ## Deployment docs synced with is_featured/tournament_overview teardown (2026-07-06)
 
@@ -150,12 +157,16 @@ production build green · live API smoke tests green.
 
 **New technical debt identified (deferred):**
 
-- [ ] N+1 remainders: `GET /teams/{id}/avg-stats` (~6 queries/match), `GET /stats/leaderboards` team rankings (4 queries/team), `GET /teams/{id}/matches` (3 queries/match) — all aggregable into grouped queries
+- [x] N+1 remainders RESOLVED (2026-07-11, 1.0.0 wave 2): `/teams/{id}/avg-stats`
+  (6/match → 6 total), `/stats/leaderboards` team rankings (~190 → 3),
+  `/teams/{id}/matches` (3/match → 2) — output byte-identical (hash-verified)
 - [x] Legacy crawler modules REMOVED (2026-07-04): 9 crawler modules + `parse_efi_pdf.py` + 3 test files + fixtures + `scripts/crawl_efi.py` deleted; `make crawl` → `make ingest`; Dockerfile slimmed (no chromium/playwright); `requirements.txt` 15 → 6 deps (+ previously undeclared `python-dotenv`)
 - [ ] Contact rate limiter is per-process and sees the proxy IP behind Passenger/reverse proxy (no `X-Forwarded-For` handling) — whole site shares one 3/h budget
 - [ ] `watch_pdfs.py`: no lockfile against overlapping cron runs; permanently failing PDFs are retried every 5 min (no quarantine/dead-letter)
-- [ ] `_q()`/`_qs()` in `pmsr_to_sql.py` do not escape backslashes (MySQL backslash-escape-mode edge case)
-- [ ] Upload endpoint buffers the whole body before the 50 MB check (no streaming limit; mitigated by auth)
+- [x] `_q()`/`_qs()` backslash escaping FIXED (2026-07-11, 1.0.0 wave 1) +
+  `exec_driver_sql` so `:word` tokens aren't reinterpreted as bind params
+- [x] Upload size RESOLVED (2026-07-11): rejects on declared `file.size` before
+  reading the body into RAM
 - [x] `is_featured` RESOLVED (2026-07-04): column wired into `get_featured_match_id()` (featured GER–CUR match actually featured again); dead query param removed from backend + frontend
 - [x] Stale seeds RESOLVED (2026-07-04): `02_teams_ger_cur.sql` (empty stub) deleted. `05_final_third_entries.sql` turned out NOT to be a duplicate — it is the sole data source and was missing from the seed pipeline entirely (live DB had 0 rows, FinalThirdZones empty). Now mounted in initdb + `make seed`, idempotent via DELETE guard, applied live (400 rows)
 - [x] Dead frontend code REMOVED (2026-07-04): `lib/api/{client,endpoints}.ts` (zero consumers), 5 unreferenced M8 modules (`EfficiencyMatrix`, `RiskReward`, `PressingEngine`, `PenetrationMap`, `ControlVsChaos`), 30 never-rendered `gk_*` fields in `KeyStatsTable` + the matching dead GK block (2 queries, 30 fields) in `GET /matches/{id}/key-stats`
@@ -325,7 +336,9 @@ All three sessions delivered. Full feature shipped in Sessions 25 A/B/C + Sessio
 - [x] `.gitignore` hardened — env files, node_modules, PDF binaries, db_data excluded
 - [x] Schema: `UNIQUE KEY uq_player (team_id, jersey_number)` added to `players` table
 - [ ] `npm install` / `pip install` in CI (dependencies not yet verified in fresh container)
-- [ ] Live Docker run with fresh volume to verify all seeds apply cleanly
+- [x] Live Docker run with fresh volume VERIFIED (2026-07-11): `down -v && up`
+  loads seeds 01→05 clean — 48 teams · 96 matches · 1248 players · 192/192
+  pressure directions non-null · AET match renders
 - [x] `parse_efi_pdf.py` deprecation — `DeprecationWarning` added; docstring updated to redirect to `parse_pmsr.py + pmsr_to_sql.py`
 
 ## Post-M9 — Full dashboard build-out (Session 1)
